@@ -1,0 +1,13 @@
+# Datos crudos de Kaggle (14 GB) y derivados pesados: no van al repo
+Data/
+*.parquet
+*.duckdb
+*.duckdb.wal
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
