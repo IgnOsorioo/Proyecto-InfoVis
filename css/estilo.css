@@ -1,0 +1,218 @@
+/* Tokens de color: el mapa (Plotly) también los lee desde aquí vía getComputedStyle. */
+:root {
+  color-scheme: light;
+  --plano: #f9f9f7;
+  --superficie: #fcfcfb;
+  --superficie-velo: rgba(252, 252, 251, 0.94);
+  --tinta: #0b0b0b;
+  --tinta-2: #52514e;
+  --tinta-3: #898781;
+  --grilla: #e1e0d9;
+  --eje: #c3c2b7;
+  --borde: rgba(11, 11, 11, 0.10);
+  /* Canciones que son #1 en más países (3 primeras ranuras categóricas, validadas entre todos los pares) */
+  --c1: #2a78d6;
+  --c2: #eb6834;
+  --c3: #1baf7a;
+  --otra: #a9a69d;        /* país con datos cuya #1 no es de las 3 más compartidas: relleno sólido */
+  --vacio: #f9f9f7;       /* país sin datos de Spotify: sin relleno, solo contorno */
+  --contorno-vacio: #c3c2b7;
+  --fuente: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --plano: #0d0d0d;
+    --superficie: #1a1a19;
+    --superficie-velo: rgba(26, 26, 25, 0.94);
+    --tinta: #ffffff;
+    --tinta-2: #c3c2b7;
+    --tinta-3: #898781;
+    --grilla: #2c2c2a;
+    --eje: #383835;
+    --borde: rgba(255, 255, 255, 0.10);
+    --c1: #3987e5;
+    --c2: #d95926;
+    --c3: #199e70;
+    --otra: #74726b;
+    --vacio: #0d0d0d;
+    --contorno-vacio: #3d3d3a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plano: #0d0d0d;
+  --superficie: #1a1a19;
+  --superficie-velo: rgba(26, 26, 25, 0.94);
+  --tinta: #ffffff;
+  --tinta-2: #c3c2b7;
+  --tinta-3: #898781;
+  --grilla: #2c2c2a;
+  --eje: #383835;
+  --borde: rgba(255, 255, 255, 0.10);
+  --c1: #3987e5;
+  --c2: #d95926;
+  --c3: #199e70;
+  --otra: #74726b;
+  --vacio: #0d0d0d;
+  --contorno-vacio: #3d3d3a;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--plano);
+  color: var(--tinta);
+  font-family: var(--fuente);
+  font-size: 15px;
+  line-height: 1.45;
+}
+a { color: var(--c1); }
+
+button {
+  font: inherit;
+  font-size: 13px;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--tinta-3); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--c1); outline-offset: 2px; }
+
+/* ---------- Barra superior ---------- */
+.barra {
+  display: flex;
+  gap: 16px 32px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 16px 24px 8px;
+}
+h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
+.titulo p { margin: 2px 0 0; color: var(--tinta-2); }
+.global { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--tinta-2); }
+.global img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.global strong { display: block; color: var(--tinta); font-size: 14px; }
+
+/* ---------- Escenario: el mapa ocupa todo el espacio disponible ---------- */
+.escenario { position: relative; flex: 1; min-height: 420px; }
+.mapa { position: absolute; inset: 0; cursor: pointer; }
+
+.leyenda, .tarjeta, .activar-caja {
+  background: var(--superficie-velo);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.leyenda {
+  position: absolute;
+  left: 24px;
+  bottom: 16px;
+  width: 280px;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+.leyenda h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.leyenda ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.leyenda li { display: grid; grid-template-columns: 12px 40px minmax(0, 1fr); gap: 8px; align-items: center; cursor: pointer; border-radius: 6px; }
+.leyenda li:hover .l-titulo { text-decoration: underline; }
+.leyenda li > span { min-width: 0; }   /* permite recortar con … los textos largos */
+.leyenda .muestra { width: 12px; height: 12px; border-radius: 3px; }
+.leyenda img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.leyenda .l-titulo { display: block; color: var(--tinta); font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leyenda .l-detalle { display: block; color: var(--tinta-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leyenda .otras { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--grilla); color: var(--tinta-2); font-size: 12px; }
+.leyenda .otras span { display: inline-flex; align-items: center; gap: 6px; }
+.muestra-otra { background: var(--otra); }
+.muestra-vacio { background: var(--vacio); box-shadow: inset 0 0 0 1px var(--tinta-3); }
+
+/* ---------- Tarjeta del país bajo el cursor ---------- */
+.tarjeta {
+  position: absolute;
+  right: 24px;
+  top: 12px;
+  width: 260px;
+  padding: 12px;
+  pointer-events: none;
+}
+.tarjeta.izquierda { right: auto; left: 24px; }
+.tarjeta[hidden] { display: none; }
+.portada { display: block; width: 100%; height: auto; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--grilla); }
+.tarjeta-texto { padding: 10px 2px 0; }
+.tarjeta-pais { margin: 0; color: var(--tinta-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+.tarjeta h2 { margin: 2px 0 0; font-size: 18px; line-height: 1.2; }
+.tarjeta-artistas { margin: 2px 0 0; color: var(--tinta-2); }
+.tarjeta-racha { margin: 6px 0 0; color: var(--tinta-2); font-size: 13px; }
+.tarjeta.sin-datos .portada, .tarjeta.sin-datos .progreso, .tarjeta.sin-datos .enlace-spotify, .tarjeta.sin-datos .estado-audio { display: none; }
+.estado-audio { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--tinta-3); }
+.progreso { height: 3px; margin-top: 6px; background: var(--grilla); border-radius: 2px; overflow: hidden; }
+.progreso div { height: 100%; width: 0; background: var(--tinta-2); }
+.enlace-spotify { display: inline-block; margin-top: 8px; font-size: 12px; pointer-events: auto; }
+
+.ecualizador { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.ecualizador i { width: 3px; height: 3px; background: var(--tinta-3); border-radius: 1px; }
+.sonando .ecualizador i { background: var(--c1); animation: rebote 0.9s ease-in-out infinite; }
+.sonando .ecualizador i:nth-child(2) { animation-delay: -0.3s; }
+.sonando .ecualizador i:nth-child(3) { animation-delay: -0.6s; }
+@keyframes rebote { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+@media (prefers-reduced-motion: reduce) { .sonando .ecualizador i { animation: none; height: 8px; } }
+
+/* ---------- Activación del sonido (los navegadores exigen un click antes de reproducir audio) ---------- */
+.activar {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.18);
+}
+.activar[hidden] { display: none; }
+.activar-caja { max-width: 360px; padding: 20px; text-align: center; }
+.activar-caja p { margin: 0 0 14px; color: var(--tinta-2); }
+.boton-primario { padding: 10px 16px; font-size: 15px; font-weight: 600; background: var(--tinta); color: var(--superficie); border-color: var(--tinta); }
+.boton-texto { display: block; margin: 8px auto 0; border: 0; background: none; color: var(--tinta-2); text-decoration: underline; }
+
+/* ---------- Controles de tiempo ---------- */
+.controles {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  border-top: 1px solid var(--grilla);
+  background: var(--superficie);
+}
+.play { width: 40px; height: 40px; border-radius: 50%; background: var(--tinta); color: var(--superficie); border-color: var(--tinta); }
+#slider { flex: 1; min-width: 120px; accent-color: var(--c1); }
+.fecha { min-width: 170px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.granos { display: inline-flex; border: 1px solid var(--eje); border-radius: 8px; overflow: hidden; }
+.granos button { border: 0; border-radius: 0; background: transparent; }
+.granos button + button { border-left: 1px solid var(--eje); }
+.granos button[aria-checked="true"] { background: var(--tinta); color: var(--superficie); }
+.sonido { font-size: 16px; }
+
+.creditos { margin: 0; padding: 6px 24px 10px; color: var(--tinta-3); font-size: 11px; background: var(--superficie); }
+
+/* ---------- Pantallas angostas: la leyenda y la tarjeta pasan debajo del mapa ---------- */
+@media (max-width: 760px) {
+  .barra { padding: 12px 16px 4px; }
+  h1 { font-size: 22px; }
+  .escenario { display: flex; flex-direction: column; min-height: 0; }
+  .mapa { position: relative; height: 300px; }
+  .leyenda, .tarjeta { position: static; width: auto; margin: 8px 16px 0; }
+  .tarjeta { display: grid; grid-template-columns: 96px 1fr; gap: 12px; }
+  .tarjeta-texto { padding: 0; }
+  .controles { flex-wrap: wrap; padding: 10px 16px; }
+  .fecha { min-width: 0; flex: 1; }
+  .granos button { padding: 6px 8px; }
+  #slider { order: 5; flex-basis: 100%; }
+  .creditos { padding: 6px 16px 12px; }
+}
