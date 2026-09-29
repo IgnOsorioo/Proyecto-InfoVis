@@ -72,7 +72,7 @@
   // ---------- Tarjeta y audio ----------
 
   function llenarTarjeta({ encabezado, c, racha }) {
-    tarjeta.hidden = false;
+    tarjeta.classList.remove('vacia');
     tarjeta.classList.toggle('sin-datos', !c);
     $('tarjeta-pais').textContent = encabezado;
     if (!c) return;
@@ -96,13 +96,9 @@
     return paisesConDatos().filter(cc => numero1(cc).idx === idx).length;
   }
 
-  function mostrarPais(cc, evento) {
+  function mostrarPais(cc) {
     clearTimeout(timerSalida);
     Estado.paisActivo = cc;
-    if (evento?.clientX !== undefined) {
-      // La tarjeta va al lado contrario del cursor para no tapar el país.
-      tarjeta.classList.toggle('izquierda', evento.clientX > window.innerWidth / 2);
-    }
     const encabezado = `${nombrePais(cc)} · ${textoPeriodo(Estado.grano, Estado.periodo)}`;
     const r = numero1(cc);
     if (!r) {
@@ -129,14 +125,14 @@
     CHN: 'Spotify no está disponible en China.',
   };
 
-  function mostrarSinChart(iso3, evento) {
+  /** País o territorio sin chart de Spotify: {iso3, nombre, nota?} (la nota viene de datos/mundo.js). */
+  function mostrarSinChart(territorio) {
     clearTimeout(timerSalida);
     Estado.paisActivo = null;
     enTarjeta = null;
-    if (evento?.clientX !== undefined) tarjeta.classList.toggle('izquierda', evento.clientX > window.innerWidth / 2);
-    llenarTarjeta({ encabezado: window.SIN_CHART[iso3] });
+    llenarTarjeta({ encabezado: territorio.nombre });
     $('tarjeta-titulo').textContent = 'Sin datos';
-    $('tarjeta-artistas').textContent = NOTAS_SIN_CHART[iso3] ??
+    $('tarjeta-artistas').textContent = territorio.nota ?? NOTAS_SIN_CHART[territorio.iso3] ??
       'Spotify no publica un chart de canciones para este país (en África, solo para Sudáfrica, Nigeria, Egipto y Marruecos).';
     $('tarjeta-racha').textContent = '';
     clearTimeout(timerAudio);
@@ -147,7 +143,6 @@
   function mostrarCancion(idx) {
     clearTimeout(timerSalida);
     Estado.paisActivo = null;
-    tarjeta.classList.remove('izquierda');
     const c = cancion(idx);
     const n = cuantosComparten(idx);
     llenarTarjeta({ encabezado: textoPeriodo(Estado.grano, Estado.periodo), c, racha: `#1 en ${n} países.` });
@@ -155,15 +150,15 @@
     tocarConEspera(c);
   }
 
+  /** Al salir del globo se detiene el audio, pero la tarjeta conserva la última canción (y su enlace). */
   function salir() {
     clearTimeout(timerSalida);
     timerSalida = setTimeout(() => {
       Estado.paisActivo = null;
-      enTarjeta = null;
-      tarjeta.hidden = true;
       clearTimeout(timerAudio);
       Reproductor.detener();
-      Mapa.resaltar(null);
+      $('estado-audio').classList.remove('sonando');
+      $('estado-audio-texto').textContent = 'En pausa · pasa el cursor por un país para seguir';
     }, ESPERA_SALIDA_MS);
   }
 
@@ -212,6 +207,8 @@
   botonPlay.addEventListener('click', () => (Estado.reproduciendo ? pausar() : reproducir()));
   slider.addEventListener('input', () => irAPeriodo(Number(slider.value)));
   document.querySelectorAll('.granos button').forEach(b => b.addEventListener('click', () => cambiarGrano(b.dataset.grano)));
+  document.querySelectorAll('.girar button').forEach(b =>
+    b.addEventListener('click', () => Mapa.girar(Number(b.dataset.lon), Number(b.dataset.lat))));
 
   document.addEventListener('keydown', e => {
     if (e.target.closest('input, button, select, textarea, [tabindex]')) return;

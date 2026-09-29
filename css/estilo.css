@@ -17,6 +17,7 @@
   --otra: #a9a69d;        /* país con datos cuya #1 no es de las 3 más compartidas: relleno sólido */
   --vacio: #f9f9f7;       /* país sin datos de Spotify: sin relleno, solo contorno */
   --contorno-vacio: #c3c2b7;
+  --oceano: #e4ebf2;      /* esfera del globo */
   --fuente: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -38,6 +39,7 @@
     --otra: #74726b;
     --vacio: #0d0d0d;
     --contorno-vacio: #3d3d3a;
+    --oceano: #121a24;
   }
 }
 :root[data-theme="dark"] {
@@ -57,6 +59,7 @@
   --otra: #74726b;
   --vacio: #0d0d0d;
   --contorno-vacio: #3d3d3a;
+  --oceano: #121a24;
 }
 
 * { box-sizing: border-box; }
@@ -103,9 +106,32 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
 .global img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
 .global strong { display: block; color: var(--tinta); font-size: 14px; }
 
-/* ---------- Escenario: el mapa ocupa todo el espacio disponible ---------- */
-.escenario { position: relative; flex: 1; min-height: 420px; }
-.mapa { position: absolute; inset: 0; cursor: pointer; }
+/* ---------- Escenario: leyenda | globo | tarjeta, en columnas que nunca se superponen ---------- */
+.escenario {
+  position: relative;
+  flex: 1;
+  min-height: 480px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: start;
+  padding: 8px 24px 16px;
+}
+.globo { position: relative; align-self: stretch; min-height: 440px; }
+.mapa { position: absolute; inset: 0 0 36px; cursor: grab; }
+.mapa:active { cursor: grabbing; }
+.girar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--tinta-3);
+}
+.girar button { font-size: 12px; padding: 4px 8px; }
 
 .leyenda, .tarjeta, .activar-caja {
   background: var(--superficie-velo);
@@ -114,14 +140,7 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.leyenda {
-  position: absolute;
-  left: 24px;
-  bottom: 16px;
-  width: 280px;
-  padding: 12px 14px;
-  font-size: 13px;
-}
+.leyenda { padding: 12px 14px; font-size: 13px; }
 .leyenda h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.04em; }
 .leyenda ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .leyenda li { display: grid; grid-template-columns: 12px 40px minmax(0, 1fr); gap: 8px; align-items: center; cursor: pointer; border-radius: 6px; }
@@ -137,16 +156,10 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
 .muestra-vacio { background: var(--vacio); box-shadow: inset 0 0 0 1px var(--tinta-3); }
 
 /* ---------- Tarjeta del país bajo el cursor ---------- */
-.tarjeta {
-  position: absolute;
-  right: 24px;
-  top: 12px;
-  width: 260px;
-  padding: 12px;
-  pointer-events: none;
-}
-.tarjeta.izquierda { right: auto; left: 24px; }
-.tarjeta[hidden] { display: none; }
+.tarjeta { padding: 12px; }
+.tarjeta-ayuda { display: none; margin: 0; color: var(--tinta-2); font-size: 14px; }
+.tarjeta.vacia .tarjeta-ayuda { display: block; }
+.tarjeta.vacia .portada, .tarjeta.vacia .tarjeta-texto { display: none; }
 .portada { display: block; width: 100%; height: auto; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--grilla); }
 .tarjeta-texto { padding: 10px 2px 0; }
 .tarjeta-pais { margin: 0; color: var(--tinta-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -157,7 +170,7 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
 .estado-audio { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--tinta-3); }
 .progreso { height: 3px; margin-top: 6px; background: var(--grilla); border-radius: 2px; overflow: hidden; }
 .progreso div { height: 100%; width: 0; background: var(--tinta-2); }
-.enlace-spotify { display: inline-block; margin-top: 8px; font-size: 12px; pointer-events: auto; }
+.enlace-spotify { display: inline-block; margin-top: 8px; font-size: 12px; }
 
 .ecualizador { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
 .ecualizador i { width: 3px; height: 3px; background: var(--tinta-3); border-radius: 1px; }
@@ -171,6 +184,7 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
 .activar {
   position: absolute;
   inset: 0;
+  z-index: 10;
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.18);
@@ -201,17 +215,26 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
 
 .creditos { margin: 0; padding: 6px 24px 10px; color: var(--tinta-3); font-size: 11px; background: var(--superficie); }
 
-/* ---------- Pantallas angostas: la leyenda y la tarjeta pasan debajo del mapa ---------- */
+/* ---------- Pantallas medianas y angostas: globo arriba, tarjeta y leyenda debajo ---------- */
+@media (max-width: 1100px) {
+  .escenario { grid-template-columns: 1fr; }
+  .globo { order: 1; min-height: 0; height: 520px; }
+  .tarjeta { order: 2; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .tarjeta.vacia { display: block; }
+  .tarjeta-texto { padding: 0; }
+  .leyenda { order: 3; }
+}
 @media (max-width: 760px) {
   .barra { padding: 12px 16px 4px; }
   h1 { font-size: 22px; }
-  .escenario { display: flex; flex-direction: column; min-height: 0; }
-  .mapa { position: relative; height: 300px; }
-  .leyenda, .tarjeta { position: static; width: auto; margin: 8px 16px 0; }
-  .tarjeta { display: grid; grid-template-columns: 96px 1fr; gap: 12px; }
-  .tarjeta-texto { padding: 0; }
+  .escenario { padding: 8px 16px 12px; }
+  .globo { height: 380px; }
+  .tarjeta { grid-template-columns: 96px minmax(0, 1fr); }
   .controles { flex-wrap: wrap; padding: 10px 16px; }
-  .fecha { min-width: 0; flex: 1; }
+  /* fila 1: play · fecha · sonido — fila 2: slider — fila 3: granularidad */
+  .fecha { min-width: max-content; }
+  .sonido { margin-left: auto; }
+  .granos { order: 6; }
   .granos button { padding: 6px 8px; }
   #slider { order: 5; flex-basis: 100%; }
   .creditos { padding: 6px 16px 12px; }

@@ -18,11 +18,20 @@
   </header>
 
   <main class="escenario">
-    <div id="mapa" class="mapa" aria-label="Mapa mundial con la canción #1 de cada país"></div>
-
     <aside class="leyenda" id="leyenda" aria-label="Canciones que son #1 en más países"></aside>
 
-    <article class="tarjeta" id="tarjeta" hidden aria-live="polite">
+    <div class="globo">
+      <div id="mapa" class="mapa" aria-label="Globo terráqueo con la canción #1 de cada país"></div>
+      <div class="girar" role="group" aria-label="Girar el globo">
+        <span>Arrastra para girar ·</span>
+        <button type="button" data-lon="-75" data-lat="5">América</button>
+        <button type="button" data-lon="15" data-lat="25">Europa y África</button>
+        <button type="button" data-lon="110" data-lat="15">Asia y Oceanía</button>
+      </div>
+    </div>
+
+    <article class="tarjeta vacia" id="tarjeta" aria-live="polite">
+      <p class="tarjeta-ayuda" id="tarjeta-ayuda">Pasa el cursor por un país para escuchar su canción #1 y ver su portada.</p>
       <img class="portada" id="tarjeta-portada" alt="" width="300" height="300">
       <div class="tarjeta-texto">
         <p class="tarjeta-pais" id="tarjeta-pais"></p>
@@ -63,11 +72,13 @@
   <p class="creditos">
     Datos: Spotify Charts (Top 200 diario, 70 países, 2017–2026) vía
     <a href="https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated">Kaggle · gonzalopezgil</a> (CC BY-SA 4.0) ·
-    Países: <a href="https://github.com/mledoze/countries">mledoze/countries</a> ·
+    Mapa: <a href="https://www.naturalearthdata.com/">Natural Earth</a> 1:50m (dominio público) ·
+    Nombres: <a href="https://github.com/mledoze/countries">mledoze/countries</a> ·
     Audio: previews de <a href="https://developers.deezer.com/api">Deezer</a> · Portadas: Spotify.
     #1 del día = puesto 1 del chart diario; de semana, mes o año = la canción con más streams en ese período.
   </p>
 
+  <script src="datos/mundo.js"></script>
   <script src="datos/paises.js"></script>
   <script src="datos/canciones.js"></script>
   <script src="datos/numero1.js"></script>
