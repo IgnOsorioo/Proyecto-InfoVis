@@ -43,7 +43,7 @@
   function reproducir() {
     if (Estado.periodo >= window.PERIODOS[Estado.grano].n - 1) irAPeriodo(0);
     Estado.reproduciendo = true;
-    botonPlay.textContent = '❚❚';
+    botonPlay.classList.add('reproduciendo');
     botonPlay.setAttribute('aria-label', 'Pausar');
     ultimoPaso = performance.now();
     raf = requestAnimationFrame(paso);
@@ -52,7 +52,7 @@
   function pausar() {
     Estado.reproduciendo = false;
     cancelAnimationFrame(raf);
-    botonPlay.textContent = '▶';
+    botonPlay.classList.remove('reproduciendo');
     botonPlay.setAttribute('aria-label', 'Reproducir el paso del tiempo');
   }
 
@@ -166,7 +166,7 @@
     cargando: 'Cargando preview…',
     sonando: 'Sonando · preview de 30 s (Deezer)',
     'sin-preview': 'Sin preview disponible para esta canción',
-    silencio: 'Activa el sonido 🔇 para escuchar',
+    silencio: 'Activa el sonido (abajo a la derecha) para escuchar',
   };
   Reproductor.alCambiar((estado, c) => {
     if (c.idx !== enTarjeta) return;
@@ -183,9 +183,9 @@
 
   function actualizarBotonSonido() {
     const on = Reproductor.habilitado;
-    $('sonido').textContent = on ? '🔊' : '🔇';
     $('sonido').setAttribute('aria-pressed', String(on));
     $('sonido').setAttribute('aria-label', on ? 'Silenciar' : 'Activar sonido');
+    $('sonido').title = on ? 'Silenciar' : 'Activar sonido';
   }
 
   function cerrarActivacion(conSonido) {

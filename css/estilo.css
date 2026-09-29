@@ -204,14 +204,20 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
   border-top: 1px solid var(--grilla);
   background: var(--superficie);
 }
-.play { width: 40px; height: 40px; border-radius: 50%; background: var(--tinta); color: var(--superficie); border-color: var(--tinta); }
+.play { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: var(--tinta); color: var(--superficie); border-color: var(--tinta); }
+.play svg { width: 16px; height: 16px; fill: currentColor; }
+.play .icono-pausa, .play.reproduciendo .icono-play { display: none; }
+.play.reproduciendo .icono-pausa { display: block; }
 #slider { flex: 1; min-width: 120px; accent-color: var(--c1); }
 .fecha { min-width: 170px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .granos { display: inline-flex; border: 1px solid var(--eje); border-radius: 8px; overflow: hidden; }
 .granos button { border: 0; border-radius: 0; background: transparent; }
 .granos button + button { border-left: 1px solid var(--eje); }
 .granos button[aria-checked="true"] { background: var(--tinta); color: var(--superficie); }
-.sonido { font-size: 16px; }
+.sonido { display: grid; place-items: center; width: 40px; height: 36px; padding: 0; }
+.sonido svg { width: 18px; height: 18px; fill: currentColor; }
+.sonido .ondas, .sonido .cruz { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.sonido[aria-pressed="true"] .cruz, .sonido[aria-pressed="false"] .ondas { display: none; }
 
 .creditos { margin: 0; padding: 6px 24px 10px; color: var(--tinta-3); font-size: 11px; background: var(--superficie); }
 

@@ -50,14 +50,17 @@
     <div class="activar" id="activar">
       <div class="activar-caja">
         <p>Al pasar el cursor por un país se reproduce un fragmento de 30 s de su canción #1.</p>
-        <button type="button" id="boton-activar" class="boton-primario">🔊 Activar sonido y explorar</button>
+        <button type="button" id="boton-activar" class="boton-primario">Activar sonido y explorar</button>
         <button type="button" id="boton-silencio" class="boton-texto">Explorar sin sonido</button>
       </div>
     </div>
   </main>
 
   <footer class="controles">
-    <button type="button" id="play" class="play" aria-label="Reproducir el paso del tiempo">▶</button>
+    <button type="button" id="play" class="play" aria-label="Reproducir el paso del tiempo">
+      <svg class="icono-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>
+      <svg class="icono-pausa" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>
+    </button>
     <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Momento">
     <output id="fecha" class="fecha" for="slider"></output>
     <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
@@ -66,7 +69,13 @@
       <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
       <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
     </div>
-    <button type="button" id="sonido" class="sonido" aria-pressed="false">🔇</button>
+    <button type="button" id="sonido" class="sonido" aria-pressed="false" aria-label="Activar sonido" title="Activar sonido">
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M2 6h3l4-3.5v11L5 10H2z"/>
+        <path class="ondas" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4"/>
+        <path class="cruz" d="M11 6l4 4M15 6l-4 4"/>
+      </svg>
+    </button>
   </footer>
 
   <p class="creditos">

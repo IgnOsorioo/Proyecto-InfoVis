@@ -13,7 +13,7 @@ Globo terráqueo interactivo y sonoro con la canción más escuchada en Spotify 
   - Aparece una tarjeta con la portada, cuánto tiempo lleva como #1 y en cuántos países más es #1.
   - Los países que comparten esa canción quedan contorneados.
   - Si el país siguiente tiene la misma canción, la música sigue sin cortarse.
-- **Línea de tiempo**: se puede elegir cualquier día, semana, mes o año entre enero de 2017 y hoy, y animar el paso del tiempo con ▶.
+- **Línea de tiempo**: se puede elegir cualquier día, semana, mes o año entre enero de 2017 y hoy, y animar el paso del tiempo con el botón de reproducir.
 - **#1 global**: la canción número uno del chart global de ese momento, arriba a la derecha.
 
 Los navegadores exigen un click antes de reproducir audio, por eso al entrar aparece el botón "Activar sonido".
