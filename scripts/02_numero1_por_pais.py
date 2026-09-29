@@ -2,7 +2,6 @@
 
 Salidas (en datos/):
   paises.js     window.PAISES     nombre, ISO3 y primer día con chart de cada país
-                window.SIN_CHART  ISO3 → nombre de los países sin chart de Spotify (para explicarlo en el mapa)
   canciones.js  window.CANCIONES  [track_id, título, artistas, portada] de cada canción que fue #1
   numero1.js    window.PERIODOS y window.NUMERO1: por granularidad y país, tramos [periodo_inicio, índice_canción]
                 (el #1 se repite muchos días seguidos, así que se guarda solo cuando cambia)
@@ -44,8 +43,9 @@ for grano, (unidad, base) in GRANOS.items():
     if grano == "dia":
         top = "SELECT country, date AS periodo, track_id FROM c WHERE rank = 1"
     else:
+        # Desempate determinista entre canciones con los mismos streams (vía hash del id).
         top = f"""
-        SELECT country, periodo, arg_max(track_id, st) AS track_id FROM (
+        SELECT country, periodo, arg_max(track_id, (st, -hash(track_id))) AS track_id FROM (
             SELECT country, date_trunc('{unidad}', date) AS periodo, track_id, sum(coalesce(streams, 0)) AS st
             FROM c GROUP BY ALL
         ) GROUP BY ALL"""
@@ -115,9 +115,7 @@ for grano, g in tramos.items():
     periodos[grano] = {"base": g["base"], "n": g["n"]}
 
 WEB_DATA_DIR.mkdir(exist_ok=True)
-con_chart = {p["iso3"] for p in paises.values()}
-sin_chart = {c["cca3"]: c["translations"]["spa"]["common"] for c in mledoze.values() if c["cca3"] not in con_chart}
-(WEB_DATA_DIR / "paises.js").write_text(js("PAISES", paises) + js("SIN_CHART", sin_chart))
+(WEB_DATA_DIR / "paises.js").write_text(js("PAISES", paises))
 (WEB_DATA_DIR / "canciones.js").write_text(
     js("PREFIJO_PORTADA", PREFIJO_PORTADA) + js("CANCIONES", canciones))
 (WEB_DATA_DIR / "numero1.js").write_text(
