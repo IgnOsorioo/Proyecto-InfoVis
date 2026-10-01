@@ -16,7 +16,10 @@
   function irAPeriodo(p) {
     Estado.periodo = p;
     slider.value = p;
-    $('fecha').textContent = textoPeriodo(Estado.grano, p);
+    const n = window.PERIODOS[Estado.grano].n;
+    slider.style.setProperty('--avance', `${(n > 1 ? p / (n - 1) : 1) * 100}%`);   // relleno de la línea
+    $('fecha').textContent = textoPeriodoCorto(Estado.grano, p);
+    actualizarSaltos();
     Mapa.dibujar();
     dibujarGlobal();
     if (Estado.paisActivo) mostrarPais(Estado.paisActivo);   // si cambió su #1, cambia la canción
@@ -28,6 +31,31 @@
     slider.max = window.PERIODOS[grano].n - 1;
     document.querySelectorAll('.granos button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.grano === grano)));
     irAPeriodo(periodoDeFecha(grano, fecha));
+  }
+
+  /** Período al que lleva saltar `delta` años desde el actual (misma fecha, acotado al rango de datos). */
+  function periodoTrasSalto(delta) {
+    const f = fechaDePeriodo(Estado.grano, Estado.periodo);
+    f.setUTCFullYear(f.getUTCFullYear() + delta);
+    return periodoDeFecha(Estado.grano, f);
+  }
+
+  function saltarAnio(delta) {
+    const p = periodoTrasSalto(delta);
+    if (p !== Estado.periodo) irAPeriodo(p);
+  }
+
+  /** Botones de año anterior/siguiente: muestran el año de destino y se desactivan en los extremos. */
+  function actualizarSaltos() {
+    for (const [id, delta] of [['anio-anterior', -1], ['anio-siguiente', 1]]) {
+      const p = periodoTrasSalto(delta);
+      const posible = p !== Estado.periodo;
+      const etiqueta = posible ? `Ir a ${textoPeriodo(Estado.grano, p)}` : (delta < 0 ? 'No hay datos anteriores' : 'No hay datos posteriores');
+      $(id).disabled = !posible;
+      $(id).setAttribute('aria-label', etiqueta);
+      $(id).title = etiqueta;
+      $(`${id}-txt`).textContent = posible ? String(fechaDePeriodo(Estado.grano, p).getUTCFullYear()) : '';
+    }
   }
 
   function paso(ts) {
@@ -71,10 +99,22 @@
 
   // ---------- Tarjeta y audio ----------
 
+  /** "Sonando ahora" del reproductor inferior (izquierda): portada pequeña, título y artistas. */
+  function actualizarAhora(c, donde) {
+    $('rp-ahora').classList.toggle('vacio', !c);
+    $('rp-titulo').textContent = c ? c.titulo : 'Sin datos';
+    $('rp-detalle').textContent = c ? `${c.artistas} · ${donde}` : donde;
+    if (c) {
+      $('rp-portada').src = c.portada;
+      $('rp-portada').alt = `Portada de ${c.titulo}`;
+    }
+  }
+
   function llenarTarjeta({ encabezado, c, racha }) {
     tarjeta.classList.remove('vacia');
     tarjeta.classList.toggle('sin-datos', !c);
     $('tarjeta-pais').textContent = encabezado;
+    actualizarAhora(c, encabezado);
     if (!c) return;
     if (enTarjeta !== c.idx) {
       $('tarjeta-portada').src = c.portada;
@@ -206,6 +246,8 @@
 
   botonPlay.addEventListener('click', () => (Estado.reproduciendo ? pausar() : reproducir()));
   slider.addEventListener('input', () => irAPeriodo(Number(slider.value)));
+  $('anio-anterior').addEventListener('click', () => saltarAnio(-1));
+  $('anio-siguiente').addEventListener('click', () => saltarAnio(1));
   document.querySelectorAll('.granos button').forEach(b => b.addEventListener('click', () => cambiarGrano(b.dataset.grano)));
   document.querySelectorAll('.acercar button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.acercar button').forEach(x => x.classList.toggle('activo', x === b));
@@ -223,6 +265,7 @@
   Mapa.on({ alPasar: mostrarPais, alPasarSinChart: mostrarSinChart, alSalir: salir, alPasarCancion: mostrarCancion });
 
   slider.max = window.PERIODOS[Estado.grano].n - 1;
+  $('fecha-fin').textContent = textoPeriodoCorto('dia', window.PERIODOS.dia.n - 1);   // fin de los datos
   irAPeriodo(window.PERIODOS[Estado.grano].n - 1);   // parte en el día más reciente
   actualizarBotonSonido();
   animarProgreso();

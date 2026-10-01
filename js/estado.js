@@ -63,6 +63,17 @@ function textoPeriodo(grano, p) {
   return anio === Number(window.FECHA_MAX.slice(0, 4)) ? `${anio} (hasta ${_fmtDia.format(new Date(window.FECHA_MAX + 'T00:00:00Z'))})` : String(anio);
 }
 
+const _fmtMesCorto = _fmt({ month: 'short', year: 'numeric' });
+
+/** Versión compacta para la línea de tiempo del reproductor: "27 sept 2026", "sem. 21 sept 2026", "sept 2026", "2026". */
+function textoPeriodoCorto(grano, p) {
+  const f = fechaDePeriodo(grano, p);
+  if (grano === 'dia') return _fmtDia.format(f);
+  if (grano === 'semana') return `sem. ${_fmtDia.format(f)}`;
+  if (grano === 'mes') return _fmtMesCorto.format(f);
+  return String(f.getUTCFullYear());
+}
+
 // ---------- #1 de un país en un período ----------
 
 /** Devuelve {idx, ini, fin} del tramo en que la canción idx fue #1, o null si el país no tenía chart. */

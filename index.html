@@ -6,10 +6,11 @@
   <title>¿Qué suena en el mundo?</title>
   <meta name="description" content="Mapa interactivo con la canción más escuchada en Spotify en cada país, día a día desde 2017. Pasa el cursor por un país para escucharla.">
   <meta name="theme-color" content="#1b1626">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%231b1626'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23e4564b' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f4eefc'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-10-01b">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-10-02a">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
 </head>
 <body>
@@ -64,26 +65,52 @@
     </div>
   </main>
 
-  <footer class="controles">
-    <button type="button" id="play" class="play" aria-label="Reproducir el paso del tiempo">
-      <svg class="icono-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>
-      <svg class="icono-pausa" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>
-    </button>
-    <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Momento">
-    <output id="fecha" class="fecha" for="slider"></output>
-    <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
-      <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
-      <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
-      <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
-      <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
+  <footer class="reproductor" aria-label="Reproductor y línea de tiempo">
+    <div class="rp-ahora vacio" id="rp-ahora" aria-live="polite">
+      <img id="rp-portada" alt="" width="56" height="56">
+      <div class="rp-texto">
+        <strong id="rp-titulo">Nada sonando</strong>
+        <span id="rp-detalle">Pasa el cursor por un país</span>
+      </div>
     </div>
-    <button type="button" id="sonido" class="sonido" aria-pressed="false" aria-label="Activar sonido" title="Activar sonido">
-      <svg viewBox="0 0 16 16" aria-hidden="true">
-        <path d="M2 6h3l4-3.5v11L5 10H2z"/>
-        <path class="ondas" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4"/>
-        <path class="cruz" d="M11 6l4 4M15 6l-4 4"/>
-      </svg>
-    </button>
+
+    <div class="rp-centro">
+      <div class="rp-botones">
+        <button type="button" id="anio-anterior" class="rp-saltar" aria-label="Año anterior">
+          <span class="rp-anio" id="anio-anterior-txt" aria-hidden="true"></span>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h2v11H3zM13.5 2.5v11L5.5 8z"/></svg>
+        </button>
+        <button type="button" id="play" class="play" aria-label="Reproducir el paso del tiempo">
+          <svg class="icono-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>
+          <svg class="icono-pausa" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>
+        </button>
+        <button type="button" id="anio-siguiente" class="rp-saltar" aria-label="Año siguiente">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 2.5h2v11h-2zM2.5 2.5v11l8-5.5z"/></svg>
+          <span class="rp-anio" id="anio-siguiente-txt" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="rp-linea">
+        <output id="fecha" class="rp-tiempo rp-actual" for="slider"></output>
+        <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Momento en la línea de tiempo">
+        <span id="fecha-fin" class="rp-tiempo rp-final"></span>
+      </div>
+    </div>
+
+    <div class="rp-derecha">
+      <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
+        <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
+        <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
+        <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
+        <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
+      </div>
+      <button type="button" id="sonido" class="sonido" aria-pressed="false" aria-label="Activar sonido" title="Activar sonido">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M2 6h3l4-3.5v11L5 10H2z"/>
+          <path class="ondas" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4"/>
+          <path class="cruz" d="M11 6l4 4M15 6l-4 4"/>
+        </svg>
+      </button>
+    </div>
   </footer>
 
   <p class="creditos">
@@ -95,14 +122,14 @@
     #1 del día = puesto 1 del chart diario; de semana, mes o año = la canción con más streams en ese período.
   </p>
 
-  <script src="datos/mundo.js?v=2026-10-01b"></script>
-  <script src="datos/paises.js?v=2026-10-01b"></script>
-  <script src="datos/canciones.js?v=2026-10-01b"></script>
-  <script src="datos/numero1.js?v=2026-10-01b"></script>
-  <script src="datos/deezer.js?v=2026-10-01b" onerror="window.DEEZER = []"></script>
-  <script src="js/estado.js?v=2026-10-01b"></script>
-  <script src="js/reproductor.js?v=2026-10-01b"></script>
-  <script src="js/mapa.js?v=2026-10-01b"></script>
-  <script src="js/main.js?v=2026-10-01b"></script>
+  <script src="datos/mundo.js?v=2026-10-02a"></script>
+  <script src="datos/paises.js?v=2026-10-02a"></script>
+  <script src="datos/canciones.js?v=2026-10-02a"></script>
+  <script src="datos/numero1.js?v=2026-10-02a"></script>
+  <script src="datos/deezer.js?v=2026-10-02a" onerror="window.DEEZER = []"></script>
+  <script src="js/estado.js?v=2026-10-02a"></script>
+  <script src="js/reproductor.js?v=2026-10-02a"></script>
+  <script src="js/mapa.js?v=2026-10-02a"></script>
+  <script src="js/main.js?v=2026-10-02a"></script>
 </body>
 </html>
