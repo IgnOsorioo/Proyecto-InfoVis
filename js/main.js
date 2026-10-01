@@ -207,8 +207,10 @@
   botonPlay.addEventListener('click', () => (Estado.reproduciendo ? pausar() : reproducir()));
   slider.addEventListener('input', () => irAPeriodo(Number(slider.value)));
   document.querySelectorAll('.granos button').forEach(b => b.addEventListener('click', () => cambiarGrano(b.dataset.grano)));
-  document.querySelectorAll('.girar button').forEach(b =>
-    b.addEventListener('click', () => Mapa.girar(Number(b.dataset.lon), Number(b.dataset.lat))));
+  document.querySelectorAll('.acercar button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.acercar button').forEach(x => x.classList.toggle('activo', x === b));
+    Mapa.enfocar(b.dataset.region);
+  }));
 
   document.addEventListener('keydown', e => {
     if (e.target.closest('input, button, select, textarea, [tabindex]')) return;
@@ -217,8 +219,6 @@
     if (e.code === 'ArrowLeft') irAPeriodo(Math.max(0, Estado.periodo - 1));
     if (e.code === 'ArrowRight') irAPeriodo(Math.min(n - 1, Estado.periodo + 1));
   });
-
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => Mapa.dibujar());
 
   Mapa.on({ alPasar: mostrarPais, alPasarSinChart: mostrarSinChart, alSalir: salir, alPasarCancion: mostrarCancion });
 

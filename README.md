@@ -1,10 +1,10 @@
 # ¿Qué suena en el mundo?
 
-Globo terráqueo interactivo y sonoro con la canción más escuchada en Spotify en cada país, día a día desde 2017. Al pasar el cursor por un país se reproduce un fragmento de su canción #1 en ese momento y se muestra la portada. Proyecto del curso Visualización de la Información (IIC2026, PUC).
+Mapa mundial interactivo y sonoro con la canción más escuchada en Spotify en cada país, día a día desde 2017. Al pasar el cursor por un país se reproduce un fragmento de su canción #1 en ese momento y se muestra la portada. Proyecto del curso Visualización de la Información (IIC2026, PUC).
 
 ## Qué muestra
 
-- **Globo**: se gira arrastrando (o con los botones América, Europa y África, y Asia y Oceanía) y se acerca con scroll. Cada país está pintado según su canción #1.
+- **Mapa 2D** (proyección Natural Earth): se mueve arrastrando y se acerca con scroll o con los botones por región. Cada país está pintado según su canción #1.
   - Las 3 canciones que son #1 en más países tienen un color propio; el resto va en gris sólido.
   - Los países y territorios sin chart de Spotify quedan vacíos, solo con su contorno.
   - Una canción conserva su color mientras siga entre esas 3.
@@ -17,6 +17,8 @@ Globo terráqueo interactivo y sonoro con la canción más escuchada en Spotify 
 - **#1 global**: la canción número uno del chart global de ese momento, arriba a la derecha.
 
 Los navegadores exigen un click antes de reproducir audio, por eso al entrar aparece el botón "Activar sonido".
+
+**Paleta "Vinilo nocturno"**: fondo ciruela oscuro, con coral `#e4564b`, turquesa `#09a295` y lavanda `#9677ee` para las tres canciones más compartidas. Esos tres colores están validados para daltonismo (diferencia ΔE ≥ 11,5 entre todos los pares) y tienen contraste ≥ 3:1 con el fondo.
 
 ## Ver la visualización
 
@@ -40,7 +42,7 @@ cd scripts
 ~/.venvs/infovis/bin/python 01_csv_a_parquet.py     # CSV de 11 GB → Parquet (≈10 s)
 ~/.venvs/infovis/bin/python 02_numero1_por_pais.py  # #1 por país y período → datos/*.js (≈5 s)
 ~/.venvs/infovis/bin/python 03_deezer.py            # ids de Deezer para los previews (usa caché)
-~/.venvs/infovis/bin/python 04_mapa_mundial.py      # geometría del globo desde Natural Earth → datos/mundo.js
+~/.venvs/infovis/bin/python 04_mapa_mundial.py      # geometría del mapa desde Natural Earth → datos/mundo.js
 ```
 
 La carpeta de datos crudos se puede cambiar con la variable `INFOVIS_RAW_DIR`.
@@ -63,4 +65,4 @@ La carpeta de datos crudos se puede cambiar con la variable `INFOVIS_RAW_DIR`.
 - Mapa: [Natural Earth](https://www.naturalearthdata.com/) 1:50m, dominio público, desde su [repositorio oficial](https://github.com/nvkelso/natural-earth-vector).
 - Nombres de países: [mledoze/countries](https://github.com/mledoze/countries), ODbL.
 - Audio: [API de Deezer](https://developers.deezer.com/api), consultada en el navegador por JSONP. Portadas: Spotify.
-- Visualización: [Plotly.js](https://plotly.com/javascript/), con proyección ortográfica.
+- Visualización: [Plotly.js](https://plotly.com/javascript/), con proyección Natural Earth. Tipografías: [DM Sans](https://fonts.google.com/specimen/DM+Sans) y [Syne](https://fonts.google.com/specimen/Syne) (Google Fonts, licencia OFL).

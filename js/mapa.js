@@ -1,4 +1,4 @@
-/* Globo terráqueo (proyección ortográfica) con cada país pintado según su canción #1 en el período elegido.
+/* Mapa mundial en 2D (proyección Natural Earth) con cada país pintado según su canción #1 en el período elegido.
    Geometría: Natural Earth 1:50m (datos/mundo.js), con los territorios de ultramar separados de su país.
    Países con datos van rellenos: las 3 canciones que son #1 en más países llevan color propio y el resto,
    gris sólido. Países sin datos quedan vacíos (solo contorno), para no confundirlos con "otra canción".
@@ -12,8 +12,17 @@ const Mapa = (() => {
   const SIN_CHART = Object.fromEntries(window.MUNDO.features
     .filter(f => !ISO3_A_CC[f.properties.iso3])
     .map(f => [f.properties.iso3, f.properties]));
-  const GIRO_MS = 450;
-  let vista = { lon: -40, lat: 12, escala: 1 };   // rotación y zoom del globo (se actualiza al arrastrar)
+  // Vistas de los botones de región: centro del mapa y zoom.
+  const REGIONES = {
+    mundo:   { lon: 10,  lat: 12,  escala: 1 },
+    america: { lon: -78, lat: 8,   escala: 2.1 },
+    europa:  { lon: 14,  lat: 51,  escala: 4.4 },
+    africa:  { lon: 28,  lat: 10,  escala: 2.3 },
+    asia:    { lon: 102, lat: 24,  escala: 2.3 },
+    oceania: { lon: 150, lat: -28, escala: 3.6 },
+  };
+  let vista = { ...REGIONES.mundo };   // centro y zoom actuales (se actualizan al arrastrar o hacer scroll)
+  let enfoques = 0;                    // cambia uirevision para que un botón de región se imponga al zoom manual
   let ranuras = new Map();      // idx de canción → ranura de color 1..3 (estable mientras siga en el top)
   let top = [];                 // [{idx, n, ranura}]
   let resaltada = null;         // idx de la canción cuyos países se contornean
@@ -63,10 +72,10 @@ const Mapa = (() => {
       { ...base, locations: conDatos.map(iso3),
         z: conDatos.map(cc => ranuras.get(numero1(cc).idx) ?? 0), zmin: -0.5, zmax: 3.5,
         colorscale: escalaDiscreta(),
-        marker: { line: { color: token('superficie'), width: 0.6 } } },
+        marker: { line: { color: token('plano'), width: 0.6 } } },
       { ...base, locations: comparten.map(iso3), z: comparten.map(() => 0),
         colorscale: [[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0)']],
-        marker: { line: { color: token('tinta'), width: 1.6 } }, hoverinfo: 'skip' },
+        marker: { line: { color: token('resalte'), width: 1.4 } }, hoverinfo: 'skip' },
     ];
   }
 
@@ -74,16 +83,14 @@ const Mapa = (() => {
     return {
       paper_bgcolor: 'rgba(0,0,0,0)',
       margin: { l: 0, r: 0, t: 0, b: 0 },
-      dragmode: 'pan',                          // en proyección ortográfica, arrastrar gira el globo
-      uirevision: 'mapa',
+      dragmode: 'pan',
+      uirevision: `mapa-${enfoques}`,
       showlegend: false,
       geo: {
-        projection: { type: 'orthographic', rotation: { lon: vista.lon, lat: vista.lat }, scale: vista.escala },
-        showocean: true, oceancolor: token('oceano'),
-        showframe: true, framecolor: token('eje'), framewidth: 1,
-        showland: false, showcountries: false, showcoastlines: false, showlakes: false,
-        lonaxis: { showgrid: true, gridcolor: token('grilla'), gridwidth: 0.5, dtick: 30 },
-        lataxis: { showgrid: true, gridcolor: token('grilla'), gridwidth: 0.5, dtick: 30 },
+        projection: { type: 'natural earth', scale: vista.escala },
+        center: { lon: vista.lon, lat: vista.lat },
+        lataxis: { range: [-57, 84] },            // sin la Antártida
+        showframe: false, showocean: false, showland: false, showcountries: false, showcoastlines: false, showlakes: false,
         bgcolor: 'rgba(0,0,0,0)',
       },
     };
@@ -120,26 +127,18 @@ const Mapa = (() => {
     el.on('plotly_hover', pasar);
     el.on('plotly_unhover', () => eventos.alSalir());
     el.on('plotly_click', pasar);          // en pantallas táctiles no hay hover: un toque hace lo mismo
-    // Guarda la rotación y el zoom que deja el usuario al arrastrar o hacer scroll.
+    // Guarda el centro y el zoom que deja el usuario al arrastrar o hacer scroll.
     el.on('plotly_relayout', () => {
-      const proy = el._fullLayout.geo.projection;
-      vista = { lon: proy.rotation.lon, lat: proy.rotation.lat, escala: proy.scale };
+      const geo = el._fullLayout.geo;
+      vista = { lon: geo.center.lon, lat: geo.center.lat, escala: geo.projection.scale };
     });
   }
 
-  /** Gira el globo suavemente hasta centrar (lon, lat). */
-  function girar(lon, lat) {
-    const desde = { ...vista };
-    const dLon = ((lon - desde.lon + 540) % 360) - 180;       // el camino más corto
-    const t0 = performance.now();
-    const paso = ahora => {
-      const k = Math.min(1, Math.max(0, (ahora - t0) / GIRO_MS));
-      const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;   // ease-in-out
-      vista = { lon: desde.lon + dLon * e, lat: desde.lat + (lat - desde.lat) * e, escala: desde.escala };
-      Plotly.relayout(EL, { 'geo.projection.rotation.lon': vista.lon, 'geo.projection.rotation.lat': vista.lat });
-      if (k < 1) requestAnimationFrame(paso);
-    };
-    requestAnimationFrame(paso);
+  /** Acerca el mapa a una región ('mundo', 'america', 'europa', 'africa', 'asia', 'oceania'). */
+  function enfocar(region) {
+    vista = { ...REGIONES[region] };
+    enfoques++;
+    redibujar();
   }
 
   // ---------- Leyenda (HTML, con portadas) ----------
@@ -182,7 +181,7 @@ const Mapa = (() => {
   }
 
   return {
-    dibujar, resaltar, girar,
+    dibujar, resaltar, enfocar,
     on(nuevos) { eventos = { ...eventos, ...nuevos }; },
   };
 })();

@@ -1,65 +1,28 @@
-/* Tokens de color: el mapa (Plotly) también los lee desde aquí vía getComputedStyle. */
+/* Tema "Vinilo nocturno": tema fijo (no cambia con el modo claro/oscuro del sistema).
+   El mapa (Plotly) también lee estos tokens vía getComputedStyle.
+   c1–c3 validados con validate_palette.js sobre #1b1626 (modo oscuro, todos los pares):
+   banda de luminosidad, croma, daltonismo ΔE ≥ 11,5 y contraste ≥ 3:1. */
 :root {
-  color-scheme: light;
-  --plano: #f9f9f7;
-  --superficie: #fcfcfb;
-  --superficie-velo: rgba(252, 252, 251, 0.94);
-  --tinta: #0b0b0b;
-  --tinta-2: #52514e;
-  --tinta-3: #898781;
-  --grilla: #e1e0d9;
-  --eje: #c3c2b7;
-  --borde: rgba(11, 11, 11, 0.10);
-  /* Canciones que son #1 en más países (3 primeras ranuras categóricas, validadas entre todos los pares) */
-  --c1: #2a78d6;
-  --c2: #eb6834;
-  --c3: #1baf7a;
-  --otra: #a9a69d;        /* país con datos cuya #1 no es de las 3 más compartidas: relleno sólido */
-  --vacio: #f9f9f7;       /* país sin datos de Spotify: sin relleno, solo contorno */
-  --contorno-vacio: #c3c2b7;
-  --oceano: #e4ebf2;      /* esfera del globo */
-  --fuente: system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-    --plano: #0d0d0d;
-    --superficie: #1a1a19;
-    --superficie-velo: rgba(26, 26, 25, 0.94);
-    --tinta: #ffffff;
-    --tinta-2: #c3c2b7;
-    --tinta-3: #898781;
-    --grilla: #2c2c2a;
-    --eje: #383835;
-    --borde: rgba(255, 255, 255, 0.10);
-    --c1: #3987e5;
-    --c2: #d95926;
-    --c3: #199e70;
-    --otra: #74726b;
-    --vacio: #0d0d0d;
-    --contorno-vacio: #3d3d3a;
-    --oceano: #121a24;
-  }
-}
-:root[data-theme="dark"] {
   color-scheme: dark;
-  --plano: #0d0d0d;
-  --superficie: #1a1a19;
-  --superficie-velo: rgba(26, 26, 25, 0.94);
-  --tinta: #ffffff;
-  --tinta-2: #c3c2b7;
-  --tinta-3: #898781;
-  --grilla: #2c2c2a;
-  --eje: #383835;
-  --borde: rgba(255, 255, 255, 0.10);
-  --c1: #3987e5;
-  --c2: #d95926;
-  --c3: #199e70;
-  --otra: #74726b;
-  --vacio: #0d0d0d;
-  --contorno-vacio: #3d3d3a;
-  --oceano: #121a24;
+  --plano: #1b1626;          /* fondo ciruela casi negro */
+  --superficie: #261f33;     /* tarjetas */
+  --superficie-velo: rgba(38, 31, 51, 0.96);
+  --tinta: #f4eefc;
+  --tinta-2: #bfb4d1;
+  --tinta-3: #8c809f;
+  --grilla: #342a45;
+  --eje: #4a3f5e;
+  --borde: rgba(244, 238, 252, 0.10);
+  /* Canciones que son #1 en más países */
+  --c1: #e4564b;             /* coral */
+  --c2: #09a295;             /* turquesa */
+  --c3: #9677ee;             /* lavanda */
+  --otra: #4a4458;           /* país con datos cuya #1 no es de las 3 más compartidas: relleno sólido */
+  --vacio: #1b1626;          /* país sin datos de Spotify: sin relleno, solo contorno */
+  --contorno-vacio: #3d3350;
+  --resalte: #f4eefc;        /* contorno de los países que comparten la canción */
+  --fuente: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fuente-titulos: "Syne", "DM Sans", system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -70,13 +33,17 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--plano);
   color: var(--tinta);
   font-family: var(--fuente);
   font-size: 15px;
   line-height: 1.45;
+  /* Un halo suave arriba, como la luz sobre un tocadiscos */
+  background:
+    radial-gradient(1100px 520px at 50% -120px, #2e2342 0%, rgba(46, 35, 66, 0) 70%),
+    var(--plano);
 }
-a { color: var(--c1); }
+a { color: var(--tinta); text-decoration-color: var(--tinta-3); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--tinta); }
 
 button {
   font: inherit;
@@ -84,12 +51,14 @@ button {
   color: var(--tinta);
   background: var(--superficie);
   border: 1px solid var(--eje);
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 999px;
+  padding: 6px 12px;
   cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
 }
 button:hover { border-color: var(--tinta-3); }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--c1); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, li:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+button.activo { background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
 
 /* ---------- Barra superior ---------- */
 .barra {
@@ -98,83 +67,90 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--c1); outlin
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  padding: 16px 24px 8px;
+  padding: 20px 24px 8px;
 }
-h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
-.titulo p { margin: 2px 0 0; color: var(--tinta-2); }
-.global { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--tinta-2); }
-.global img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+h1 {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.titulo p { margin: 4px 0 0; color: var(--tinta-2); }
+.global { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--tinta-3); }
+.global img { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; background: var(--grilla); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); }
 .global strong { display: block; color: var(--tinta); font-size: 14px; }
 
-/* ---------- Escenario: leyenda | globo | tarjeta, en columnas que nunca se superponen ---------- */
+/* ---------- Escenario: mapa (con leyenda debajo) | tarjeta, sin superposiciones ---------- */
 .escenario {
   position: relative;
   flex: 1;
-  min-height: 480px;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 280px;
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
   align-items: start;
   padding: 8px 24px 16px;
 }
-.globo { position: relative; align-self: stretch; min-height: 440px; }
-.mapa { position: absolute; inset: 0 0 36px; cursor: grab; }
+.col-mapa { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.zona-mapa { position: relative; height: clamp(320px, 58vh, 620px); }
+.mapa { position: absolute; inset: 0; cursor: grab; }
 .mapa:active { cursor: grabbing; }
-.girar {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--tinta-3);
-}
-.girar button { font-size: 12px; padding: 4px 8px; }
+.acercar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; font-size: 12px; color: var(--tinta-3); }
+.acercar button { font-size: 12px; padding: 4px 10px; }
 
 .leyenda, .tarjeta, .activar-caja {
   background: var(--superficie-velo);
   border: 1px solid var(--borde);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
-.leyenda { padding: 12px 14px; font-size: 13px; }
-.leyenda h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.04em; }
-.leyenda ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-.leyenda li { display: grid; grid-template-columns: 12px 40px minmax(0, 1fr); gap: 8px; align-items: center; cursor: pointer; border-radius: 6px; }
+/* Leyenda en franja horizontal bajo el mapa */
+.leyenda { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 12px 16px; font-size: 13px; }
+.leyenda h3 { margin: 0; font-size: 11px; font-weight: 700; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.08em; }
+.leyenda ol { flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 16px; }
+.leyenda li { display: grid; grid-template-columns: 10px 40px minmax(0, 1fr); gap: 8px; align-items: center; cursor: pointer; border-radius: 8px; }
 .leyenda li:hover .l-titulo { text-decoration: underline; }
 .leyenda li > span { min-width: 0; }   /* permite recortar con … los textos largos */
-.leyenda .muestra { width: 12px; height: 12px; border-radius: 3px; }
-.leyenda img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.leyenda .muestra { width: 10px; height: 10px; border-radius: 50%; }
+.leyenda img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background: var(--grilla); }
 .leyenda .l-titulo { display: block; color: var(--tinta); font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leyenda .l-detalle { display: block; color: var(--tinta-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.leyenda .otras { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--grilla); color: var(--tinta-2); font-size: 12px; }
+.leyenda .otras { display: flex; flex-direction: column; gap: 4px; color: var(--tinta-2); font-size: 12px; }
 .leyenda .otras span { display: inline-flex; align-items: center; gap: 6px; }
 .muestra-otra { background: var(--otra); }
-.muestra-vacio { background: var(--vacio); box-shadow: inset 0 0 0 1px var(--tinta-3); }
+.muestra-vacio { background: transparent; box-shadow: inset 0 0 0 1px var(--tinta-3); }
 
-/* ---------- Tarjeta del país bajo el cursor ---------- */
+/* ---------- Tarjeta de la canción bajo el cursor ---------- */
 .tarjeta { padding: 12px; }
-.tarjeta-ayuda { display: none; margin: 0; color: var(--tinta-2); font-size: 14px; }
+.tarjeta-ayuda { display: none; margin: 0; padding: 8px 4px; color: var(--tinta-2); font-size: 14px; }
 .tarjeta.vacia .tarjeta-ayuda { display: block; }
 .tarjeta.vacia .portada, .tarjeta.vacia .tarjeta-texto { display: none; }
-.portada { display: block; width: 100%; height: auto; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--grilla); }
-.tarjeta-texto { padding: 10px 2px 0; }
-.tarjeta-pais { margin: 0; color: var(--tinta-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
-.tarjeta h2 { margin: 2px 0 0; font-size: 18px; line-height: 1.2; }
+.portada {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--grilla);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+.tarjeta-texto { padding: 12px 2px 2px; }
+.tarjeta-pais { margin: 0; color: var(--tinta-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.tarjeta h2 { margin: 4px 0 0; font-family: var(--fuente-titulos); font-size: 20px; font-weight: 700; line-height: 1.2; }
 .tarjeta-artistas { margin: 2px 0 0; color: var(--tinta-2); }
-.tarjeta-racha { margin: 6px 0 0; color: var(--tinta-2); font-size: 13px; }
+.tarjeta-racha { margin: 8px 0 0; color: var(--tinta-2); font-size: 13px; }
 .tarjeta.sin-datos .portada, .tarjeta.sin-datos .progreso, .tarjeta.sin-datos .enlace-spotify, .tarjeta.sin-datos .estado-audio { display: none; }
-.estado-audio { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--tinta-3); }
+.estado-audio { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--tinta-3); }
 .progreso { height: 3px; margin-top: 6px; background: var(--grilla); border-radius: 2px; overflow: hidden; }
 .progreso div { height: 100%; width: 0; background: var(--tinta-2); }
-.enlace-spotify { display: inline-block; margin-top: 8px; font-size: 12px; }
+.enlace-spotify { display: inline-block; margin-top: 10px; font-size: 12px; }
 
 .ecualizador { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
 .ecualizador i { width: 3px; height: 3px; background: var(--tinta-3); border-radius: 1px; }
-.sonando .ecualizador i { background: var(--c1); animation: rebote 0.9s ease-in-out infinite; }
+.sonando .ecualizador i { background: var(--tinta); animation: rebote 0.9s ease-in-out infinite; }
 .sonando .ecualizador i:nth-child(2) { animation-delay: -0.3s; }
 .sonando .ecualizador i:nth-child(3) { animation-delay: -0.6s; }
 @keyframes rebote { 0%, 100% { height: 3px; } 50% { height: 12px; } }
@@ -187,61 +163,61 @@ h1 { margin: 0; font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; }
   z-index: 10;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(12, 9, 18, 0.55);
+  backdrop-filter: blur(2px);
 }
 .activar[hidden] { display: none; }
-.activar-caja { max-width: 360px; padding: 20px; text-align: center; }
-.activar-caja p { margin: 0 0 14px; color: var(--tinta-2); }
-.boton-primario { padding: 10px 16px; font-size: 15px; font-weight: 600; background: var(--tinta); color: var(--superficie); border-color: var(--tinta); }
-.boton-texto { display: block; margin: 8px auto 0; border: 0; background: none; color: var(--tinta-2); text-decoration: underline; }
+.activar-caja { max-width: 380px; padding: 24px; text-align: center; }
+.activar-caja p { margin: 0 0 16px; color: var(--tinta-2); }
+.boton-primario { padding: 10px 18px; font-size: 15px; font-weight: 700; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+.boton-texto { display: block; margin: 10px auto 0; border: 0; background: none; color: var(--tinta-2); text-decoration: underline; }
 
 /* ---------- Controles de tiempo ---------- */
 .controles {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 24px;
+  gap: 14px;
+  padding: 12px 24px;
   border-top: 1px solid var(--grilla);
-  background: var(--superficie);
+  background: rgba(38, 31, 51, 0.6);
 }
-.play { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: var(--tinta); color: var(--superficie); border-color: var(--tinta); }
+.play { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
 .play svg { width: 16px; height: 16px; fill: currentColor; }
 .play .icono-pausa, .play.reproduciendo .icono-play { display: none; }
 .play.reproduciendo .icono-pausa { display: block; }
-#slider { flex: 1; min-width: 120px; accent-color: var(--c1); }
-.fecha { min-width: 170px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.granos { display: inline-flex; border: 1px solid var(--eje); border-radius: 8px; overflow: hidden; }
+#slider { flex: 1; min-width: 120px; accent-color: var(--tinta); }
+.fecha { min-width: 170px; font-family: var(--fuente-titulos); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.granos { display: inline-flex; border: 1px solid var(--eje); border-radius: 999px; overflow: hidden; }
 .granos button { border: 0; border-radius: 0; background: transparent; }
 .granos button + button { border-left: 1px solid var(--eje); }
-.granos button[aria-checked="true"] { background: var(--tinta); color: var(--superficie); }
-.sonido { display: grid; place-items: center; width: 40px; height: 36px; padding: 0; }
+.granos button[aria-checked="true"] { background: var(--tinta); color: var(--plano); }
+.sonido { display: grid; place-items: center; width: 42px; height: 38px; padding: 0; }
 .sonido svg { width: 18px; height: 18px; fill: currentColor; }
 .sonido .ondas, .sonido .cruz { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
 .sonido[aria-pressed="true"] .cruz, .sonido[aria-pressed="false"] .ondas { display: none; }
 
-.creditos { margin: 0; padding: 6px 24px 10px; color: var(--tinta-3); font-size: 11px; background: var(--superficie); }
+.creditos { margin: 0; padding: 6px 24px 12px; color: var(--tinta-3); font-size: 11px; background: rgba(38, 31, 51, 0.6); }
 
-/* ---------- Pantallas medianas y angostas: globo arriba, tarjeta y leyenda debajo ---------- */
+/* ---------- Pantallas medianas y angostas: mapa arriba, tarjeta y leyenda debajo ---------- */
 @media (max-width: 1100px) {
   .escenario { grid-template-columns: 1fr; }
-  .globo { order: 1; min-height: 0; height: 520px; }
-  .tarjeta { order: 2; display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .tarjeta { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 14px; align-items: start; }
   .tarjeta.vacia { display: block; }
   .tarjeta-texto { padding: 0; }
-  .leyenda { order: 3; }
 }
 @media (max-width: 760px) {
-  .barra { padding: 12px 16px 4px; }
-  h1 { font-size: 22px; }
+  .barra { padding: 14px 16px 4px; }
+  h1 { font-size: 24px; }
   .escenario { padding: 8px 16px 12px; }
-  .globo { height: 380px; }
+  .zona-mapa { height: 260px; }
+  .leyenda ol { grid-template-columns: minmax(0, 1fr); }
   .tarjeta { grid-template-columns: 96px minmax(0, 1fr); }
   .controles { flex-wrap: wrap; padding: 10px 16px; }
   /* fila 1: play · fecha · sonido — fila 2: slider — fila 3: granularidad */
   .fecha { min-width: max-content; }
   .sonido { margin-left: auto; }
   .granos { order: 6; }
-  .granos button { padding: 6px 8px; }
+  .granos button { padding: 6px 9px; }
   #slider { order: 5; flex-basis: 100%; }
   .creditos { padding: 6px 16px 12px; }
 }

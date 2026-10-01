@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>¿Qué suena en el mundo?</title>
   <meta name="description" content="Mapa interactivo con la canción más escuchada en Spotify en cada país, día a día desde 2017. Pasa el cursor por un país para escucharla.">
+  <meta name="theme-color" content="#1b1626">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&display=swap">
   <link rel="stylesheet" href="css/estilo.css">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
 </head>
@@ -18,17 +22,21 @@
   </header>
 
   <main class="escenario">
-    <aside class="leyenda" id="leyenda" aria-label="Canciones que son #1 en más países"></aside>
-
-    <div class="globo">
-      <div id="mapa" class="mapa" aria-label="Globo terráqueo con la canción #1 de cada país"></div>
-      <div class="girar" role="group" aria-label="Girar el globo">
-        <span>Arrastra para girar ·</span>
-        <button type="button" data-lon="-75" data-lat="5">América</button>
-        <button type="button" data-lon="15" data-lat="25">Europa y África</button>
-        <button type="button" data-lon="110" data-lat="15">Asia y Oceanía</button>
+    <section class="col-mapa">
+      <div class="zona-mapa">
+        <div id="mapa" class="mapa" aria-label="Mapa mundial con la canción #1 de cada país"></div>
       </div>
-    </div>
+      <div class="acercar" role="group" aria-label="Acercar a una región">
+        <span>Arrastra para mover y usa scroll para acercar ·</span>
+        <button type="button" data-region="mundo" class="activo">Mundo</button>
+        <button type="button" data-region="america">América</button>
+        <button type="button" data-region="europa">Europa</button>
+        <button type="button" data-region="africa">África y M. Oriente</button>
+        <button type="button" data-region="asia">Asia</button>
+        <button type="button" data-region="oceania">Oceanía</button>
+      </div>
+      <aside class="leyenda" id="leyenda" aria-label="Canciones que son #1 en más países"></aside>
+    </section>
 
     <article class="tarjeta vacia" id="tarjeta" aria-live="polite">
       <p class="tarjeta-ayuda" id="tarjeta-ayuda">Pasa el cursor por un país para escuchar su canción #1 y ver su portada.</p>
