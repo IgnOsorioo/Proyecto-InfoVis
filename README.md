@@ -23,10 +23,14 @@ Los navegadores exigen un click antes de reproducir audio, por eso al entrar apa
 ## Ver la visualización
 
 ```bash
-python3 -m http.server 8000   # y abrir http://localhost:8000
+python3 scripts/servir.py     # y abrir http://localhost:8000
 ```
 
+`servir.py` le pide al navegador no guardar archivos en caché. Con `python3 -m http.server`, en cambio, el navegador puede mezclar la página nueva con CSS o JS viejos después de un cambio.
+
 Abrir `index.html` con doble click también funciona. En GitHub Pages se publica desde la rama `main`, carpeta raíz, sin paso de compilación.
+
+**Al cambiar CSS, JS o datos**, sube el número de versión (`?v=…`) en las referencias de `index.html`. GitHub Pages guarda los archivos 10 minutos en caché, y así cada visitante descarga los archivos nuevos y no una mezcla con los antiguos.
 
 ## Regenerar los datos
 
