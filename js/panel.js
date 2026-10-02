@@ -87,6 +87,7 @@ const Panel = (() => {
     if ($('p-portada').dataset.idx === String(c.idx)) return;
     $('p-portada').dataset.idx = c.idx;
     $('p-portada').src = c.portada;
+    $('p-fondo').src = c.portada;                       // misma portada, desenfocada, llena los lados si falta alto
     $('p-portada').alt = `Portada de ${c.titulo}`;
     $('p-titulo').textContent = c.titulo;
     $('p-titulo').title = c.titulo;
@@ -138,8 +139,8 @@ const Panel = (() => {
       { type: 'scatter', mode: 'markers', x: [x.at(-1)], y: [y.at(-1)], hoverinfo: 'skip',
         marker: { color: coral, size: 9, line: { color: token('panel'), width: 2 } } },
     ], {
-      height: 130,
-      margin: { l: 36, r: 10, t: 6, b: 22 },
+      height: 96,
+      margin: { l: 34, r: 8, t: 4, b: 20 },
       paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
       showlegend: false,
       font: { family: token('fuente'), size: 10, color: token('tinta-3') },

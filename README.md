@@ -9,12 +9,12 @@ Mapa mundial interactivo y sonoro con la canción más escuchada en Spotify en c
   - en gris sólido, los países con datos cuyo #1 es otra canción;
   - vacíos, solo con contorno, los países y territorios sin chart de Spotify.
 - **Pasar el cursor por un país** (o tocarlo, en pantallas táctiles): su #1 pasa a ser la canción seleccionada y suena el preview de 30 s de Deezer. Si el país siguiente tiene la misma canción, la música sigue sin cortarse. Si el país no tiene datos, el panel muestra solo un mensaje centrado.
-- **Panel lateral** (alto completo, a la derecha), con la canción seleccionada:
-  - portada, título, artistas y dónde está en el ranking (por ejemplo, "#1 en Chile · lleva 9 días seguidos");
+- **Panel lateral** (alto completo, a la derecha, sin scroll: portada, estadísticas y top 5 caben en la misma pantalla), con la canción seleccionada:
+  - portada de ancho completo (si falta alto, se achica cuadrada sobre la misma imagen desenfocada, sin recortarla ni deformarla), título, artistas y dónde está en el ranking (por ejemplo, "#1 en Chile · lleva 9 días seguidos");
   - estadísticas a la fecha: estreno, en cuántos países es #1 (los países en coral del mapa) y reproducciones acumuladas en los charts;
   - **gráfico de popularidad**: reproducciones semanales sumando los charts de los 70 países, desde que la canción entra a los charts hasta la fecha elegida. Al reproducir la línea de tiempo crece en tiempo real y muestra la tendencia;
   - **top 5** del mundo, de un continente o de un país, según lo que se haya seleccionado: el país bajo el cursor o el botón de región. Con un click en una canción del top se selecciona y suena.
-- **Reproductor inferior** (formato tipo Spotify): play/pausa al centro, botones para saltar un año atrás o adelante y, debajo, la línea de tiempo. Se puede elegir cualquier día, semana, mes o año entre enero de 2017 y hoy.
+- **Reproductor inferior** (formato tipo Spotify): play/pausa al centro, botones para saltar un año atrás o adelante y, debajo, la línea de tiempo; a la izquierda la granularidad y a la derecha el sonido. Se puede elegir cualquier día, semana, mes o año entre enero de 2017 y hoy.
 
 Los navegadores exigen un click antes de reproducir audio, por eso al entrar aparece el botón "Activar sonido".
 

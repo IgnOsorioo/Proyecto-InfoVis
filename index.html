@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-10-02h">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-10-02k">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
 </head>
@@ -49,6 +49,15 @@
     </main>
 
     <footer class="reproductor" aria-label="Reproductor y línea de tiempo">
+      <div class="rp-izquierda">
+        <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
+          <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
+          <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
+          <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
+          <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
+        </div>
+      </div>
+
       <div class="rp-centro">
         <div class="rp-botones">
           <button type="button" id="anio-anterior" class="rp-saltar" aria-label="Año anterior">
@@ -72,12 +81,6 @@
       </div>
 
       <div class="rp-derecha">
-        <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
-          <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
-          <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
-          <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
-          <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
-        </div>
         <button type="button" id="sonido" class="sonido" aria-pressed="false" aria-label="Activar sonido" title="Activar sonido">
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M2 6h3l4-3.5v11L5 10H2z"/>
@@ -99,54 +102,61 @@
     <div class="p-mensaje" id="p-mensaje"><strong id="p-mensaje-titulo"></strong><span id="p-mensaje-texto"></span></div>
 
     <div class="p-contenido">
-    <section class="p-cancion">
-      <img class="p-portada" id="p-portada" alt="" width="300" height="300">
-      <p class="p-contexto" id="p-contexto"></p>
-      <div class="p-nombre">
-        <h2 id="p-titulo"></h2>
-        <p class="p-artistas" id="p-artistas"></p>
+      <!-- Portada de ancho completo; si falta alto, se achica cuadrada y centrada sobre la misma imagen desenfocada -->
+      <div class="p-hero">
+        <img class="p-fondo" id="p-fondo" alt="" aria-hidden="true">
+        <img class="p-portada" id="p-portada" alt="" width="300" height="300">
       </div>
-      <div class="p-audio" id="p-audio">
-        <span class="ecualizador" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span id="p-audio-texto"></span>
-        <a id="p-spotify" class="enlace-spotify" target="_blank" rel="noopener">Abrir en Spotify</a>
-      </div>
-      <div class="progreso" aria-hidden="true"><div id="p-progreso"></div></div>
-    </section>
 
-    <dl class="p-stats">
-      <div><dt>Estreno</dt><dd id="p-estreno"></dd></div>
-      <div><dt><i class="muestra muestra-sel"></i>Es #1 en</dt><dd id="p-numero1"></dd></div>
-      <div title="Reproducciones acumuladas en los charts de los 70 países hasta la fecha"><dt>Reproducciones</dt><dd id="p-reproducciones"></dd></div>
-    </dl>
+      <div class="p-cuerpo">
+        <section class="p-info">
+          <p class="p-contexto" id="p-contexto"></p>
+          <div class="p-nombre">
+            <h2 id="p-titulo"></h2>
+            <p class="p-artistas" id="p-artistas"></p>
+          </div>
+          <div class="p-audio" id="p-audio">
+            <span class="ecualizador" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span id="p-audio-texto"></span>
+            <a id="p-spotify" class="enlace-spotify" target="_blank" rel="noopener">Abrir en Spotify</a>
+          </div>
+          <div class="progreso" aria-hidden="true"><div id="p-progreso"></div></div>
+        </section>
 
-    <figure class="p-popularidad">
-      <figcaption>Popularidad · reproducciones semanales en los charts</figcaption>
-      <div class="p-grafico-caja">
-        <div id="p-grafico"></div>
-        <p class="p-grafico-aviso" id="p-grafico-aviso" hidden></p>
-      </div>
-    </figure>
+        <dl class="p-stats">
+          <div><dt>Estreno</dt><dd id="p-estreno"></dd></div>
+          <div><dt><i class="muestra muestra-sel"></i>Es #1 en</dt><dd id="p-numero1"></dd></div>
+          <div title="Reproducciones acumuladas en los charts de los 70 países hasta la fecha"><dt>Reproducciones</dt><dd id="p-reproducciones"></dd></div>
+        </dl>
 
-    <section class="p-top" aria-labelledby="p-top-titulo">
-      <div class="p-top-cabecera">
-        <h3 id="p-top-titulo">Top 5</h3>
-        <span id="p-top-periodo"></span>
+        <figure class="p-popularidad">
+          <figcaption>Popularidad · reproducciones semanales en los charts</figcaption>
+          <div class="p-grafico-caja">
+            <div id="p-grafico"></div>
+            <p class="p-grafico-aviso" id="p-grafico-aviso" hidden></p>
+          </div>
+        </figure>
+
+        <section class="p-top" aria-labelledby="p-top-titulo">
+          <div class="p-top-cabecera">
+            <h3 id="p-top-titulo">Top 5</h3>
+            <span id="p-top-periodo"></span>
+          </div>
+          <ol id="p-top"></ol>
+        </section>
       </div>
-      <ol id="p-top"></ol>
-    </section>
     </div>
   </aside>
 
-  <script src="datos/mundo.js?v=2026-10-02h"></script>
-  <script src="datos/paises.js?v=2026-10-02h"></script>
-  <script src="datos/canciones.js?v=2026-10-02h"></script>
-  <script src="datos/numero1.js?v=2026-10-02h"></script>
-  <script src="datos/deezer.js?v=2026-10-02h" onerror="window.DEEZER = []"></script>
-  <script src="js/estado.js?v=2026-10-02h"></script>
-  <script src="js/reproductor.js?v=2026-10-02h"></script>
-  <script src="js/mapa.js?v=2026-10-02h"></script>
-  <script src="js/panel.js?v=2026-10-02h"></script>
-  <script src="js/main.js?v=2026-10-02h"></script>
+  <script src="datos/mundo.js?v=2026-10-02k"></script>
+  <script src="datos/paises.js?v=2026-10-02k"></script>
+  <script src="datos/canciones.js?v=2026-10-02k"></script>
+  <script src="datos/numero1.js?v=2026-10-02k"></script>
+  <script src="datos/deezer.js?v=2026-10-02k" onerror="window.DEEZER = []"></script>
+  <script src="js/estado.js?v=2026-10-02k"></script>
+  <script src="js/reproductor.js?v=2026-10-02k"></script>
+  <script src="js/mapa.js?v=2026-10-02k"></script>
+  <script src="js/panel.js?v=2026-10-02k"></script>
+  <script src="js/main.js?v=2026-10-02k"></script>
 </body>
 </html>
