@@ -5,7 +5,7 @@ La búsqueda avanzada artist:"..." de Deezer devuelve 0 resultados, así que se 
 "artista título" y se valida que el artista coincida. Los resultados se guardan en caché, así que
 volver a correr el script solo consulta canciones nuevas.
 
-Uso: python scripts/03_deezer.py   (después de 02_numero1_por_pais.py)
+Uso: python scripts/03_deezer.py   (después de 02_construir_datos.py)
 """
 import json
 import re
@@ -74,7 +74,7 @@ print(f"{len(canciones)} canciones, {len(pendientes)} por buscar en Deezer", flu
 
 
 def procesar(c):
-    track_id, titulo, artistas, _ = c
+    track_id, titulo, artistas = c[0], c[1], c[2]
     try:
         return track_id, buscar(titulo, artistas.split(", ")[0])
     except requests.RequestException as e:
