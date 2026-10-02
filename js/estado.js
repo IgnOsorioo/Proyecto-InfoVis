@@ -96,8 +96,10 @@ function textoPeriodoCorto(grano, p) {
 }
 
 const _fmtCompacto = new Intl.NumberFormat('es-CL', { notation: 'compact', maximumFractionDigits: 1 });
+const _fmtMillones = new Intl.NumberFormat('es-CL', { maximumFractionDigits: 0 });
+/** "202 M", "45,3 mil"; sobre mil millones en millones con separador de miles ("2.050 M"), no "2049,6 M". */
 function textoCantidad(n) {
-  return _fmtCompacto.format(n);
+  return n >= 1e9 ? `${_fmtMillones.format(n / 1e6)} M` : _fmtCompacto.format(n);
 }
 
 // ---------- #1 de un país en un período ----------

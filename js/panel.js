@@ -76,6 +76,7 @@ const Panel = (() => {
     pedido++;                                           // cancela una actualización pendiente
     panel.classList.remove('cargando');
     panel.classList.add('modo-mensaje');
+    panel.scrollTop = 0;
     $('p-mensaje-titulo').textContent = titulo;
     $('p-mensaje-texto').textContent = texto;
   }
@@ -92,7 +93,7 @@ const Panel = (() => {
     $('p-artistas').textContent = c.artistas;
     $('p-artistas').title = c.artistas;
     $('p-spotify').href = `https://open.spotify.com/track/${c.id}`;
-    $('p-estreno').textContent = c.estreno ? textoFecha(new Date(c.estreno + 'T00:00:00Z')) : '—';
+    $('p-estreno').textContent = c.estreno ? c.estreno.split('-').reverse().join('/') : '—';   // DD/MM/AAAA
   }
 
   /** Dónde está la canción hoy: "#1 en Chile · lleva 9 días seguidos" o su puesto en el top 5 mostrado. */

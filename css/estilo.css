@@ -185,7 +185,7 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
   border-left: 1px solid var(--grilla);
 }
 .p-contenido { display: flex; flex-direction: column; gap: 12px; }
-.panel.modo-mensaje .p-contenido { visibility: hidden; }
+.panel.modo-mensaje .p-contenido { display: none; }   /* sin scroll: el mensaje queda centrado en pantalla */
 
 /* País sin datos: solo el mensaje, centrado */
 .p-mensaje { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 32px; text-align: center; }
@@ -193,22 +193,24 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
 .p-mensaje strong { font-size: 24px; font-weight: 900; line-height: 1.1; }
 .p-mensaje span { max-width: 280px; color: var(--tinta-2); }
 
-/* Pantalla de carga: aparece solo si los datos tardan */
-.p-cargando { position: absolute; inset: 0; z-index: 2; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 12px; background: var(--panel); color: var(--tinta-2); font-size: 13px; }
+/* Pantalla de carga: aparece solo si los datos tardan. Fija sobre el panel, cubre lo visible aunque se haya hecho scroll. */
+.p-cargando { position: fixed; top: 0; right: 0; bottom: 0; width: 380px; z-index: 2; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 12px; background: var(--panel); color: var(--tinta-2); font-size: 13px; }
 .panel.cargando .p-cargando { display: flex; }
 .giro { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--eje); border-top-color: var(--tinta); animation: girar 0.8s linear infinite; }
 @keyframes girar { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .giro { animation-duration: 2.4s; } }
 
 .p-cancion { display: flex; flex-direction: column; }
+/* Portada de borde a borde del panel (anula el padding lateral y superior), cuadrada y sin deformar */
 .p-portada {
-  width: min(100%, 22vh);
+  display: block;
+  width: calc(100% + 36px);
+  max-width: none;
   height: auto;
   aspect-ratio: 1;
-  border-radius: 8px;
+  margin: -16px -18px 0;
   object-fit: cover;
   background: var(--grilla);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
 }
 .p-contexto { margin: 12px 0 0; height: 16px; color: var(--tinta-3); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Título (máx. 2 líneas) + artistas en un bloque de alto fijo: el panel no salta y los artistas quedan pegados al título */
@@ -238,9 +240,10 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
 @keyframes rebote { 0%, 100% { height: 3px; } 50% { height: 12px; } }
 @media (prefers-reduced-motion: reduce) { .sonando .ecualizador i { animation: none; height: 8px; } }
 
-.p-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+/* Cada tarjeta toma el ancho de su contenido y el espacio que sobra se reparte: la fecha y "Reproducciones" caben completas */
+.p-stats { display: grid; grid-template-columns: repeat(3, minmax(0, auto)); gap: 8px; margin: 0; }
 .p-stats div { padding: 8px 10px; background: var(--superficie); border-radius: 8px; }
-.p-stats dt { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.p-stats dt { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; }
 .p-stats dd { margin: 2px 0 0; font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .p-popularidad { margin: 0; }
@@ -278,7 +281,8 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
   .principal { height: auto; }
   .zona-mapa { flex: none; height: 55vh; }
   .panel { height: auto; min-height: 640px; overflow: visible; border-left: 0; border-top: 1px solid var(--grilla); }
-  .p-portada { width: min(60%, 260px); }
+  .p-cargando { position: absolute; inset: 0; width: auto; }
+  .p-portada { width: min(100% + 36px, 420px); margin: -16px auto 0; }
 }
 @media (max-width: 760px) {
   .barra { padding: 14px 16px 4px; }
@@ -292,4 +296,5 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
   .rp-derecha { justify-content: center; }
   .granos button { padding: 6px 9px; }
   .creditos { padding: 2px 16px 10px; white-space: normal; }
+  .p-portada { width: calc(100% + 36px); margin: -16px -18px 0; }
 }
