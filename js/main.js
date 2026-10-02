@@ -20,8 +20,8 @@
     actualizarSaltos();
     // Si el cursor está sobre un país, su #1 puede cambiar con la fecha; si no, la canción elegida se mantiene.
     if (Estado.paisActivo) elegirDesdePais(Estado.paisActivo);
+    else if (!Estado.mensaje) Panel.mostrar();
     Mapa.dibujar();
-    Panel.tiempo();
   }
 
   function cambiarGrano(grano) {
@@ -88,10 +88,7 @@
   /** Cambia la canción seleccionada (la que muestra el panel, se pinta en el mapa y suena). */
   function seleccionar(idx, { origen = null, sonar = true } = {}) {
     Estado.origen = origen;
-    if (idx !== Estado.cancion) {
-      Estado.cancion = idx;
-      Panel.cancionCambiada();
-    }
+    Estado.cancion = idx;
     if (sonar) tocarConEspera(cancion(idx));
   }
 
@@ -106,17 +103,20 @@
     Panel.audio('pausa');
   }
 
-  /** El #1 del país pasa a ser la canción seleccionada; el top 5 del panel pasa a ese país. */
+  /** El #1 del país pasa a ser la canción seleccionada y el top 5 del panel pasa a ese país.
+      Si el país todavía no tenía chart en esta fecha, el panel muestra solo un mensaje. */
   function elegirDesdePais(cc) {
     Estado.ambito = cc;
     const r = numero1(cc);
     if (!r) {
-      Panel.aviso(`${nombrePais(cc)}: Spotify publica su chart desde el ${textoFecha(new Date(window.PAISES[cc].inicio + 'T00:00:00Z'))}.`);
+      Estado.mensaje = true;
+      Panel.mensaje(nombrePais(cc), `Sin datos en esta fecha: Spotify publica el chart de este país desde el ${textoFecha(new Date(window.PAISES[cc].inicio + 'T00:00:00Z'))}.`);
       detenerAudio();
       return;
     }
-    Panel.aviso(null);
+    Estado.mensaje = false;
     seleccionar(r.idx, { origen: cc });
+    Panel.mostrar();
   }
 
   function pasarPorPais(cc) {
@@ -126,7 +126,6 @@
     Mapa.marcar(cc);
     elegirDesdePais(cc);
     Mapa.dibujar();
-    Panel.tiempo();
   }
 
   const NOTAS_SIN_CHART = {
@@ -138,29 +137,34 @@
   function pasarSinChart(territorio) {
     clearTimeout(timerSalida);
     Estado.paisActivo = null;
+    Estado.mensaje = true;
     Mapa.marcar(null);
     Mapa.dibujar();
-    Panel.aviso(`${territorio.nombre}: ${territorio.nota ?? NOTAS_SIN_CHART[territorio.iso3] ??
-      'Spotify no publica un chart de canciones para este país (en África, solo para Sudáfrica, Nigeria, Egipto y Marruecos).'}`);
+    Panel.mensaje(territorio.nombre, territorio.nota ?? NOTAS_SIN_CHART[territorio.iso3] ??
+      'Sin datos: Spotify no publica un chart de canciones para este país (en África, solo para Sudáfrica, Nigeria, Egipto y Marruecos).');
     detenerAudio();
   }
 
-  /** Al salir del mapa se detiene el audio; la canción seleccionada y el panel se mantienen. */
+  /** Al salir del mapa se detiene el audio; el panel vuelve a (o se queda en) la última canción seleccionada. */
   function salir() {
     clearTimeout(timerSalida);
     timerSalida = setTimeout(() => {
       Estado.paisActivo = null;
+      if (Estado.mensaje) {
+        Estado.mensaje = false;
+        Panel.mostrar();
+      }
       Mapa.marcar(null);
       Mapa.dibujar();
-      Panel.aviso(null);
       detenerAudio();
     }, ESPERA_SALIDA_MS);
   }
 
   function elegirDelTop(idx) {
+    Estado.mensaje = false;
     seleccionar(idx, { origen: null });
     Mapa.dibujar();
-    Panel.tiempo();
+    Panel.mostrar();
   }
 
   function marcarRegion(boton) {
@@ -209,8 +213,9 @@
   document.querySelectorAll('.acercar button').forEach(b => b.addEventListener('click', () => {
     marcarRegion(b);
     Estado.ambito = b.dataset.region === 'mundo' ? 'global' : b.dataset.region;   // el top 5 pasa a la región
+    Estado.mensaje = false;
     Mapa.enfocar(b.dataset.region);
-    Panel.tiempo();
+    Panel.mostrar();
   }));
 
   document.addEventListener('keydown', e => {
@@ -229,6 +234,7 @@
   Estado.periodo = window.PERIODOS[Estado.grano].n - 1;                               // parte en el día más reciente
   seleccionar(numero1('global').idx, { sonar: false });                               // y con el #1 del mundo
   irAPeriodo(Estado.periodo);
+  Mapa.iniciar();
   actualizarBotonSonido();
   Panel.audio(null);
   animarProgreso();

@@ -7,6 +7,7 @@ const Estado = {
   cancion: null,        // índice de la canción seleccionada (la que suena y muestra el panel)
   origen: null,         // país desde el que se eligió la canción (su #1), o null si vino del top 5
   ambito: 'global',     // top 5 del panel: 'global', un continente o un país
+  mensaje: false,       // el cursor está sobre un país sin datos: el panel muestra solo un mensaje
   reproduciendo: false, // animación del tiempo
 };
 

@@ -13,16 +13,19 @@ const Mapa = (() => {
   const SIN_CHART = Object.fromEntries(window.MUNDO.features
     .filter(f => !ISO3_A_CC[f.properties.iso3])
     .map(f => [f.properties.iso3, f.properties]));
-  // Vistas de los botones de región: centro del mapa y zoom.
+  // Recuadro (longitud, latitud) que debe verse completo con cada botón de región. Plotly ajusta el mapa
+  // para que el recuadro entero quepa, aunque eso muestre también partes de otros continentes.
   const REGIONES = {
-    mundo:   { lon: 10,  lat: 12,  escala: 1 },
-    america: { lon: -78, lat: 8,   escala: 2.1 },
-    europa:  { lon: 14,  lat: 51,  escala: 4.4 },
-    africa:  { lon: 28,  lat: 10,  escala: 2.3 },
-    asia:    { lon: 102, lat: 24,  escala: 2.3 },
-    oceania: { lon: 150, lat: -28, escala: 3.6 },
+    mundo:   { lon: [-180, 180], lat: [-57, 84] },
+    america: { lon: [-170, -30], lat: [-57, 84] },   // de Alaska y el Ártico canadiense a Tierra del Fuego
+    europa:  { lon: [-32, 45],   lat: [27, 81] },    // incluye Canarias, Azores, Islandia y Svalbard
+    africa:  { lon: [-20, 62],   lat: [-36, 43] },   // África, Turquía y la península arábiga
+    asia:    { lon: [44, 150],   lat: [-12, 56] },   // de Kazajistán y Pakistán a Japón e Indonesia
+    oceania: { lon: [110, 180],  lat: [-48, -9] },
   };
-  let vista = { ...REGIONES.mundo };   // centro y zoom actuales (se actualizan al arrastrar o hacer scroll)
+  const MARGEN_PX = 8;
+  let region = 'mundo';
+  let escala = 1;                      // zoom que asegura que el recuadro de la región quepa entero
   let enfoques = 0;                    // cambia uirevision para que un botón de región se imponga al zoom manual
   let marcado = null;                  // país bajo el cursor (contorno claro)
   let eventos = { alPasar: () => {}, alPasarSinChart: () => {}, alSalir: () => {} };
@@ -46,7 +49,8 @@ const Mapa = (() => {
       { ...base, locations: sinDatos, z: sinDatos.map(() => 0), colorscale: plano(token('vacio')),
         marker: { line: { color: token('contorno-vacio'), width: 0.6 } } },
       { ...base, locations: conDatos.map(iso3), zmin: 0, zmax: 1,
-        z: conDatos.map(cc => (numero1(cc).idx === Estado.cancion ? 1 : 0)),
+        // Sobre un país sin datos el panel no muestra canción, así que tampoco se pinta coral.
+        z: conDatos.map(cc => (!Estado.mensaje && numero1(cc).idx === Estado.cancion ? 1 : 0)),
         colorscale: [[0, token('otra')], [0.5, token('otra')], [0.5, token('c1')], [1, token('c1')]],
         marker: { line: { color: token('plano'), width: 0.6 } } },
       { ...base, locations: marcados, z: marcados.map(() => 0), colorscale: plano('rgba(0,0,0,0)'),
@@ -59,12 +63,12 @@ const Mapa = (() => {
       paper_bgcolor: 'rgba(0,0,0,0)',
       margin: { l: 0, r: 0, t: 0, b: 0 },
       dragmode: 'pan',
-      uirevision: `mapa-${enfoques}`,
+      uirevision: `mapa-${enfoques}`,     // conserva el arrastre y el zoom del usuario al cambiar de fecha
       showlegend: false,
       geo: {
-        projection: { type: 'natural earth', scale: vista.escala },
-        center: { lon: vista.lon, lat: vista.lat },
-        lataxis: { range: [-57, 84] },            // sin la Antártida
+        projection: { type: 'natural earth', scale: escala },
+        lonaxis: { range: REGIONES[region].lon },
+        lataxis: { range: REGIONES[region].lat },  // el mundo, sin la Antártida
         showframe: false, showocean: false, showland: false, showcountries: false, showcoastlines: false, showlakes: false,
         bgcolor: 'rgba(0,0,0,0)',
       },
@@ -73,8 +77,9 @@ const Mapa = (() => {
 
   /** Redibuja (al cambiar de fecha, de canción seleccionada o de país bajo el cursor). */
   function dibujar() {
-    Plotly.react(EL, trazas(), layout(), { ...CONFIG_PLOTLY, scrollZoom: true });
+    const listo = Plotly.react(EL, trazas(), layout(), { ...CONFIG_PLOTLY, scrollZoom: true });
     if (!eventosConectados) conectarEventos();
+    return listo;                      // Plotly.react es asíncrono: la promesa se cumple al terminar de dibujar
   }
 
   /** País bajo el cursor (contorno claro); se ve en el próximo dibujar(). */
@@ -94,22 +99,51 @@ const Mapa = (() => {
     el.on('plotly_hover', pasar);
     el.on('plotly_unhover', () => eventos.alSalir());
     el.on('plotly_click', pasar);          // en pantallas táctiles no hay hover: un toque hace lo mismo
-    // Guarda el centro y el zoom que deja el usuario al arrastrar o hacer scroll.
-    el.on('plotly_relayout', () => {
-      const geo = el._fullLayout.geo;
-      vista = { lon: geo.center.lon, lat: geo.center.lat, escala: geo.projection.scale };
-    });
   }
 
   /** Acerca el mapa a una región ('mundo', 'america', 'europa', 'africa', 'asia', 'oceania'). */
-  function enfocar(region) {
-    vista = { ...REGIONES[region] };
+  function enfocar(nueva) {
+    region = nueva;
+    escala = 1;
     enfoques++;
-    dibujar();
+    dibujar().then(asegurarRegionCompleta);
   }
+
+  /** Plotly encuadra el recuadro de la región solo de forma aproximada (en esta proyección los bordes son
+      curvos), así que algunas esquinas pueden quedar fuera. Se mide dónde cae el borde del recuadro en
+      pantalla y, si se sale, se reduce el zoom lo justo para que quepa completo. */
+  function asegurarRegionCompleta() {
+    const gd = document.getElementById(EL);
+    const sub = gd._fullLayout?.geo?._subplot;
+    if (typeof sub?.projection !== 'function') return;
+    const { lon: [lon0, lon1], lat: [lat0, lat1] } = REGIONES[region];
+    const { w, h } = gd._fullLayout._size;
+    const cx = w / 2, cy = h / 2;
+    let dx = 0, dy = 0;
+    for (let i = 0; i <= 40; i++) {
+      const lon = lon0 + (lon1 - lon0) * i / 40, lat = lat0 + (lat1 - lat0) * i / 40;
+      for (const [x, y] of [[lon, lat0], [lon, lat1], [lon0, lat], [lon1, lat]].map(pt => sub.projection(pt))) {
+        dx = Math.max(dx, Math.abs(x - cx));
+        dy = Math.max(dy, Math.abs(y - cy));
+      }
+    }
+    const factor = Math.min((cx - MARGEN_PX) / dx, (cy - MARGEN_PX) / dy);
+    if (factor < 0.999) {
+      escala *= factor;
+      dibujar();
+    }
+  }
+
+  // Al cambiar el tamaño de la ventana, se vuelve a encuadrar la región elegida.
+  let timerResize = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(timerResize);
+    timerResize = setTimeout(() => { if (region !== 'mundo' || escala !== 1) enfocar(region); }, 200);
+  });
 
   return {
     dibujar, marcar, enfocar,
+    iniciar() { dibujar().then(asegurarRegionCompleta); },
     on(nuevos) { eventos = { ...eventos, ...nuevos }; },
   };
 })();

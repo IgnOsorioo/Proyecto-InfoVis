@@ -4,11 +4,11 @@ Mapa mundial interactivo y sonoro con la canción más escuchada en Spotify en c
 
 ## Qué muestra
 
-- **Mapa 2D** (proyección Natural Earth): se mueve arrastrando y se acerca con scroll o con los botones por región. Gira en torno a la canción seleccionada:
+- **Mapa 2D** (proyección Natural Earth): se mueve arrastrando y se acerca con scroll. Los botones de región encuadran el continente completo (aunque se vean partes de otros). Gira en torno a la canción seleccionada:
   - en coral, los países donde esa canción es #1 en la fecha elegida;
   - en gris sólido, los países con datos cuyo #1 es otra canción;
   - vacíos, solo con contorno, los países y territorios sin chart de Spotify.
-- **Pasar el cursor por un país** (o tocarlo, en pantallas táctiles): su #1 pasa a ser la canción seleccionada y suena el preview de 30 s de Deezer. Si el país siguiente tiene la misma canción, la música sigue sin cortarse.
+- **Pasar el cursor por un país** (o tocarlo, en pantallas táctiles): su #1 pasa a ser la canción seleccionada y suena el preview de 30 s de Deezer. Si el país siguiente tiene la misma canción, la música sigue sin cortarse. Si el país no tiene datos, el panel muestra solo un mensaje centrado.
 - **Panel lateral** (alto completo, a la derecha), con la canción seleccionada:
   - portada, título, artistas y dónde está en el ranking (por ejemplo, "#1 en Chile · lleva 9 días seguidos");
   - estadísticas a la fecha: estreno, en cuántos países es #1 (los países en coral del mapa) y reproducciones acumuladas en los charts;
@@ -18,7 +18,7 @@ Mapa mundial interactivo y sonoro con la canción más escuchada en Spotify en c
 
 Los navegadores exigen un click antes de reproducir audio, por eso al entrar aparece el botón "Activar sonido".
 
-**Paleta "Vinilo nocturno"**: fondo ciruela oscuro y coral `#e4564b` para la canción seleccionada (validado para contraste y daltonismo sobre el fondo).
+**Estilo**: fondo negro con grises neutros, coral `#e4564b` para la canción seleccionada y tipografía Figtree en pesos 600 a 900. El panel se arma de una vez con todos sus datos (si tardan, muestra una pantalla de carga) y sus bloques tienen alto fijo, así que no salta al cambiar de país.
 
 ## Ver la visualización
 
@@ -71,4 +71,4 @@ La carpeta de datos crudos se puede cambiar con la variable `INFOVIS_RAW_DIR`.
 - Mapa: [Natural Earth](https://www.naturalearthdata.com/) 1:50m, dominio público, desde su [repositorio oficial](https://github.com/nvkelso/natural-earth-vector).
 - Nombres de países: [mledoze/countries](https://github.com/mledoze/countries), ODbL.
 - Audio: [API de Deezer](https://developers.deezer.com/api), consultada en el navegador por JSONP. Portadas: Spotify.
-- Visualización: [Plotly.js](https://plotly.com/javascript/), con proyección Natural Earth. Tipografías: [DM Sans](https://fonts.google.com/specimen/DM+Sans) y [Syne](https://fonts.google.com/specimen/Syne) (Google Fonts, licencia OFL).
+- Visualización: [Plotly.js](https://plotly.com/javascript/), con proyección Natural Earth. Tipografía: [Figtree](https://fonts.google.com/specimen/Figtree) (Google Fonts, licencia OFL).

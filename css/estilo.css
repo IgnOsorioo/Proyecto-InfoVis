@@ -1,27 +1,22 @@
-/* Tema "Vinilo nocturno": tema fijo (no cambia con el modo claro/oscuro del sistema).
-   El mapa y el gráfico (Plotly) también leen estos tokens vía getComputedStyle.
-   c1 (coral) validado con validate_palette.js sobre #1b1626 junto a turquesa y lavanda:
-   banda de luminosidad, croma, daltonismo y contraste ≥ 3:1. */
+/* Tema oscuro fijo: fondo negro, grises neutros y coral para la canción seleccionada.
+   El mapa y el gráfico (Plotly) también leen estos tokens vía getComputedStyle. */
 :root {
   color-scheme: dark;
-  --plano: #1b1626;          /* fondo ciruela casi negro */
-  --superficie: #261f33;     /* tarjetas */
-  --panel: #201a2b;          /* panel lateral */
-  --tinta: #f4eefc;
-  --tinta-2: #bfb4d1;
-  --tinta-3: #8c809f;
-  --grilla: #342a45;
-  --eje: #4a3f5e;
-  --borde: rgba(244, 238, 252, 0.10);
+  --plano: #000000;          /* fondo */
+  --superficie: #1c1c1c;     /* tarjetas y estadísticas */
+  --panel: #121212;          /* panel lateral */
+  --tinta: #ffffff;
+  --tinta-2: #b3b3b3;
+  --tinta-3: #8a8a8a;
+  --grilla: #282828;
+  --eje: #3e3e3e;
+  --borde: rgba(255, 255, 255, 0.08);
   --c1: #e4564b;             /* coral: países donde la canción seleccionada es #1 */
-  --c2: #09a295;
-  --c3: #9677ee;
-  --otra: #4a4458;           /* país con datos cuyo #1 es otra canción: relleno sólido */
-  --vacio: #1b1626;          /* país sin datos de Spotify: sin relleno, solo contorno */
-  --contorno-vacio: #3d3350;
-  --resalte: #f4eefc;        /* contorno del país bajo el cursor */
-  --fuente: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --fuente-titulos: "Syne", "DM Sans", system-ui, sans-serif;
+  --otra: #4d4d4d;           /* país con datos cuyo #1 es otra canción: relleno sólido */
+  --vacio: #000000;          /* país sin datos de Spotify: sin relleno, solo contorno */
+  --contorno-vacio: #333333;
+  --resalte: #ffffff;        /* contorno del país bajo el cursor */
+  --fuente: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -34,12 +29,11 @@ body {
   height: 100vh;
   overflow: hidden;
   color: var(--tinta);
+  background: var(--plano);
   font-family: var(--fuente);
   font-size: 15px;
-  line-height: 1.45;
-  background:
-    radial-gradient(1100px 520px at 40% -120px, #2e2342 0%, rgba(46, 35, 66, 0) 70%),
-    var(--plano);
+  font-weight: 600;
+  line-height: 1.4;
 }
 a { color: var(--tinta); text-decoration-color: var(--tinta-3); text-underline-offset: 3px; }
 a:hover { text-decoration-color: var(--tinta); }
@@ -47,6 +41,7 @@ a:hover { text-decoration-color: var(--tinta); }
 button {
   font: inherit;
   font-size: 13px;
+  font-weight: 700;
   color: var(--tinta);
   background: var(--superficie);
   border: 1px solid var(--eje);
@@ -68,14 +63,7 @@ button.activo { background: var(--tinta); color: var(--plano); border-color: var
 .principal { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
 
 .barra { padding: 18px 24px 4px; }
-h1 {
-  margin: 0;
-  font-family: var(--fuente-titulos);
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-}
+h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
 .barra p { margin: 4px 0 0; color: var(--tinta-2); }
 
 .escenario { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 24px 10px; }
@@ -95,7 +83,7 @@ h1 {
   z-index: 10;
   display: grid;
   place-items: center;
-  background: rgba(12, 9, 18, 0.55);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(2px);
 }
 .activar[hidden] { display: none; }
@@ -106,10 +94,10 @@ h1 {
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 .activar-caja p { margin: 0 0 16px; color: var(--tinta-2); }
-.boton-primario { padding: 10px 18px; font-size: 15px; font-weight: 700; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+.boton-primario { padding: 10px 18px; font-size: 15px; font-weight: 800; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
 .boton-texto { display: block; margin: 10px auto 0; border: 0; background: none; color: var(--tinta-2); text-decoration: underline; }
 
 /* ---------- Reproductor inferior (formato tipo Spotify) ----------
@@ -121,7 +109,7 @@ h1 {
   gap: 16px;
   padding: 10px 20px 8px;
   border-top: 1px solid var(--grilla);
-  background: #130f1b;
+  background: var(--plano);
 }
 .rp-centro { grid-column: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 640px; justify-self: center; }
 .rp-botones { display: flex; align-items: center; justify-content: center; gap: 18px; }
@@ -142,7 +130,7 @@ h1 {
 
 .rp-linea { display: flex; align-items: center; gap: 10px; width: 100%; }
 .rp-tiempo { flex: none; min-width: 96px; font-size: 12px; color: var(--tinta-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.rp-actual { text-align: right; color: var(--tinta-2); font-weight: 600; }
+.rp-actual { text-align: right; color: var(--tinta-2); font-weight: 800; }
 .rp-final { text-align: left; }
 
 /* Línea de tiempo: barra fina con el avance relleno (--avance lo actualiza main.js); la perilla aparece al pasar el cursor */
@@ -180,45 +168,69 @@ h1 {
   padding: 2px 20px 8px;
   color: var(--tinta-3);
   font-size: 11px;
-  background: #130f1b;
+  background: var(--plano);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ---------- Panel lateral: canción seleccionada + top 5 (alto completo) ---------- */
+/* ---------- Panel lateral: canción seleccionada + top 5 (alto completo) ----------
+   Cada bloque tiene alto fijo (títulos de 1–2 líneas, top de 5 filas) para que el panel no salte al cambiar de país. */
 .panel {
+  position: relative;
   height: 100vh;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 18px 16px;
+  padding: 16px 18px;
   background: var(--panel);
   border-left: 1px solid var(--grilla);
 }
-.p-aviso { margin: 0; padding: 8px 10px; font-size: 13px; color: var(--tinta-2); background: var(--superficie); border-left: 3px solid var(--tinta-3); border-radius: 6px; }
-.p-aviso[hidden] { display: none; }
+.p-contenido { display: flex; flex-direction: column; gap: 12px; }
+.panel.modo-mensaje .p-contenido { visibility: hidden; }
+
+/* País sin datos: solo el mensaje, centrado */
+.p-mensaje { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 32px; text-align: center; }
+.panel.modo-mensaje .p-mensaje { display: flex; }
+.p-mensaje strong { font-size: 24px; font-weight: 900; line-height: 1.1; }
+.p-mensaje span { max-width: 280px; color: var(--tinta-2); }
+
+/* Pantalla de carga: aparece solo si los datos tardan */
+.p-cargando { position: absolute; inset: 0; z-index: 2; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 12px; background: var(--panel); color: var(--tinta-2); font-size: 13px; }
+.panel.cargando .p-cargando { display: flex; }
+.giro { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--eje); border-top-color: var(--tinta); animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .giro { animation-duration: 2.4s; } }
 
 .p-cancion { display: flex; flex-direction: column; }
 .p-portada {
   width: min(100%, 22vh);
   height: auto;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: 8px;
   object-fit: cover;
   background: var(--grilla);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
 }
-.p-contexto { margin: 12px 0 0; color: var(--tinta-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-.p-cancion h2 { margin: 4px 0 0; font-family: var(--fuente-titulos); font-size: 22px; font-weight: 700; line-height: 1.15; }
-.p-artistas { margin: 2px 0 0; color: var(--tinta-2); }
-.p-audio { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 10px; font-size: 12px; color: var(--tinta-3); }
-.p-audio .enlace-spotify { margin-left: auto; }
+.p-contexto { margin: 12px 0 0; height: 16px; color: var(--tinta-3); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Título (máx. 2 líneas) + artistas en un bloque de alto fijo: el panel no salta y los artistas quedan pegados al título */
+.p-nombre { height: 82px; overflow: hidden; }
+.p-cancion h2 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.p-artistas { margin: 2px 0 0; color: var(--tinta-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-audio { display: flex; align-items: center; gap: 8px; height: 18px; margin-top: 10px; font-size: 12px; color: var(--tinta-3); white-space: nowrap; }
+.p-audio #p-audio-texto { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .progreso { height: 3px; margin-top: 6px; background: var(--grilla); border-radius: 2px; overflow: hidden; }
 .progreso div { height: 100%; width: 0; background: var(--tinta-2); }
 
-.ecualizador { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.ecualizador { flex: none; display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
 .ecualizador i { width: 3px; height: 3px; background: var(--tinta-3); border-radius: 1px; }
 .sonando .ecualizador i { background: var(--tinta); animation: rebote 0.9s ease-in-out infinite; }
 .sonando .ecualizador i:nth-child(2) { animation-delay: -0.3s; }
@@ -228,26 +240,26 @@ h1 {
 
 .p-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .p-stats div { padding: 8px 10px; background: var(--superficie); border-radius: 8px; }
-.p-stats dt { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.06em; }
-.p-stats dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-stats dt { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: var(--tinta-3); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.p-stats dd { margin: 2px 0 0; font-size: 16px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .p-popularidad { margin: 0; }
-.p-popularidad figcaption { font-size: 11px; color: var(--tinta-3); }
+.p-popularidad figcaption { font-size: 11px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-grafico-caja { position: relative; height: 130px; margin-top: 4px; }
 .p-grafico-aviso { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-size: 13px; color: var(--tinta-3); }
 .p-grafico-aviso[hidden] { display: none; }
 
 .p-top-cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.p-top h3 { margin: 0; font-family: var(--fuente-titulos); font-size: 16px; font-weight: 700; }
+.p-top h3 { margin: 0; font-size: 17px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-top-cabecera span { font-size: 11px; color: var(--tinta-3); white-space: nowrap; }
-.p-top ol { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.p-top ol { margin: 6px 0 0; padding: 0; list-style: none; display: grid; grid-template-rows: repeat(5, 44px); gap: 4px; }
 .p-top li {
   display: grid;
   grid-template-columns: 18px 36px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  padding: 4px 8px 4px 6px;
-  border-radius: 8px;
+  padding: 0 8px 0 6px;
+  border-radius: 6px;
   border-left: 3px solid transparent;
   cursor: pointer;
 }
@@ -256,16 +268,16 @@ h1 {
 .p-pos { font-size: 13px; color: var(--tinta-3); text-align: right; font-variant-numeric: tabular-nums; }
 .p-top img { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
 .p-top-texto { display: flex; flex-direction: column; min-width: 0; }
-.p-top-texto strong { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-top-texto strong { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-top-texto span { font-size: 12px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.p-top-vacio { display: block !important; color: var(--tinta-3); font-size: 13px; cursor: default !important; }
+.p-top-vacio { display: block !important; grid-row: 1 / span 5; color: var(--tinta-3); font-size: 13px; cursor: default !important; }
 
 /* ---------- Pantallas medianas y angostas: el panel pasa debajo ---------- */
 @media (max-width: 1100px) {
   body { display: block; height: auto; overflow: auto; }
   .principal { height: auto; }
   .zona-mapa { flex: none; height: 55vh; }
-  .panel { height: auto; overflow: visible; border-left: 0; border-top: 1px solid var(--grilla); }
+  .panel { height: auto; min-height: 640px; overflow: visible; border-left: 0; border-top: 1px solid var(--grilla); }
   .p-portada { width: min(60%, 260px); }
 }
 @media (max-width: 760px) {

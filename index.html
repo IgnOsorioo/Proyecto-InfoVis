@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>¿Qué suena en el mundo?</title>
   <meta name="description" content="Mapa interactivo con la canción más escuchada en Spotify en cada país, día a día desde 2017. Pasa el cursor por un país para escucharla.">
-  <meta name="theme-color" content="#1b1626">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%231b1626'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23e4564b' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f4eefc'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23000000'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23e4564b' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f4eefc'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-10-02c">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-10-02f">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
 </head>
@@ -94,14 +94,18 @@
     </p>
   </div>
 
-  <aside class="panel" aria-label="Canción seleccionada" aria-live="polite">
-    <p class="p-aviso" id="p-aviso" hidden></p>
+  <aside class="panel" id="panel" aria-label="Canción seleccionada" aria-live="polite">
+    <div class="p-cargando" aria-hidden="true"><span class="giro"></span>Cargando…</div>
+    <div class="p-mensaje" id="p-mensaje"><strong id="p-mensaje-titulo"></strong><span id="p-mensaje-texto"></span></div>
 
+    <div class="p-contenido">
     <section class="p-cancion">
       <img class="p-portada" id="p-portada" alt="" width="300" height="300">
       <p class="p-contexto" id="p-contexto"></p>
-      <h2 id="p-titulo"></h2>
-      <p class="p-artistas" id="p-artistas"></p>
+      <div class="p-nombre">
+        <h2 id="p-titulo"></h2>
+        <p class="p-artistas" id="p-artistas"></p>
+      </div>
       <div class="p-audio" id="p-audio">
         <span class="ecualizador" aria-hidden="true"><i></i><i></i><i></i></span>
         <span id="p-audio-texto"></span>
@@ -131,17 +135,18 @@
       </div>
       <ol id="p-top"></ol>
     </section>
+    </div>
   </aside>
 
-  <script src="datos/mundo.js?v=2026-10-02c"></script>
-  <script src="datos/paises.js?v=2026-10-02c"></script>
-  <script src="datos/canciones.js?v=2026-10-02c"></script>
-  <script src="datos/numero1.js?v=2026-10-02c"></script>
-  <script src="datos/deezer.js?v=2026-10-02d" onerror="window.DEEZER = []"></script>
-  <script src="js/estado.js?v=2026-10-02c"></script>
-  <script src="js/reproductor.js?v=2026-10-02c"></script>
-  <script src="js/mapa.js?v=2026-10-02c"></script>
-  <script src="js/panel.js?v=2026-10-02c"></script>
-  <script src="js/main.js?v=2026-10-02c"></script>
+  <script src="datos/mundo.js?v=2026-10-02f"></script>
+  <script src="datos/paises.js?v=2026-10-02f"></script>
+  <script src="datos/canciones.js?v=2026-10-02f"></script>
+  <script src="datos/numero1.js?v=2026-10-02f"></script>
+  <script src="datos/deezer.js?v=2026-10-02f" onerror="window.DEEZER = []"></script>
+  <script src="js/estado.js?v=2026-10-02f"></script>
+  <script src="js/reproductor.js?v=2026-10-02f"></script>
+  <script src="js/mapa.js?v=2026-10-02f"></script>
+  <script src="js/panel.js?v=2026-10-02f"></script>
+  <script src="js/main.js?v=2026-10-02f"></script>
 </body>
 </html>
