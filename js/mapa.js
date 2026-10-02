@@ -1,8 +1,9 @@
-/* Mapa mundial en 2D (proyección Natural Earth) con cada país pintado según su canción #1 en el período elegido.
+/* Mapa mundial en 2D (proyección Natural Earth). Gira en torno a la canción seleccionada:
+   - coral: países donde esa canción es #1 en el período elegido;
+   - gris sólido: países con datos cuyo #1 es otra canción;
+   - vacío (solo contorno): países sin datos de Spotify.
    Geometría: Natural Earth 1:50m (datos/mundo.js), con los territorios de ultramar separados de su país.
-   Países con datos van rellenos: las 3 canciones que son #1 en más países llevan color propio y el resto,
-   gris sólido. Países sin datos quedan vacíos (solo contorno), para no confundirlos con "otra canción".
-   Trazas: 0 sin datos · 1 países con datos (z = ranura de color) · 2 contorno de los países que comparten canción. */
+   Trazas: 0 sin datos · 1 países con datos · 2 contorno del país bajo el cursor. */
 
 const Mapa = (() => {
   const EL = 'mapa';
@@ -23,34 +24,9 @@ const Mapa = (() => {
   };
   let vista = { ...REGIONES.mundo };   // centro y zoom actuales (se actualizan al arrastrar o hacer scroll)
   let enfoques = 0;                    // cambia uirevision para que un botón de región se imponga al zoom manual
-  let ranuras = new Map();      // idx de canción → ranura de color 1..3 (estable mientras siga en el top)
-  let top = [];                 // [{idx, n, ranura}]
-  let resaltada = null;         // idx de la canción cuyos países se contornean
-  let eventos = { alPasar: () => {}, alPasarSinChart: () => {}, alSalir: () => {}, alPasarCancion: () => {} };
+  let marcado = null;                  // país bajo el cursor (contorno claro)
+  let eventos = { alPasar: () => {}, alPasarSinChart: () => {}, alSalir: () => {} };
   let eventosConectados = false;
-
-  /** Top 3 de canciones por cantidad de países donde son #1, con colores que siguen a la canción. */
-  function calcularTop() {
-    const conteo = new Map();
-    for (const cc of paisesConDatos()) {
-      const idx = numero1(cc).idx;
-      conteo.set(idx, (conteo.get(idx) || 0) + 1);
-    }
-    const orden = [...conteo]
-      .filter(([, n]) => n >= 2)
-      .sort((a, b) => b[1] - a[1] || ranuras.has(b[0]) - ranuras.has(a[0]))
-      .slice(0, 3);
-    const nuevas = new Map(orden.filter(([idx]) => ranuras.has(idx)).map(([idx]) => [idx, ranuras.get(idx)]));
-    const libres = [1, 2, 3].filter(r => ![...nuevas.values()].includes(r));
-    for (const [idx] of orden) if (!nuevas.has(idx)) nuevas.set(idx, libres.shift());
-    ranuras = nuevas;
-    top = orden.map(([idx, n]) => ({ idx, n, ranura: ranuras.get(idx) }));
-  }
-
-  function escalaDiscreta() {
-    const c = [token('otra'), token('c1'), token('c2'), token('c3')];
-    return c.flatMap((color, i) => [[i / 4, color], [(i + 1) / 4, color]]);
-  }
 
   function trazas() {
     const conDatos = paisesConDatos();
@@ -60,22 +36,21 @@ const Mapa = (() => {
       ...Object.keys(window.PAISES).filter(cc => cc !== 'global' && !conDatos.includes(cc)).map(iso3),
       ...Object.keys(SIN_CHART),
     ];
-    const comparten = resaltada === null ? [] : conDatos.filter(cc => numero1(cc).idx === resaltada);
     const base = {
       type: 'choropleth', geojson: window.MUNDO, featureidkey: 'properties.iso3', locationmode: 'geojson-id',
       showscale: false, hoverinfo: 'none',
     };
+    const plano = color => [[0, color], [1, color]];
+    const marcados = marcado && window.PAISES[marcado] ? [iso3(marcado)] : [];
     return [
-      { ...base, locations: sinDatos, z: sinDatos.map(() => 0),
-        colorscale: [[0, token('vacio')], [1, token('vacio')]],
+      { ...base, locations: sinDatos, z: sinDatos.map(() => 0), colorscale: plano(token('vacio')),
         marker: { line: { color: token('contorno-vacio'), width: 0.6 } } },
-      { ...base, locations: conDatos.map(iso3),
-        z: conDatos.map(cc => ranuras.get(numero1(cc).idx) ?? 0), zmin: -0.5, zmax: 3.5,
-        colorscale: escalaDiscreta(),
+      { ...base, locations: conDatos.map(iso3), zmin: 0, zmax: 1,
+        z: conDatos.map(cc => (numero1(cc).idx === Estado.cancion ? 1 : 0)),
+        colorscale: [[0, token('otra')], [0.5, token('otra')], [0.5, token('c1')], [1, token('c1')]],
         marker: { line: { color: token('plano'), width: 0.6 } } },
-      { ...base, locations: comparten.map(iso3), z: comparten.map(() => 0),
-        colorscale: [[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0)']],
-        marker: { line: { color: token('resalte'), width: 1.4 } }, hoverinfo: 'skip' },
+      { ...base, locations: marcados, z: marcados.map(() => 0), colorscale: plano('rgba(0,0,0,0)'),
+        marker: { line: { color: token('resalte'), width: 1.6 } }, hoverinfo: 'skip' },
     ];
   }
 
@@ -96,23 +71,15 @@ const Mapa = (() => {
     };
   }
 
-  function redibujar() {
+  /** Redibuja (al cambiar de fecha, de canción seleccionada o de país bajo el cursor). */
+  function dibujar() {
     Plotly.react(EL, trazas(), layout(), { ...CONFIG_PLOTLY, scrollZoom: true });
     if (!eventosConectados) conectarEventos();
   }
 
-  /** Recalcula el top y redibuja (al cambiar de fecha, de granularidad o de tema de color). */
-  function dibujar() {
-    calcularTop();
-    redibujar();
-    dibujarLeyenda();
-  }
-
-  /** Contornea todos los países cuya #1 es la canción idx (o ninguno con null). */
-  function resaltar(idx) {
-    if (idx === resaltada) return;
-    resaltada = idx;
-    redibujar();
+  /** País bajo el cursor (contorno claro); se ve en el próximo dibujar(). */
+  function marcar(cc) {
+    marcado = cc;
   }
 
   // Plotly agrega .on() al div recién en el primer dibujo.
@@ -138,50 +105,11 @@ const Mapa = (() => {
   function enfocar(region) {
     vista = { ...REGIONES[region] };
     enfoques++;
-    redibujar();
-  }
-
-  // ---------- Leyenda (HTML, con portadas) ----------
-
-  function el(tag, props = {}, hijos = []) {
-    const nodo = Object.assign(document.createElement(tag), props);
-    nodo.append(...[].concat(hijos));
-    return nodo;
-  }
-
-  function dibujarLeyenda() {
-    const cont = document.getElementById('leyenda');
-    const total = paisesConDatos().length;
-    const items = top.map(({ idx, n, ranura }) => {
-      const c = cancion(idx);
-      const muestra = el('i', { className: 'muestra' });
-      muestra.style.background = `var(--c${ranura})`;
-      const li = el('li', { tabIndex: 0, title: `Escuchar ${c.titulo}` }, [
-        muestra,
-        el('img', { src: c.portada, alt: '', loading: 'lazy' }),
-        el('span', {}, [
-          el('span', { className: 'l-titulo', textContent: c.titulo }),
-          el('span', { className: 'l-detalle', textContent: `#1 en ${n} de ${total} países · ${c.artistas}` }),
-        ]),
-      ]);
-      li.addEventListener('mouseenter', () => eventos.alPasarCancion(idx));
-      li.addEventListener('focus', () => eventos.alPasarCancion(idx));
-      li.addEventListener('click', () => eventos.alPasarCancion(idx));
-      li.addEventListener('mouseleave', () => eventos.alSalir());
-      return li;
-    });
-    cont.replaceChildren(
-      el('h3', { textContent: top.length ? 'Las más compartidas' : 'Cada país tiene su propio #1' }),
-      el('ol', {}, items),
-      el('div', { className: 'otras' }, [
-        el('span', {}, [el('i', { className: 'muestra muestra-otra' }), 'Otra canción']),
-        el('span', {}, [el('i', { className: 'muestra muestra-vacio' }), 'Sin datos (Spotify no publica chart)']),
-      ]),
-    );
+    dibujar();
   }
 
   return {
-    dibujar, resaltar, enfocar,
+    dibujar, marcar, enfocar,
     on(nuevos) { eventos = { ...eventos, ...nuevos }; },
   };
 })();

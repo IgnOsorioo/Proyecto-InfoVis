@@ -4,21 +4,21 @@ Mapa mundial interactivo y sonoro con la canción más escuchada en Spotify en c
 
 ## Qué muestra
 
-- **Mapa 2D** (proyección Natural Earth): se mueve arrastrando y se acerca con scroll o con los botones por región. Cada país está pintado según su canción #1.
-  - Las 3 canciones que son #1 en más países tienen un color propio; el resto va en gris sólido.
-  - Los países y territorios sin chart de Spotify quedan vacíos, solo con su contorno.
-  - Una canción conserva su color mientras siga entre esas 3.
-- **Pasar el cursor por un país** (o tocarlo, en pantallas táctiles):
-  - Suena el preview de 30 s de su #1, desde Deezer.
-  - Aparece una tarjeta con la portada, cuánto tiempo lleva como #1 y en cuántos países más es #1.
-  - Los países que comparten esa canción quedan contorneados.
-  - Si el país siguiente tiene la misma canción, la música sigue sin cortarse.
-- **Línea de tiempo**: se puede elegir cualquier día, semana, mes o año entre enero de 2017 y hoy, y animar el paso del tiempo con el botón de reproducir.
-- **#1 global**: la canción número uno del chart global de ese momento, arriba a la derecha.
+- **Mapa 2D** (proyección Natural Earth): se mueve arrastrando y se acerca con scroll o con los botones por región. Gira en torno a la canción seleccionada:
+  - en coral, los países donde esa canción es #1 en la fecha elegida;
+  - en gris sólido, los países con datos cuyo #1 es otra canción;
+  - vacíos, solo con contorno, los países y territorios sin chart de Spotify.
+- **Pasar el cursor por un país** (o tocarlo, en pantallas táctiles): su #1 pasa a ser la canción seleccionada y suena el preview de 30 s de Deezer. Si el país siguiente tiene la misma canción, la música sigue sin cortarse.
+- **Panel lateral** (alto completo, a la derecha), con la canción seleccionada:
+  - portada, título, artistas y dónde está en el ranking (por ejemplo, "#1 en Chile · lleva 9 días seguidos");
+  - estadísticas a la fecha: estreno, en cuántos países es #1 (los países en coral del mapa) y reproducciones acumuladas en los charts;
+  - **gráfico de popularidad**: reproducciones semanales sumando los charts de los 70 países, desde que la canción entra a los charts hasta la fecha elegida. Al reproducir la línea de tiempo crece en tiempo real y muestra la tendencia;
+  - **top 5** del mundo, de un continente o de un país, según lo que se haya seleccionado: el país bajo el cursor o el botón de región. Con un click en una canción del top se selecciona y suena.
+- **Reproductor inferior** (formato tipo Spotify): play/pausa al centro, botones para saltar un año atrás o adelante y, debajo, la línea de tiempo. Se puede elegir cualquier día, semana, mes o año entre enero de 2017 y hoy.
 
 Los navegadores exigen un click antes de reproducir audio, por eso al entrar aparece el botón "Activar sonido".
 
-**Paleta "Vinilo nocturno"**: fondo ciruela oscuro, con coral `#e4564b`, turquesa `#09a295` y lavanda `#9677ee` para las tres canciones más compartidas. Esos tres colores están validados para daltonismo (diferencia ΔE ≥ 11,5 entre todos los pares) y tienen contraste ≥ 3:1 con el fondo.
+**Paleta "Vinilo nocturno"**: fondo ciruela oscuro y coral `#e4564b` para la canción seleccionada (validado para contraste y daltonismo sobre el fondo).
 
 ## Ver la visualización
 
@@ -44,7 +44,7 @@ python3 -m venv ~/.venvs/infovis
 ~/.venvs/infovis/bin/pip install -r scripts/requirements.txt
 cd scripts
 ~/.venvs/infovis/bin/python 01_csv_a_parquet.py     # CSV de 11 GB → Parquet (≈10 s)
-~/.venvs/infovis/bin/python 02_numero1_por_pais.py  # #1 por país y período → datos/*.js (≈5 s)
+~/.venvs/infovis/bin/python 02_construir_datos.py   # catálogo, #1, top 5 y popularidad → datos/ (≈20 s)
 ~/.venvs/infovis/bin/python 03_deezer.py            # ids de Deezer para los previews (usa caché)
 ~/.venvs/infovis/bin/python 04_mapa_mundial.py      # geometría del mapa desde Natural Earth → datos/mundo.js
 ```
@@ -55,11 +55,13 @@ La carpeta de datos crudos se puede cambiar con la variable `INFOVIS_RAW_DIR`.
 
 - **#1 del día**: puesto 1 del chart diario de Spotify en ese país.
 - **#1 de la semana, el mes o el año**: la canción con más streams sumados en ese período.
+- **Top 5 de un continente**: las canciones con más streams sumando los países de ese continente (los mismos grupos que los botones de región).
+- **Popularidad**: reproducciones semanales sumando los charts (Top 200) de los 70 países. No incluye las reproducciones fuera de los charts.
 - **Sin datos**: países sin Spotify (China o Rusia, por ejemplo) o cuyo chart todavía no existía en esa fecha (por ejemplo, Corea antes de 2021).
 - **Territorios de ultramar**: Natural Earth incluye la Guayana Francesa, Guadalupe, Martinica, Reunión, Mayotte y el Caribe neerlandés dentro de Francia o Países Bajos. Aquí se separan y se muestran sin datos, porque Spotify no publica un chart propio para ellos.
 - **Cobertura**:
   - 70 países más el chart global.
-  - 7.313 canciones que alguna vez fueron #1.
+  - 20.930 canciones que alguna vez fueron #1 o estuvieron en algún top 5.
   - Portadas desde los datos de Spotify del dataset.
   - Previews de Deezer: los ids se buscan offline por "artista + título". Si no se encuentra el id, se busca en el navegador.
 

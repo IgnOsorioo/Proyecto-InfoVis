@@ -1,15 +1,13 @@
-/* Punto de entrada: conecta el mapa, la tarjeta del país, el reproductor y la línea de tiempo. */
+/* Punto de entrada: conecta el mapa, el panel lateral, el audio y el reproductor (línea de tiempo). */
 
 (() => {
   const $ = id => document.getElementById(id);
   const slider = $('slider');
   const botonPlay = $('play');
-  const tarjeta = $('tarjeta');
   const ESPERA_AUDIO_MS = 120;   // al barrer el mapa con el cursor no se piden previews de cada país que se cruza
   const ESPERA_SALIDA_MS = 350;
   let raf = null, ultimoPaso = 0;
   let timerAudio = null, timerSalida = null;
-  let enTarjeta = null;          // idx de la canción que muestra la tarjeta
 
   // ---------- Tiempo ----------
 
@@ -20,9 +18,10 @@
     slider.style.setProperty('--avance', `${(n > 1 ? p / (n - 1) : 1) * 100}%`);   // relleno de la línea
     $('fecha').textContent = textoPeriodoCorto(Estado.grano, p);
     actualizarSaltos();
+    // Si el cursor está sobre un país, su #1 puede cambiar con la fecha; si no, la canción elegida se mantiene.
+    if (Estado.paisActivo) elegirDesdePais(Estado.paisActivo);
     Mapa.dibujar();
-    dibujarGlobal();
-    if (Estado.paisActivo) mostrarPais(Estado.paisActivo);   // si cambió su #1, cambia la canción
+    Panel.tiempo();
   }
 
   function cambiarGrano(grano) {
@@ -84,47 +83,16 @@
     botonPlay.setAttribute('aria-label', 'Reproducir el paso del tiempo');
   }
 
-  // ---------- #1 global (barra superior) ----------
+  // ---------- Selección de canción y audio ----------
 
-  function dibujarGlobal() {
-    const r = numero1('global');
-    if (!r) { $('global').replaceChildren(); return; }
-    const c = cancion(r.idx);
-    const img = Object.assign(document.createElement('img'), { src: c.portada, alt: '' });
-    const texto = document.createElement('div');
-    const titulo = Object.assign(document.createElement('strong'), { textContent: c.titulo });
-    texto.append('#1 global', titulo, c.artistas);
-    $('global').replaceChildren(img, texto);
-  }
-
-  // ---------- Tarjeta y audio ----------
-
-  /** "Sonando ahora" del reproductor inferior (izquierda): portada pequeña, título y artistas. */
-  function actualizarAhora(c, donde) {
-    $('rp-ahora').classList.toggle('vacio', !c);
-    $('rp-titulo').textContent = c ? c.titulo : 'Sin datos';
-    $('rp-detalle').textContent = c ? `${c.artistas} · ${donde}` : donde;
-    if (c) {
-      $('rp-portada').src = c.portada;
-      $('rp-portada').alt = `Portada de ${c.titulo}`;
+  /** Cambia la canción seleccionada (la que muestra el panel, se pinta en el mapa y suena). */
+  function seleccionar(idx, { origen = null, sonar = true } = {}) {
+    Estado.origen = origen;
+    if (idx !== Estado.cancion) {
+      Estado.cancion = idx;
+      Panel.cancionCambiada();
     }
-  }
-
-  function llenarTarjeta({ encabezado, c, racha }) {
-    tarjeta.classList.remove('vacia');
-    tarjeta.classList.toggle('sin-datos', !c);
-    $('tarjeta-pais').textContent = encabezado;
-    actualizarAhora(c, encabezado);
-    if (!c) return;
-    if (enTarjeta !== c.idx) {
-      $('tarjeta-portada').src = c.portada;
-      $('tarjeta-portada').alt = `Portada de ${c.titulo}`;
-      $('tarjeta-titulo').textContent = c.titulo;
-      $('tarjeta-artistas').textContent = c.artistas;
-      $('tarjeta-spotify').href = `https://open.spotify.com/track/${c.id}`;
-      enTarjeta = c.idx;
-    }
-    $('tarjeta-racha').textContent = racha;
+    if (sonar) tocarConEspera(cancion(idx));
   }
 
   function tocarConEspera(c) {
@@ -132,32 +100,33 @@
     timerAudio = setTimeout(() => Reproductor.tocar(c), ESPERA_AUDIO_MS);
   }
 
-  function cuantosComparten(idx) {
-    return paisesConDatos().filter(cc => numero1(cc).idx === idx).length;
+  function detenerAudio() {
+    clearTimeout(timerAudio);
+    Reproductor.detener();
+    Panel.audio('pausa');
   }
 
-  function mostrarPais(cc) {
-    clearTimeout(timerSalida);
-    Estado.paisActivo = cc;
-    const encabezado = `${nombrePais(cc)} · ${textoPeriodo(Estado.grano, Estado.periodo)}`;
+  /** El #1 del país pasa a ser la canción seleccionada; el top 5 del panel pasa a ese país. */
+  function elegirDesdePais(cc) {
+    Estado.ambito = cc;
     const r = numero1(cc);
     if (!r) {
-      enTarjeta = null;
-      llenarTarjeta({ encabezado });
-      $('tarjeta-titulo').textContent = 'Sin datos';
-      $('tarjeta-artistas').textContent = `Spotify publica el chart de ${nombrePais(cc)} desde el ${window.PAISES[cc].inicio}.`;
-      $('tarjeta-racha').textContent = '';
-      clearTimeout(timerAudio);
-      Reproductor.detener();
-      Mapa.resaltar(null);
+      Panel.aviso(`${nombrePais(cc)}: Spotify publica su chart desde el ${textoFecha(new Date(window.PAISES[cc].inicio + 'T00:00:00Z'))}.`);
+      detenerAudio();
       return;
     }
-    const c = cancion(r.idx);
-    const otros = cuantosComparten(r.idx) - 1;
-    const compartida = otros > 0 ? ` También es #1 en ${otros} ${otros === 1 ? 'país' : 'países'} más.` : ' Solo es #1 aquí.';
-    llenarTarjeta({ encabezado, c, racha: textoRacha(r) + '.' + compartida });
-    Mapa.resaltar(r.idx);
-    tocarConEspera(c);
+    Panel.aviso(null);
+    seleccionar(r.idx, { origen: cc });
+  }
+
+  function pasarPorPais(cc) {
+    clearTimeout(timerSalida);
+    Estado.paisActivo = cc;
+    marcarRegion(null);
+    Mapa.marcar(cc);
+    elegirDesdePais(cc);
+    Mapa.dibujar();
+    Panel.tiempo();
   }
 
   const NOTAS_SIN_CHART = {
@@ -166,56 +135,44 @@
   };
 
   /** País o territorio sin chart de Spotify: {iso3, nombre, nota?} (la nota viene de datos/mundo.js). */
-  function mostrarSinChart(territorio) {
+  function pasarSinChart(territorio) {
     clearTimeout(timerSalida);
     Estado.paisActivo = null;
-    enTarjeta = null;
-    llenarTarjeta({ encabezado: territorio.nombre });
-    $('tarjeta-titulo').textContent = 'Sin datos';
-    $('tarjeta-artistas').textContent = territorio.nota ?? NOTAS_SIN_CHART[territorio.iso3] ??
-      'Spotify no publica un chart de canciones para este país (en África, solo para Sudáfrica, Nigeria, Egipto y Marruecos).';
-    $('tarjeta-racha').textContent = '';
-    clearTimeout(timerAudio);
-    Reproductor.detener();
-    Mapa.resaltar(null);
+    Mapa.marcar(null);
+    Mapa.dibujar();
+    Panel.aviso(`${territorio.nombre}: ${territorio.nota ?? NOTAS_SIN_CHART[territorio.iso3] ??
+      'Spotify no publica un chart de canciones para este país (en África, solo para Sudáfrica, Nigeria, Egipto y Marruecos).'}`);
+    detenerAudio();
   }
 
-  function mostrarCancion(idx) {
-    clearTimeout(timerSalida);
-    Estado.paisActivo = null;
-    const c = cancion(idx);
-    const n = cuantosComparten(idx);
-    llenarTarjeta({ encabezado: textoPeriodo(Estado.grano, Estado.periodo), c, racha: `#1 en ${n} países.` });
-    Mapa.resaltar(idx);
-    tocarConEspera(c);
-  }
-
-  /** Al salir del globo se detiene el audio, pero la tarjeta conserva la última canción (y su enlace). */
+  /** Al salir del mapa se detiene el audio; la canción seleccionada y el panel se mantienen. */
   function salir() {
     clearTimeout(timerSalida);
     timerSalida = setTimeout(() => {
       Estado.paisActivo = null;
-      clearTimeout(timerAudio);
-      Reproductor.detener();
-      $('estado-audio').classList.remove('sonando');
-      $('estado-audio-texto').textContent = 'En pausa · pasa el cursor por un país para seguir';
+      Mapa.marcar(null);
+      Mapa.dibujar();
+      Panel.aviso(null);
+      detenerAudio();
     }, ESPERA_SALIDA_MS);
   }
 
-  const TEXTO_AUDIO = {
-    cargando: 'Cargando preview…',
-    sonando: 'Sonando · preview de 30 s (Deezer)',
-    'sin-preview': 'Sin preview disponible para esta canción',
-    silencio: 'Activa el sonido (abajo a la derecha) para escuchar',
-  };
+  function elegirDelTop(idx) {
+    seleccionar(idx, { origen: null });
+    Mapa.dibujar();
+    Panel.tiempo();
+  }
+
+  function marcarRegion(boton) {
+    document.querySelectorAll('.acercar button').forEach(x => x.classList.toggle('activo', x === boton));
+  }
+
   Reproductor.alCambiar((estado, c) => {
-    if (c.idx !== enTarjeta) return;
-    $('estado-audio').classList.toggle('sonando', estado === 'sonando');
-    $('estado-audio-texto').textContent = TEXTO_AUDIO[estado];
+    if (c.idx === Estado.cancion) Panel.audio(estado);
   });
 
   function animarProgreso() {
-    $('progreso').style.width = `${Reproductor.progreso() * 100}%`;
+    Panel.progreso(Reproductor.progreso());
     requestAnimationFrame(animarProgreso);
   }
 
@@ -250,8 +207,10 @@
   $('anio-siguiente').addEventListener('click', () => saltarAnio(1));
   document.querySelectorAll('.granos button').forEach(b => b.addEventListener('click', () => cambiarGrano(b.dataset.grano)));
   document.querySelectorAll('.acercar button').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('.acercar button').forEach(x => x.classList.toggle('activo', x === b));
+    marcarRegion(b);
+    Estado.ambito = b.dataset.region === 'mundo' ? 'global' : b.dataset.region;   // el top 5 pasa a la región
     Mapa.enfocar(b.dataset.region);
+    Panel.tiempo();
   }));
 
   document.addEventListener('keydown', e => {
@@ -262,11 +221,15 @@
     if (e.code === 'ArrowRight') irAPeriodo(Math.min(n - 1, Estado.periodo + 1));
   });
 
-  Mapa.on({ alPasar: mostrarPais, alPasarSinChart: mostrarSinChart, alSalir: salir, alPasarCancion: mostrarCancion });
+  Mapa.on({ alPasar: pasarPorPais, alPasarSinChart: pasarSinChart, alSalir: salir });
+  Panel.iniciar({ alElegirCancion: elegirDelTop });
 
   slider.max = window.PERIODOS[Estado.grano].n - 1;
   $('fecha-fin').textContent = textoPeriodoCorto('dia', window.PERIODOS.dia.n - 1);   // fin de los datos
-  irAPeriodo(window.PERIODOS[Estado.grano].n - 1);   // parte en el día más reciente
+  Estado.periodo = window.PERIODOS[Estado.grano].n - 1;                               // parte en el día más reciente
+  seleccionar(numero1('global').idx, { sonar: false });                               // y con el #1 del mundo
+  irAPeriodo(Estado.periodo);
   actualizarBotonSonido();
+  Panel.audio(null);
   animarProgreso();
 })();

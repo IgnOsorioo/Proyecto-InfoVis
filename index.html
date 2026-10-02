@@ -10,126 +10,138 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Syne:wght@700;800&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-10-02a">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-10-02c">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
 </head>
 <body>
-  <header class="barra">
-    <div class="titulo">
+  <div class="principal">
+    <header class="barra">
       <h1>¿Qué suena en el mundo?</h1>
       <p>La canción más escuchada en Spotify en cada país. Pasa el cursor por un país para escucharla.</p>
-    </div>
-    <div class="global" id="global" aria-live="polite"></div>
-  </header>
+    </header>
 
-  <main class="escenario">
-    <section class="col-mapa">
+    <main class="escenario">
       <div class="zona-mapa">
-        <div id="mapa" class="mapa" aria-label="Mapa mundial con la canción #1 de cada país"></div>
+        <div id="mapa" class="mapa" aria-label="Mapa mundial: en coral, los países donde la canción seleccionada es #1"></div>
       </div>
-      <div class="acercar" role="group" aria-label="Acercar a una región">
-        <span>Arrastra para mover y usa scroll para acercar ·</span>
+      <div class="acercar" role="group" aria-label="Elegir una región: acerca el mapa y muestra su top 5">
         <button type="button" data-region="mundo" class="activo">Mundo</button>
         <button type="button" data-region="america">América</button>
         <button type="button" data-region="europa">Europa</button>
         <button type="button" data-region="africa">África y M. Oriente</button>
         <button type="button" data-region="asia">Asia</button>
         <button type="button" data-region="oceania">Oceanía</button>
+        <span class="clave" aria-hidden="true">
+          <span><i class="muestra muestra-sel"></i>#1 de la canción seleccionada</span>
+          <span><i class="muestra muestra-otra"></i>otra canción</span>
+          <span><i class="muestra muestra-vacio"></i>sin datos</span>
+        </span>
       </div>
-      <aside class="leyenda" id="leyenda" aria-label="Canciones que son #1 en más países"></aside>
+
+      <div class="activar" id="activar">
+        <div class="activar-caja">
+          <p>Al pasar el cursor por un país se reproduce un fragmento de 30 s de su canción #1.</p>
+          <button type="button" id="boton-activar" class="boton-primario">Activar sonido y explorar</button>
+          <button type="button" id="boton-silencio" class="boton-texto">Explorar sin sonido</button>
+        </div>
+      </div>
+    </main>
+
+    <footer class="reproductor" aria-label="Reproductor y línea de tiempo">
+      <div class="rp-centro">
+        <div class="rp-botones">
+          <button type="button" id="anio-anterior" class="rp-saltar" aria-label="Año anterior">
+            <span class="rp-anio" id="anio-anterior-txt" aria-hidden="true"></span>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h2v11H3zM13.5 2.5v11L5.5 8z"/></svg>
+          </button>
+          <button type="button" id="play" class="play" aria-label="Reproducir el paso del tiempo">
+            <svg class="icono-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>
+            <svg class="icono-pausa" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>
+          </button>
+          <button type="button" id="anio-siguiente" class="rp-saltar" aria-label="Año siguiente">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 2.5h2v11h-2zM2.5 2.5v11l8-5.5z"/></svg>
+            <span class="rp-anio" id="anio-siguiente-txt" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="rp-linea">
+          <output id="fecha" class="rp-tiempo rp-actual" for="slider"></output>
+          <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Momento en la línea de tiempo">
+          <span id="fecha-fin" class="rp-tiempo rp-final"></span>
+        </div>
+      </div>
+
+      <div class="rp-derecha">
+        <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
+          <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
+          <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
+          <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
+          <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
+        </div>
+        <button type="button" id="sonido" class="sonido" aria-pressed="false" aria-label="Activar sonido" title="Activar sonido">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M2 6h3l4-3.5v11L5 10H2z"/>
+            <path class="ondas" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4"/>
+            <path class="cruz" d="M11 6l4 4M15 6l-4 4"/>
+          </svg>
+        </button>
+      </div>
+    </footer>
+
+    <p class="creditos">
+      Datos: <a href="https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated">Spotify Charts vía Kaggle</a> (CC BY-SA 4.0) ·
+      Mapa: <a href="https://www.naturalearthdata.com/">Natural Earth</a> · Audio: <a href="https://developers.deezer.com/api">Deezer</a> · Portadas: Spotify
+    </p>
+  </div>
+
+  <aside class="panel" aria-label="Canción seleccionada" aria-live="polite">
+    <p class="p-aviso" id="p-aviso" hidden></p>
+
+    <section class="p-cancion">
+      <img class="p-portada" id="p-portada" alt="" width="300" height="300">
+      <p class="p-contexto" id="p-contexto"></p>
+      <h2 id="p-titulo"></h2>
+      <p class="p-artistas" id="p-artistas"></p>
+      <div class="p-audio" id="p-audio">
+        <span class="ecualizador" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span id="p-audio-texto"></span>
+        <a id="p-spotify" class="enlace-spotify" target="_blank" rel="noopener">Abrir en Spotify</a>
+      </div>
+      <div class="progreso" aria-hidden="true"><div id="p-progreso"></div></div>
     </section>
 
-    <article class="tarjeta vacia" id="tarjeta" aria-live="polite">
-      <p class="tarjeta-ayuda" id="tarjeta-ayuda">Pasa el cursor por un país para escuchar su canción #1 y ver su portada.</p>
-      <img class="portada" id="tarjeta-portada" alt="" width="300" height="300">
-      <div class="tarjeta-texto">
-        <p class="tarjeta-pais" id="tarjeta-pais"></p>
-        <h2 id="tarjeta-titulo"></h2>
-        <p class="tarjeta-artistas" id="tarjeta-artistas"></p>
-        <p class="tarjeta-racha" id="tarjeta-racha"></p>
-        <div class="estado-audio" id="estado-audio">
-          <span class="ecualizador" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span id="estado-audio-texto"></span>
-        </div>
-        <div class="progreso" aria-hidden="true"><div id="progreso"></div></div>
-        <a id="tarjeta-spotify" class="enlace-spotify" target="_blank" rel="noopener">Abrir en Spotify</a>
-      </div>
-    </article>
+    <dl class="p-stats">
+      <div><dt>Estreno</dt><dd id="p-estreno"></dd></div>
+      <div><dt><i class="muestra muestra-sel"></i>Es #1 en</dt><dd id="p-numero1"></dd></div>
+      <div><dt>Reproducciones</dt><dd id="p-reproducciones"></dd></div>
+    </dl>
 
-    <div class="activar" id="activar">
-      <div class="activar-caja">
-        <p>Al pasar el cursor por un país se reproduce un fragmento de 30 s de su canción #1.</p>
-        <button type="button" id="boton-activar" class="boton-primario">Activar sonido y explorar</button>
-        <button type="button" id="boton-silencio" class="boton-texto">Explorar sin sonido</button>
+    <figure class="p-popularidad">
+      <figcaption>Popularidad · reproducciones semanales en los charts</figcaption>
+      <div class="p-grafico-caja">
+        <div id="p-grafico"></div>
+        <p class="p-grafico-aviso" id="p-grafico-aviso" hidden></p>
       </div>
-    </div>
-  </main>
+    </figure>
 
-  <footer class="reproductor" aria-label="Reproductor y línea de tiempo">
-    <div class="rp-ahora vacio" id="rp-ahora" aria-live="polite">
-      <img id="rp-portada" alt="" width="56" height="56">
-      <div class="rp-texto">
-        <strong id="rp-titulo">Nada sonando</strong>
-        <span id="rp-detalle">Pasa el cursor por un país</span>
+    <section class="p-top" aria-labelledby="p-top-titulo">
+      <div class="p-top-cabecera">
+        <h3 id="p-top-titulo">Top 5</h3>
+        <span id="p-top-periodo"></span>
       </div>
-    </div>
+      <ol id="p-top"></ol>
+    </section>
+  </aside>
 
-    <div class="rp-centro">
-      <div class="rp-botones">
-        <button type="button" id="anio-anterior" class="rp-saltar" aria-label="Año anterior">
-          <span class="rp-anio" id="anio-anterior-txt" aria-hidden="true"></span>
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h2v11H3zM13.5 2.5v11L5.5 8z"/></svg>
-        </button>
-        <button type="button" id="play" class="play" aria-label="Reproducir el paso del tiempo">
-          <svg class="icono-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>
-          <svg class="icono-pausa" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>
-        </button>
-        <button type="button" id="anio-siguiente" class="rp-saltar" aria-label="Año siguiente">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 2.5h2v11h-2zM2.5 2.5v11l8-5.5z"/></svg>
-          <span class="rp-anio" id="anio-siguiente-txt" aria-hidden="true"></span>
-        </button>
-      </div>
-      <div class="rp-linea">
-        <output id="fecha" class="rp-tiempo rp-actual" for="slider"></output>
-        <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Momento en la línea de tiempo">
-        <span id="fecha-fin" class="rp-tiempo rp-final"></span>
-      </div>
-    </div>
-
-    <div class="rp-derecha">
-      <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
-        <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
-        <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
-        <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
-        <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
-      </div>
-      <button type="button" id="sonido" class="sonido" aria-pressed="false" aria-label="Activar sonido" title="Activar sonido">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M2 6h3l4-3.5v11L5 10H2z"/>
-          <path class="ondas" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4"/>
-          <path class="cruz" d="M11 6l4 4M15 6l-4 4"/>
-        </svg>
-      </button>
-    </div>
-  </footer>
-
-  <p class="creditos">
-    Datos: Spotify Charts (Top 200 diario, 70 países, 2017–2026) vía
-    <a href="https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated">Kaggle · gonzalopezgil</a> (CC BY-SA 4.0) ·
-    Mapa: <a href="https://www.naturalearthdata.com/">Natural Earth</a> 1:50m (dominio público) ·
-    Nombres: <a href="https://github.com/mledoze/countries">mledoze/countries</a> ·
-    Audio: previews de <a href="https://developers.deezer.com/api">Deezer</a> · Portadas: Spotify.
-    #1 del día = puesto 1 del chart diario; de semana, mes o año = la canción con más streams en ese período.
-  </p>
-
-  <script src="datos/mundo.js?v=2026-10-02a"></script>
-  <script src="datos/paises.js?v=2026-10-02a"></script>
-  <script src="datos/canciones.js?v=2026-10-02a"></script>
-  <script src="datos/numero1.js?v=2026-10-02a"></script>
-  <script src="datos/deezer.js?v=2026-10-02a" onerror="window.DEEZER = []"></script>
-  <script src="js/estado.js?v=2026-10-02a"></script>
-  <script src="js/reproductor.js?v=2026-10-02a"></script>
-  <script src="js/mapa.js?v=2026-10-02a"></script>
-  <script src="js/main.js?v=2026-10-02a"></script>
+  <script src="datos/mundo.js?v=2026-10-02c"></script>
+  <script src="datos/paises.js?v=2026-10-02c"></script>
+  <script src="datos/canciones.js?v=2026-10-02c"></script>
+  <script src="datos/numero1.js?v=2026-10-02c"></script>
+  <script src="datos/deezer.js?v=2026-10-02c" onerror="window.DEEZER = []"></script>
+  <script src="js/estado.js?v=2026-10-02c"></script>
+  <script src="js/reproductor.js?v=2026-10-02c"></script>
+  <script src="js/mapa.js?v=2026-10-02c"></script>
+  <script src="js/panel.js?v=2026-10-02c"></script>
+  <script src="js/main.js?v=2026-10-02c"></script>
 </body>
 </html>
