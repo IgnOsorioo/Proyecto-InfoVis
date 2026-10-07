@@ -1,6 +1,6 @@
 # Auditoría del proyecto frente a la pauta de la E1
 
-**Fecha de la auditoría:** 7 de octubre de 2026. **Estado:** V1 cerrada (tag `v1`); V2 en desarrollo para la R2 (8 de octubre). **Entrega:** jueves 22 de octubre, 23:59, un PDF por el formulario.
+**Fecha de la auditoría:** 7 de octubre de 2026, actualizada con la V2 el mismo día. **Estado:** V1 cerrada (tag `v1`); V2 lista para la R2 (8 de octubre), pendiente de su tag. **Entrega:** jueves 22 de octubre, 23:59, un PDF por el formulario.
 
 Leyenda: ✅ cumple · ⚠️ parcial o en riesgo · ❌ falta.
 
@@ -62,12 +62,12 @@ Leyenda: ✅ cumple · ⚠️ parcial o en riesgo · ❌ falta.
 | Tipos de visualización revisados para la pregunta | ✅ | Mapa coroplético para "dónde" y línea de área para "cuándo". Se descartaron el gráfico de dispersión y el globo. |
 | Sin errores comunes (ejes truncados, doble eje, 3D) | ✅ | El gráfico de popularidad parte en 0, tiene un solo eje y es 2D. |
 | Principios de diseño (jerarquía, tipografía, menos es más) | ✅ | Un solo color de acento, jerarquía clara en el panel y tipografía consistente. |
-| Coherencia entre mensaje y forma | ⚠️ | El mensaje principal aún no está definido en la visualización (ver punto 1). |
+| Coherencia entre mensaje y forma | ✅ | Desde la V2, la vista general muestra el mensaje: el #1 de cada país es mundial, compartido o propio, con su evolución desde 2017. |
 | Interacción con Shneiderman y más allá de Plotly por defecto | ✅ | Overview (mapa), zoom & filter (regiones, tiempo, granularidad), details on demand (cursor → panel). Todo es interacción propia. |
-| Sonificación con tono, ritmo o timbre (no solo volumen) | ⚠️ | Hoy suena la canción real. Es comprensible sin explicación, pero no codifica variables con parámetros sonoros (ver punto 2). |
+| Sonificación con tono, ritmo o timbre (no solo volumen) | ✅ | Desde la V2, los aplausos codifican la popularidad con ritmo (densidad) y timbre (murmullo), y los silbidos, en cuántos países es #1. Falta validar con usuarios que se entiendan sin explicación. |
 | No basada solo en barras | ✅ | Mapa, línea de área y lista. |
 | Resultado alineado y ordenado | ✅ | Validado sin superposiciones ni scroll desde 1280×720 hasta 1920×1080. |
-| Revisiones con material y preguntas | ⚠️ | Pendiente registrar la R1 y preparar la R2. |
+| Revisiones con material y preguntas | ⚠️ | R1 registrada (falta la fecha). Las preguntas para la R2 están en borrador. |
 | Feedback al otro grupo registrado | ❌ | Mañana. |
 | Cada versión con commit/tag y evidencia visual y sonora | ⚠️ | V1 tiene tag y capturas; falta su video con audio. |
 | GitHub Pages con la versión final | ✅ | Funciona (la versión final será `/v4/`). |
@@ -75,12 +75,12 @@ Leyenda: ✅ cumple · ⚠️ parcial o en riesgo · ❌ falta.
 
 ## Riesgos principales y acciones sugeridas
 
-1. **La vista general no transmite un mensaje por sí sola.** Hoy solo dice "dónde es #1 la canción seleccionada".
+1. ✅ *Resuelto en la V2.* **La vista general no transmitía un mensaje por sí sola.** Hoy solo dice "dónde es #1 la canción seleccionada".
    - **Acción para la V2:** pintar cada país según si su #1 es el #1 mundial, un hit regional o un hit local, y dejar la canción seleccionada contorneada.
    - **Por qué:** los datos respaldan un mensaje claro (del 40 % al 12 % de países con el #1 mundial; ver [contexto-general.md](contexto-general.md)).
-2. **La sonificación puede leerse como decorativa.** La pauta pide parámetros efectivos y que "el tipo de sonido cambie con el dato". Que suene la canción real es un buen punto de partida.
+2. ✅ *Resuelto en la V2 con aplausos (lo observó también la R1).* **La sonificación podía leerse como decorativa.** La pauta pide parámetros efectivos y que "el tipo de sonido cambie con el dato". Que suene la canción real es un buen punto de partida.
    - **Acción para la V2/V3:** agregar una capa que codifique datos. Por ejemplo, al reproducir la línea de tiempo, que el tono suba y baje con la popularidad semanal de la canción seleccionada. O un timbre distinto según si el #1 del país es mundial, regional o local.
-3. **La V2 tiene que mostrar el efecto de la R1.** Hay que registrar ya lo que dijo el equipo docente ([R1](R1-equipo-docente.md)) y justificar en la V2 qué se adoptó y qué no.
+3. ✅ *Registrado en [R1](R1-equipo-docente.md) y [v2/README.md](../v2/README.md).* **La V2 tiene que mostrar el efecto de la R1.** Hay que registrar ya lo que dijo el equipo docente ([R1](R1-equipo-docente.md)) y justificar en la V2 qué se adoptó y qué no.
 4. **Evidencia sonora.** Cada versión necesita un video con audio. Las capturas automáticas no graban sonido, así que hay que grabarlo con QuickTime u OBS al cerrar cada versión.
 5. **Comprensión individual (modificador de la nota).** En la R1 y la R3 se le pregunta a cada integrante. Todos deben poder explicar:
    - el pipeline de datos;

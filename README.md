@@ -27,6 +27,14 @@ La Entrega 1 se evalúa por proceso: cuatro versiones navegables, cada una con s
 - **Para empezar la siguiente:** `cp -R vN/index.html vN/css vN/js vN+1/`, y en `index.html` de la raíz marcarla como `vigente`.
 - **Si cambia el formato de `datos/`**, las versiones cerradas dejarían de funcionar. Antes de regenerar, copiar los datos actuales a `vN/datos/` y cambiar las rutas `../datos/` de esa versión a `datos/`. La app deduce la carpeta de datos desde la ruta de `canciones.js`, así que no hay que tocar el JS.
 
+## Qué cambia en la V2
+
+Responde a la R1 (ver [v2/README.md](v2/README.md)):
+- vista general con mensaje (el #1 de cada país es mundial, compartido o propio), sin ventana inicial;
+- pasar el cursor muestra y hacer click sigue una canción (su puesto en cada país);
+- aplausos que codifican su popularidad en el tiempo;
+- buscador de canciones.
+
 ## Qué muestra (V1)
 
 - **Mapa 2D** (proyección Natural Earth): se mueve arrastrando y se acerca con scroll. Los botones de región encuadran el continente completo (aunque se vean partes de otros). Gira en torno a la canción seleccionada:
@@ -72,6 +80,7 @@ cd scripts
 ~/.venvs/infovis/bin/python 02_construir_datos.py   # catálogo, #1, top 5 y popularidad → datos/ (≈20 s)
 ~/.venvs/infovis/bin/python 03_deezer.py            # ids de Deezer para los previews (usa caché)
 ~/.venvs/infovis/bin/python 04_mapa_mundial.py      # geometría del mapa desde Natural Earth → datos/mundo.js
+~/.venvs/infovis/bin/python 05_ranking_por_pais.py  # puesto semanal de cada canción en cada país → datos/ranking/ (V2, ≈6 s)
 ```
 
 La carpeta de datos crudos se puede cambiar con la variable `INFOVIS_RAW_DIR`.
@@ -82,6 +91,8 @@ La carpeta de datos crudos se puede cambiar con la variable `INFOVIS_RAW_DIR`.
 - **#1 de la semana, el mes o el año**: la canción con más streams sumados en ese período.
 - **Top 5 de un continente**: las canciones con más streams sumando los países de ese continente (los mismos grupos que los botones de región).
 - **Popularidad**: reproducciones semanales sumando los charts (Top 200) de los 70 países. No incluye las reproducciones fuera de los charts.
+- **Puesto semanal** (V2, "seguir una canción"): el mejor puesto de la canción en el Top 200 diario de cada país durante la semana. En el mapa, el #1 sale del mismo dato que "Es #1 en".
+- **#1 mundial, compartido o propio** (V2): el #1 del país es el mismo que el del chart global, también es #1 en otro país o solo es #1 ahí.
 - **Sin datos**: países sin Spotify (China o Rusia, por ejemplo) o cuyo chart todavía no existía en esa fecha (por ejemplo, Corea antes de 2021).
 - **Territorios de ultramar**: Natural Earth incluye la Guayana Francesa, Guadalupe, Martinica, Reunión, Mayotte y el Caribe neerlandés dentro de Francia o Países Bajos. Aquí se separan y se muestran sin datos, porque Spotify no publica un chart propio para ellos.
 - **Cobertura**:
