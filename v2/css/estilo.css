@@ -1,4 +1,6 @@
-/* Tema oscuro fijo: fondo negro, grises neutros y coral para la canción seleccionada.
+/* Tema oscuro fijo: fondo negro, grises neutros y coral como acento.
+   Explorar: azul = #1 mundial, gris cálido = compartido, coral = propio (escala divergente de global a local).
+   Seguir una canción: rampa de coral según su puesto en cada país.
    El mapa y el gráfico (Plotly) también leen estos tokens vía getComputedStyle. */
 :root {
   color-scheme: dark;
@@ -11,8 +13,14 @@
   --grilla: #282828;
   --eje: #3e3e3e;
   --borde: rgba(255, 255, 255, 0.08);
-  --c1: #e4564b;             /* coral: países donde la canción seleccionada es #1 */
-  --otra: #4d4d4d;           /* país con datos cuyo #1 es otra canción: relleno sólido */
+  --c1: #e4564b;             /* coral: países donde la canción seguida es #1 */
+  --mundial: #5b9bd5;        /* explorar: el #1 del país es el #1 del chart global */
+  --compartido: #8c8079;     /* explorar: el #1 del país también es #1 en otro país */
+  --propio: #e4564b;         /* explorar: el #1 del país es #1 solo ahí */
+  --top10: #b0463d;          /* seguir: puesto de la canción en cada país */
+  --top50: #7a352f;
+  --top200: #4a2825;
+  --fuera: #262626;          /* seguir: el país tiene chart, pero la canción no está en su top 200 */
   --vacio: #000000;          /* país sin datos de Spotify: sin relleno, solo contorno */
   --contorno-vacio: #333333;
   --resalte: #ffffff;        /* contorno del país bajo el cursor */
@@ -56,15 +64,63 @@ button.activo { background: var(--tinta); color: var(--plano); border-color: var
 
 .muestra { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; }
 .muestra-sel { background: var(--c1); }
-.muestra-otra { background: var(--otra); }
+.muestra-mundial { background: var(--mundial); }
+.muestra-compartido { background: var(--compartido); }
+.muestra-propio { background: var(--propio); }
+.muestra-top10 { background: var(--top10); }
+.muestra-top50 { background: var(--top50); }
+.muestra-top200 { background: var(--top200); }
+.muestra-fuera { background: var(--fuera); }
 .muestra-vacio { background: transparent; box-shadow: inset 0 0 0 1px var(--tinta-3); }
 
 /* ---------- Columna principal ---------- */
 .principal { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
 
-.barra { padding: 18px 24px 4px; }
+.barra { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 18px 24px 4px; }
+.barra-titulo { min-width: 0; }
 h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
 .barra p { margin: 4px 0 0; color: var(--tinta-2); }
+
+/* Buscador de canciones */
+.buscador { position: relative; flex: none; width: 300px; margin-top: 2px; }
+.buscador > svg { position: absolute; left: 13px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%); fill: none; stroke: var(--tinta-3); stroke-width: 1.6; stroke-linecap: round; pointer-events: none; }
+.buscador input {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+}
+.buscador input::placeholder { color: var(--tinta-3); }
+.buscador input:hover { border-color: var(--tinta-3); }
+.buscador-resultados {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #1a1a1a;
+  border: 1px solid var(--eje);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+.buscador-resultados[hidden] { display: none; }
+.buscador-resultados li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: center; padding: 6px; border-radius: 6px; cursor: pointer; }
+.buscador-resultados li.activo, .buscador-resultados li:hover { background: #2a2a2a; }
+.buscador-resultados img { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.buscador-resultados li > span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.buscador-resultados strong { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.buscador-resultados li > span > span { font-size: 12px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.buscador-resultados .sin-resultados { display: block; padding: 8px; color: var(--tinta-3); font-size: 13px; cursor: default; }
+.buscador-resultados .sin-resultados:hover { background: none; }
 
 .escenario { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 24px 10px; }
 .zona-mapa { position: relative; flex: 1; min-height: 240px; }
@@ -73,32 +129,100 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
 
 .acercar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; font-size: 12px; color: var(--tinta-3); }
 .acercar button { font-size: 12px; padding: 4px 10px; }
-.clave { display: inline-flex; align-items: center; gap: 14px; margin-left: 14px; white-space: nowrap; }
-.clave span { display: inline-flex; align-items: center; gap: 6px; }
 
-/* ---------- Activación del sonido (los navegadores exigen un click antes de reproducir audio) ---------- */
-.activar {
+/* ---------- Capas sobre el mapa ---------- */
+/* Leyenda abajo a la izquierda (sobre el Pacífico sur), una por modo */
+.leyenda {
   position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(2px);
+  left: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--tinta-2);
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  pointer-events: none;
 }
-.activar[hidden] { display: none; }
-.activar-caja {
-  max-width: 380px;
-  padding: 24px;
-  text-align: center;
+.leyenda strong { font-size: 11px; font-weight: 800; color: var(--tinta); }
+.leyenda span { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.leyenda-sonido { margin-top: 4px; }
+.leyenda-seguir, body.modo-seguir .leyenda-explorar { display: none; }
+body.modo-seguir .leyenda-seguir { display: flex; }
+
+/* Aviso de sonido (no bloquea: cualquier click o tecla lo activa) */
+.aviso-sonido {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--tinta-2);
   background: var(--superficie);
-  border: 1px solid var(--borde);
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+  pointer-events: none;
 }
-.activar-caja p { margin: 0 0 16px; color: var(--tinta-2); }
-.boton-primario { padding: 10px 18px; font-size: 15px; font-weight: 800; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
-.boton-texto { display: block; margin: 10px auto 0; border: 0; background: none; color: var(--tinta-2); text-decoration: underline; }
+.aviso-sonido[hidden] { display: none; }
+.aviso-sonido svg { width: 14px; height: 14px; fill: currentColor; }
+.aviso-sonido .ondas { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+
+/* Canción seguida: cuál es, qué está sonando y cómo salir */
+.seguir {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, 100%);
+  padding: 5px;
+  background: rgba(18, 18, 18, 0.94);
+  border: 1px solid var(--eje);
+  border-left: 3px solid var(--c1);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.seguir[hidden] { display: none; }
+.seguir img { flex: none; width: 46px; height: 46px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.seguir-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.seguir-texto > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seguir-etiqueta { font-size: 10px; font-weight: 800; color: var(--c1); text-transform: uppercase; letter-spacing: 0.08em; }
+.seguir-texto strong { font-size: 14px; font-weight: 900; }
+#seguir-artistas { font-size: 12px; color: var(--tinta-2); }
+.seguir-dato { font-size: 11px; color: var(--tinta-3); }
+.seguir-cerrar { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; align-self: flex-start; }
+.seguir-cerrar svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+/* Globo con el puesto de la canción seguida en el país bajo el cursor */
+.globo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--tinta-2);
+  white-space: nowrap;
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.globo[hidden] { display: none; }
+.globo strong { font-size: 13px; font-weight: 900; color: var(--tinta); }
 
 /* ---------- Reproductor inferior (formato tipo Spotify) ----------
    izquierda: granularidad · centro: año anterior / play / año siguiente y, debajo, la línea de tiempo · derecha: sonido */
@@ -180,13 +304,30 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
    (portada, estadísticas, popularidad y top 5) se ve en la misma pantalla y nada salta al cambiar de país. */
 .panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   overflow: hidden auto;      /* solo hace scroll en pantallas muy bajas (< ~700 px) */
   background: var(--panel);
   border-left: 1px solid var(--grilla);
 }
-.p-contenido { display: flex; flex-direction: column; height: 100%; }
-.panel.modo-mensaje .p-contenido { display: none; }
+.p-contenido { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.panel.modo-resumen .p-contenido,
+.panel.modo-mensaje .p-contenido, .panel.modo-mensaje .p-resumen, .panel.modo-mensaje .p-top { display: none; }
+
+/* Resumen (overview): qué tan local es el #1 hoy y desde 2017 */
+.p-resumen { display: none; flex: 1 1 auto; min-height: 0; flex-direction: column; gap: 10px; padding: 18px 18px 0; }
+.panel.modo-resumen .p-resumen { display: flex; }
+.r-titular { margin: 0; font-size: 26px; font-weight: 900; line-height: 1.08; letter-spacing: -0.01em; }
+.r-bajada { margin: 0; font-size: 13px; color: var(--tinta-2); line-height: 1.4; }
+.r-cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.r-cats div { padding: 7px 9px; background: var(--superficie); border-radius: 8px; }
+.r-cats dt { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--tinta-3); white-space: nowrap; }
+.r-cats dd { margin: 1px 0 0; font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.r-cats span { font-size: 11px; color: var(--tinta-3); white-space: nowrap; }
+.r-evolucion { flex: 1 1 auto; min-height: 110px; display: flex; flex-direction: column; margin: 0; }
+.r-evolucion figcaption { font-size: 11px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#r-grafico { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 
 /* País sin datos: solo el mensaje, centrado */
 .p-mensaje { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 32px; text-align: center; }
@@ -216,7 +357,24 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
 }
 
-.p-cuerpo { flex: none; display: flex; flex-direction: column; gap: 10px; padding: 12px 18px 14px; }
+.p-cuerpo { flex: none; display: flex; flex-direction: column; gap: 10px; padding: 12px 18px 0; }
+
+/* Volver al resumen (o dejar de seguir), sobre la portada */
+.p-volver {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px 5px 8px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+}
+.p-volver svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 .p-contexto { margin: 0; height: 15px; color: var(--tinta-3); font-size: 11px; font-weight: 800; line-height: 15px; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Título (máx. 2 líneas) + artistas en un bloque de alto fijo: el panel no salta y los artistas quedan pegados al título */
@@ -260,6 +418,7 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
 .p-grafico-aviso { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-size: 13px; color: var(--tinta-3); }
 .p-grafico-aviso[hidden] { display: none; }
 
+.p-top { flex: none; padding: 10px 18px 14px; }
 .p-top-cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .p-top h3 { margin: 0; font-size: 16px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-top-cabecera span { font-size: 11px; color: var(--tinta-3); white-space: nowrap; }
@@ -293,15 +452,24 @@ h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spa
   .principal { height: auto; }
   .zona-mapa { flex: none; height: 55vh; }
   .panel { height: auto; min-height: 640px; overflow: visible; border-left: 0; border-top: 1px solid var(--grilla); }
-  .p-contenido { height: auto; }
+  .p-contenido { flex: none; }
+  .p-resumen { flex: none; }
+  .r-evolucion { flex: none; height: 170px; }
   .p-hero { flex: none; height: min(100vw, 420px); max-height: none; }
 }
 @media (max-width: 760px) {
-  .barra { padding: 14px 16px 4px; }
+  .barra { flex-direction: column; gap: 10px; padding: 14px 16px 4px; }
+  .buscador { width: 100%; }
+  .leyenda { font-size: 10px; padding: 6px 8px; }
   h1 { font-size: 24px; }
   .escenario { padding: 4px 16px 10px; }
-  .zona-mapa { height: 260px; }
-  .clave { margin-left: 0; flex-wrap: wrap; white-space: normal; }
+  /* El mapa es bajo: el indicador "Siguiendo" y el aviso van arriba y la leyenda debajo, sin taparlo */
+  .zona-mapa { height: auto; display: flex; flex-direction: column; gap: 8px; }
+  .mapa { position: relative; inset: auto; height: 260px; }
+  .seguir, .aviso-sonido, .leyenda { position: static; }
+  .seguir, .aviso-sonido { order: -1; align-self: flex-start; }
+  .leyenda { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; padding: 0; background: none; }
+  body.modo-seguir .leyenda-seguir { display: flex; }
   .reproductor { grid-template-columns: 1fr; padding: 10px 16px 8px; gap: 10px; }
   .rp-centro, .rp-derecha, .rp-izquierda { grid-column: 1; grid-row: auto; }
   .rp-tiempo { min-width: 0; }

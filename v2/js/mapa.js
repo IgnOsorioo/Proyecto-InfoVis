@@ -1,7 +1,8 @@
-/* Mapa mundial en 2D (proyección Natural Earth). Gira en torno a la canción seleccionada:
-   - coral: países donde esa canción es #1 en el período elegido;
-   - gris sólido: países con datos cuyo #1 es otra canción;
-   - vacío (solo contorno): países sin datos de Spotify.
+/* Mapa mundial en 2D (proyección Natural Earth). Pinta distinto según el modo:
+   - explorar: el #1 de cada país es el #1 mundial (azul), uno compartido con otros países (gris cálido) o uno
+     propio (coral). Con el cursor sobre un país, se atenúan los que no comparten su #1.
+   - seguir: el puesto de la canción seguida en cada país (#1 · top 10 · top 50 · top 200 · fuera del chart).
+   Vacíos, solo con contorno: países sin datos de Spotify.
    Geometría: Natural Earth 1:50m (datos/mundo.js), con los territorios de ultramar separados de su país.
    Trazas: 0 sin datos · 1 países con datos · 2 contorno del país bajo el cursor. */
 
@@ -28,8 +29,35 @@ const Mapa = (() => {
   let escala = 1;                      // zoom que asegura que el recuadro de la región quepa entero
   let enfoques = 0;                    // cambia uirevision para que un botón de región se imponga al zoom manual
   let marcado = null;                  // país bajo el cursor (contorno claro)
-  let eventos = { alPasar: () => {}, alPasarSinChart: () => {}, alSalir: () => {} };
+  let eventos = { alPasar: () => {}, alPasarSinChart: () => {}, alSalir: () => {}, alElegir: () => {} };
   let eventosConectados = false;
+
+  /** Escala de colores discreta: el valor i (0..k-1) toma exactamente el color i. */
+  function escalaDiscreta(colores) {
+    const k = colores.length;
+    return colores.flatMap((c, i) => [[i / k, c], [(i + 1) / k, c]]);
+  }
+
+  /** Mezcla un color #rrggbb con el fondo negro (k = cuánto del color queda). */
+  function atenuar(hex, k) {
+    const n = parseInt(hex.slice(1), 16);
+    const canal = d => Math.round(((n >> d) & 255) * k).toString(16).padStart(2, '0');
+    return `#${canal(16)}${canal(8)}${canal(0)}`;
+  }
+
+  /** z (nivel de color) de cada país con datos y la lista de colores, según el modo. */
+  function relleno(conDatos) {
+    if (Estado.modo === 'seguir') {
+      return { z: conDatos.map(nivelPuesto), colores: ['fuera', 'top200', 'top50', 'top10', 'c1'].map(token) };
+    }
+    const { n1, cat } = categorias();
+    // Con el cursor sobre un país, los que no comparten su #1 pasan a la versión atenuada de su color
+    // (z + 3). Plotly no permite una opacidad distinta por país en un mapa coroplético.
+    const elegido = marcado ? n1[marcado] : undefined;
+    const z = conDatos.map(cc => CATEGORIAS.indexOf(cat[cc]) + (elegido !== undefined && n1[cc] !== elegido ? 3 : 0));
+    const plenos = CATEGORIAS.map(token);
+    return { z, colores: [...plenos, ...plenos.map(c => atenuar(c, 0.3))] };
+  }
 
   function trazas() {
     const conDatos = paisesConDatos();
@@ -48,11 +76,12 @@ const Mapa = (() => {
     return [
       { ...base, locations: sinDatos, z: sinDatos.map(() => 0), colorscale: plano(token('vacio')),
         marker: { line: { color: token('contorno-vacio'), width: 0.6 } } },
-      { ...base, locations: conDatos.map(iso3), zmin: 0, zmax: 1,
-        // Sobre un país sin datos el panel no muestra canción, así que tampoco se pinta coral.
-        z: conDatos.map(cc => (!Estado.mensaje && numero1(cc).idx === Estado.cancion ? 1 : 0)),
-        colorscale: [[0, token('otra')], [0.5, token('otra')], [0.5, token('c1')], [1, token('c1')]],
-        marker: { line: { color: token('plano'), width: 0.6 } } },
+      (() => {
+        const { z, colores } = relleno(conDatos);
+        return { ...base, locations: conDatos.map(iso3), z, zmin: 0, zmax: colores.length - 1,
+          colorscale: escalaDiscreta(colores),
+          marker: { line: { color: token('plano'), width: 0.6 } } };
+      })(),
       { ...base, locations: marcados, z: marcados.map(() => 0), colorscale: plano('rgba(0,0,0,0)'),
         marker: { line: { color: token('resalte'), width: 1.6 } }, hoverinfo: 'skip' },
     ];
@@ -91,14 +120,21 @@ const Mapa = (() => {
   function conectarEventos() {
     eventosConectados = true;
     const el = document.getElementById(EL);
-    const pasar = ev => {
+    // Cada evento entrega el país (ISO2, o el territorio sin chart) y el evento del mouse (para ubicar el globo).
+    const leer = ev => {
       const iso3 = ev.points[0]?.location;
-      if (ISO3_A_CC[iso3]) eventos.alPasar(ISO3_A_CC[iso3]);
-      else if (SIN_CHART[iso3]) eventos.alPasarSinChart(SIN_CHART[iso3]);
+      return { cc: ISO3_A_CC[iso3] ?? null, territorio: ISO3_A_CC[iso3] ? null : SIN_CHART[iso3] ?? null, raton: ev.event };
     };
-    el.on('plotly_hover', pasar);
+    el.on('plotly_hover', ev => {
+      const { cc, territorio, raton } = leer(ev);
+      if (cc) eventos.alPasar(cc, raton);
+      else if (territorio) eventos.alPasarSinChart(territorio, raton);
+    });
     el.on('plotly_unhover', () => eventos.alSalir());
-    el.on('plotly_click', pasar);          // en pantallas táctiles no hay hover: un toque hace lo mismo
+    el.on('plotly_click', ev => {          // click (o toque en pantallas táctiles): seguir la canción del país
+      const { cc } = leer(ev);
+      if (cc) eventos.alElegir(cc);
+    });
   }
 
   /** Acerca el mapa a una región ('mundo', 'america', 'europa', 'africa', 'asia', 'oceania'). */
