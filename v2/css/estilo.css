@@ -1,0 +1,313 @@
+/* Tema oscuro fijo: fondo negro, grises neutros y coral para la canción seleccionada.
+   El mapa y el gráfico (Plotly) también leen estos tokens vía getComputedStyle. */
+:root {
+  color-scheme: dark;
+  --plano: #000000;          /* fondo */
+  --superficie: #1c1c1c;     /* tarjetas y estadísticas */
+  --panel: #121212;          /* panel lateral */
+  --tinta: #ffffff;
+  --tinta-2: #b3b3b3;
+  --tinta-3: #8a8a8a;
+  --grilla: #282828;
+  --eje: #3e3e3e;
+  --borde: rgba(255, 255, 255, 0.08);
+  --c1: #e4564b;             /* coral: países donde la canción seleccionada es #1 */
+  --otra: #4d4d4d;           /* país con datos cuyo #1 es otra canción: relleno sólido */
+  --vacio: #000000;          /* país sin datos de Spotify: sin relleno, solo contorno */
+  --contorno-vacio: #333333;
+  --resalte: #ffffff;        /* contorno del país bajo el cursor */
+  --fuente: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;   /* principal | panel lateral de alto completo */
+  height: 100vh;
+  overflow: hidden;
+  color: var(--tinta);
+  background: var(--plano);
+  font-family: var(--fuente);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+a { color: var(--tinta); text-decoration-color: var(--tinta-3); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--tinta); }
+
+button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+button:hover { border-color: var(--tinta-3); }
+button:focus-visible, input:focus-visible, li:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+button.activo { background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+
+.muestra { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; }
+.muestra-sel { background: var(--c1); }
+.muestra-otra { background: var(--otra); }
+.muestra-vacio { background: transparent; box-shadow: inset 0 0 0 1px var(--tinta-3); }
+
+/* ---------- Columna principal ---------- */
+.principal { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+
+.barra { padding: 18px 24px 4px; }
+h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
+.barra p { margin: 4px 0 0; color: var(--tinta-2); }
+
+.escenario { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 24px 10px; }
+.zona-mapa { position: relative; flex: 1; min-height: 240px; }
+.mapa { position: absolute; inset: 0; cursor: grab; }
+.mapa:active { cursor: grabbing; }
+
+.acercar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; font-size: 12px; color: var(--tinta-3); }
+.acercar button { font-size: 12px; padding: 4px 10px; }
+.clave { display: inline-flex; align-items: center; gap: 14px; margin-left: 14px; white-space: nowrap; }
+.clave span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Activación del sonido (los navegadores exigen un click antes de reproducir audio) ---------- */
+.activar {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+.activar[hidden] { display: none; }
+.activar-caja {
+  max-width: 380px;
+  padding: 24px;
+  text-align: center;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.activar-caja p { margin: 0 0 16px; color: var(--tinta-2); }
+.boton-primario { padding: 10px 18px; font-size: 15px; font-weight: 800; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+.boton-texto { display: block; margin: 10px auto 0; border: 0; background: none; color: var(--tinta-2); text-decoration: underline; }
+
+/* ---------- Reproductor inferior (formato tipo Spotify) ----------
+   izquierda: granularidad · centro: año anterior / play / año siguiente y, debajo, la línea de tiempo · derecha: sonido */
+.reproductor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px 8px;
+  border-top: 1px solid var(--grilla);
+  background: var(--plano);
+}
+.rp-centro { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 640px; justify-self: center; }
+.rp-botones { display: flex; align-items: center; justify-content: center; gap: 18px; }
+
+.play { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: var(--tinta); color: var(--plano); border-color: var(--tinta); transition: transform 0.1s; }
+.play:hover { transform: scale(1.06); border-color: var(--tinta); }
+.play svg { width: 16px; height: 16px; fill: currentColor; }
+.play .icono-pausa, .play.reproduciendo .icono-play { display: none; }
+.play.reproduciendo .icono-pausa { display: block; }
+
+.rp-saltar { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 4px; border: 0; background: none; color: var(--tinta-2); }
+.rp-saltar:hover { color: var(--tinta); }
+.rp-saltar:disabled { opacity: 0.3; cursor: default; }
+.rp-saltar svg { width: 16px; height: 16px; fill: currentColor; }
+.rp-anio { min-width: 32px; font-size: 11px; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+#anio-anterior .rp-anio { text-align: right; }
+#anio-siguiente .rp-anio { text-align: left; }
+
+.rp-linea { display: flex; align-items: center; gap: 10px; width: 100%; }
+.rp-tiempo { flex: none; min-width: 96px; font-size: 12px; color: var(--tinta-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rp-actual { text-align: right; color: var(--tinta-2); font-weight: 800; }
+.rp-final { text-align: left; }
+
+/* Línea de tiempo: barra fina con el avance relleno (--avance lo actualiza main.js); la perilla aparece al pasar el cursor */
+#slider {
+  flex: 1;
+  min-width: 80px;
+  height: 4px;
+  margin: 8px 0;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--tinta-2) var(--avance, 0%), var(--eje) var(--avance, 0%));
+  cursor: pointer;
+}
+.rp-linea:hover #slider, #slider:focus-visible { background: linear-gradient(to right, var(--tinta) var(--avance, 0%), var(--eje) var(--avance, 0%)); }
+#slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--tinta); border: 0; opacity: 0; transition: opacity 0.15s; }
+#slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--tinta); border: 0; opacity: 0; transition: opacity 0.15s; }
+.rp-linea:hover #slider::-webkit-slider-thumb, #slider:focus-visible::-webkit-slider-thumb { opacity: 1; }
+.rp-linea:hover #slider::-moz-range-thumb, #slider:focus-visible::-moz-range-thumb { opacity: 1; }
+#slider::-moz-range-track { background: transparent; }
+
+.rp-izquierda { grid-column: 1; grid-row: 1; display: flex; align-items: center; justify-content: flex-start; min-width: 0; }
+.rp-derecha { grid-column: 3; grid-row: 1; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.granos { display: inline-flex; border: 1px solid var(--eje); border-radius: 999px; overflow: hidden; }
+.granos button { border: 0; border-radius: 0; background: transparent; }
+.granos button + button { border-left: 1px solid var(--eje); }
+.granos button[aria-checked="true"] { background: var(--tinta); color: var(--plano); }
+.sonido { display: grid; place-items: center; width: 38px; height: 34px; padding: 0; }
+.sonido svg { width: 18px; height: 18px; fill: currentColor; }
+.sonido .ondas, .sonido .cruz { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.sonido[aria-pressed="true"] .cruz, .sonido[aria-pressed="false"] .ondas { display: none; }
+
+/* Fuentes de datos en una sola línea */
+.creditos {
+  margin: 0;
+  padding: 2px 20px 8px;
+  color: var(--tinta-3);
+  font-size: 11px;
+  background: var(--plano);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Panel lateral: canción seleccionada + top 5 (alto completo, sin scroll) ----------
+   La portada ocupa el ancho completo y el alto que sobra; el resto de los bloques tiene alto fijo, así todo
+   (portada, estadísticas, popularidad y top 5) se ve en la misma pantalla y nada salta al cambiar de país. */
+.panel {
+  position: relative;
+  height: 100vh;
+  overflow: hidden auto;      /* solo hace scroll en pantallas muy bajas (< ~700 px) */
+  background: var(--panel);
+  border-left: 1px solid var(--grilla);
+}
+.p-contenido { display: flex; flex-direction: column; height: 100%; }
+.panel.modo-mensaje .p-contenido { display: none; }
+
+/* País sin datos: solo el mensaje, centrado */
+.p-mensaje { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 32px; text-align: center; }
+.panel.modo-mensaje .p-mensaje { display: flex; }
+.p-mensaje strong { font-size: 24px; font-weight: 900; line-height: 1.1; }
+.p-mensaje span { max-width: 300px; color: var(--tinta-2); }
+
+/* Pantalla de carga: aparece solo si los datos tardan */
+.p-cargando { position: absolute; inset: 0; z-index: 2; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 12px; background: var(--panel); color: var(--tinta-2); font-size: 13px; }
+.panel.cargando .p-cargando { display: flex; }
+.giro { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--eje); border-top-color: var(--tinta); animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .giro { animation-duration: 2.4s; } }
+
+/* Portada: cuadrada, de ancho completo si hay alto; si no, se achica centrada sobre la misma imagen desenfocada */
+.p-hero { position: relative; flex: 1 1 auto; min-height: 120px; max-height: 399px; overflow: hidden; background: var(--grilla); }   /* 399 = 400 px del panel − 1 px de borde: cuadrada */
+.p-fondo { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover; filter: blur(22px) brightness(0.45); }
+.p-portada {
+  position: relative;
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  object-fit: cover;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.p-cuerpo { flex: none; display: flex; flex-direction: column; gap: 10px; padding: 12px 18px 14px; }
+
+.p-contexto { margin: 0; height: 15px; color: var(--tinta-3); font-size: 11px; font-weight: 800; line-height: 15px; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Título (máx. 2 líneas) + artistas en un bloque de alto fijo: el panel no salta y los artistas quedan pegados al título */
+.p-nombre { height: 66px; margin-top: 2px; overflow: hidden; }
+.p-info h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.p-artistas { margin: 2px 0 0; color: var(--tinta-2); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-audio { display: flex; align-items: center; gap: 8px; height: 18px; margin-top: 4px; font-size: 12px; color: var(--tinta-3); white-space: nowrap; }
+.p-audio #p-audio-texto { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.enlace-spotify { flex: none; font-size: 12px; }
+.progreso { height: 3px; margin-top: 6px; background: var(--grilla); border-radius: 2px; overflow: hidden; }
+.progreso div { height: 100%; width: 0; background: var(--tinta-2); }
+
+.ecualizador { flex: none; display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.ecualizador i { width: 3px; height: 3px; background: var(--tinta-3); border-radius: 1px; }
+.sonando .ecualizador i { background: var(--tinta); animation: rebote 0.9s ease-in-out infinite; }
+.sonando .ecualizador i:nth-child(2) { animation-delay: -0.3s; }
+.sonando .ecualizador i:nth-child(3) { animation-delay: -0.6s; }
+@keyframes rebote { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+@media (prefers-reduced-motion: reduce) { .sonando .ecualizador i { animation: none; height: 8px; } }
+
+/* Estadísticas: etiquetas en minúscula (más angostas) y ancho repartido según lo que necesita cada tarjeta
+   (la fecha y "Reproducciones" son las más largas), con holgura aunque el sistema muestre barras de scroll */
+.p-stats { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.84fr) minmax(0, 1.04fr); gap: 8px; margin: 0; }
+.p-stats div { padding: 7px 9px; background: var(--superficie); border-radius: 8px; }
+.p-stats dt { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--tinta-3); white-space: nowrap; }
+.p-stats dd { margin: 1px 0 0; font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.p-popularidad { margin: 0; }
+.p-popularidad figcaption { font-size: 11px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-grafico-caja { position: relative; height: 96px; margin-top: 2px; }
+.p-grafico-aviso { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-size: 13px; color: var(--tinta-3); }
+.p-grafico-aviso[hidden] { display: none; }
+
+.p-top-cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.p-top h3 { margin: 0; font-size: 16px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-top-cabecera span { font-size: 11px; color: var(--tinta-3); white-space: nowrap; }
+.p-top ol { margin: 6px 0 0; padding: 0; list-style: none; display: grid; grid-template-rows: repeat(5, 38px); gap: 3px; }
+.p-top li {
+  display: grid;
+  grid-template-columns: 16px 32px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 0 8px 0 6px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.p-top li:hover { background: var(--superficie); }
+.p-top li.actual { background: var(--superficie); border-left-color: var(--c1); }
+.p-pos { font-size: 12px; color: var(--tinta-3); text-align: right; font-variant-numeric: tabular-nums; }
+.p-top img { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.p-top-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.p-top-texto strong { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-top-texto span { font-size: 12px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-top-vacio { display: block !important; grid-row: 1 / span 5; color: var(--tinta-3); font-size: 13px; cursor: default !important; }
+
+@media (max-width: 1300px) {
+  .granos button { padding: 5px 8px; font-size: 12px; }
+}
+
+/* ---------- Pantallas medianas y angostas: el panel pasa debajo ---------- */
+@media (max-width: 1100px) {
+  body { display: block; height: auto; overflow: auto; }
+  .principal { height: auto; }
+  .zona-mapa { flex: none; height: 55vh; }
+  .panel { height: auto; min-height: 640px; overflow: visible; border-left: 0; border-top: 1px solid var(--grilla); }
+  .p-contenido { height: auto; }
+  .p-hero { flex: none; height: min(100vw, 420px); max-height: none; }
+}
+@media (max-width: 760px) {
+  .barra { padding: 14px 16px 4px; }
+  h1 { font-size: 24px; }
+  .escenario { padding: 4px 16px 10px; }
+  .zona-mapa { height: 260px; }
+  .clave { margin-left: 0; flex-wrap: wrap; white-space: normal; }
+  .reproductor { grid-template-columns: 1fr; padding: 10px 16px 8px; gap: 10px; }
+  .rp-centro, .rp-derecha, .rp-izquierda { grid-column: 1; grid-row: auto; }
+  .rp-tiempo { min-width: 0; }
+  .rp-izquierda, .rp-derecha { justify-content: center; }
+  .rp-izquierda { order: 2; }
+  .rp-derecha { order: 3; }
+  .granos button { padding: 6px 9px; }
+  .creditos { padding: 2px 16px 10px; white-space: normal; }
+}

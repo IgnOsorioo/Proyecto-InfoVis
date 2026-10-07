@@ -2,7 +2,32 @@
 
 Mapa mundial interactivo y sonoro con la canción más escuchada en Spotify en cada país, día a día desde 2017. Al pasar el cursor por un país se reproduce un fragmento de su canción #1 en ese momento y se muestra la portada. Proyecto del curso Visualización de la Información (IIC2026, PUC).
 
-## Qué muestra
+**En línea:** https://ignosorioo.github.io/Proyecto-InfoVis/ (la página de inicio enlaza cada versión).
+
+## Estructura del repositorio
+
+La Entrega 1 se evalúa por proceso: cuatro versiones navegables, cada una con su tag y su registro.
+
+| Carpeta | Contenido |
+|---|---|
+| `index.html` | Página de inicio con las versiones y su estado. |
+| [`v1/`](v1/) … [`v4/`](v4/) | Una carpeta por versión, con su app (`index.html`, `css/`, `js/`), su `README.md` (evidencia, qué cambió, rationale y qué se descartó) y sus capturas en `evidencia/`. Una versión cerrada no se vuelve a tocar. |
+| [`readmes/`](readmes/) | Revisiones R1, R2 y R3 (feedback del equipo docente y de los pares), feedback que dimos, evaluación con usuarios, contexto general y auditoría frente a la pauta. |
+| `datos/` | Datos generados por el pipeline, compartidos por todas las versiones (cada app los carga desde `../datos/`). |
+| `scripts/` | Pipeline de datos en Python y servidor local. |
+
+### Trabajar por versiones
+
+- **Se trabaja solo en la carpeta de la versión vigente** (hoy, `v2/`), en `http://localhost:8000/v2/`.
+- **Para cerrar una versión:**
+  1. completar su `README.md`;
+  2. guardar capturas en `vN/evidencia/` y grabar un video corto con audio;
+  3. hacer commit y crear el tag: `git tag -a vN -m "VN — …"` y `git push --tags`;
+  4. en `index.html` de la raíz, marcarla como `cerrada` en la lista `VERSIONES`, con su fecha y tag.
+- **Para empezar la siguiente:** `cp -R vN/index.html vN/css vN/js vN+1/`, y en `index.html` de la raíz marcarla como `vigente`.
+- **Si cambia el formato de `datos/`**, las versiones cerradas dejarían de funcionar. Antes de regenerar, copiar los datos actuales a `vN/datos/` y cambiar las rutas `../datos/` de esa versión a `datos/`. La app deduce la carpeta de datos desde la ruta de `canciones.js`, así que no hay que tocar el JS.
+
+## Qué muestra (V1)
 
 - **Mapa 2D** (proyección Natural Earth): se mueve arrastrando y se acerca con scroll. Los botones de región encuadran el continente completo (aunque se vean partes de otros). Gira en torno a la canción seleccionada:
   - en coral, los países donde esa canción es #1 en la fecha elegida;
@@ -23,14 +48,14 @@ Los navegadores exigen un click antes de reproducir audio, por eso al entrar apa
 ## Ver la visualización
 
 ```bash
-python3 scripts/servir.py     # y abrir http://localhost:8000
+python3 scripts/servir.py     # y abrir http://localhost:8000 (inicio) o http://localhost:8000/v2/
 ```
 
 `servir.py` le pide al navegador no guardar archivos en caché. Con `python3 -m http.server`, en cambio, el navegador puede mezclar la página nueva con CSS o JS viejos después de un cambio.
 
-Abrir `index.html` con doble click también funciona. En GitHub Pages se publica desde la rama `main`, carpeta raíz, sin paso de compilación.
+Abrir `vN/index.html` con doble click también funciona. En GitHub Pages se publica desde la rama `main`, carpeta raíz, sin paso de compilación.
 
-**Al cambiar CSS, JS o datos**, sube el número de versión (`?v=…`) en las referencias de `index.html`. GitHub Pages guarda los archivos 10 minutos en caché, y así cada visitante descarga los archivos nuevos y no una mezcla con los antiguos.
+**Al cambiar CSS, JS o datos**, sube el número de versión (`?v=…`) en las referencias del `index.html` de la versión que estás editando. GitHub Pages guarda los archivos 10 minutos en caché, y así cada visitante descarga los archivos nuevos y no una mezcla con los antiguos.
 
 ## Regenerar los datos
 

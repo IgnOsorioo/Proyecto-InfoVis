@@ -176,9 +176,12 @@ function cargadorScript(nombreGlobal, ruta) {
   };
 }
 
-const VERSION_DATOS = document.querySelector('script[src*="datos/canciones.js"]')?.src.split('?v=')[1] ?? '';
-const pedirTop5 = cargadorScript('cargarTop5', clave => `datos/top5/${clave}.js?v=${VERSION_DATOS}`);
-const _pedirFragmento = cargadorScript('cargarPopularidad', n => `datos/popularidad/${n.padStart(2, '0')}.js?v=${VERSION_DATOS}`);
+// La carpeta de datos se deduce del <script> de canciones.js: la app funciona igual en /v1/, /v2/… o en la raíz.
+const _SRC_CANCIONES = document.querySelector('script[src*="datos/canciones.js"]')?.src ?? 'datos/canciones.js';
+const BASE_DATOS = _SRC_CANCIONES.replace(/canciones\.js.*$/, '');
+const VERSION_DATOS = _SRC_CANCIONES.split('?v=')[1] ?? '';
+const pedirTop5 = cargadorScript('cargarTop5', clave => `${BASE_DATOS}top5/${clave}.js?v=${VERSION_DATOS}`);
+const _pedirFragmento = cargadorScript('cargarPopularidad', n => `${BASE_DATOS}popularidad/${n.padStart(2, '0')}.js?v=${VERSION_DATOS}`);
 
 /** Reproducciones semanales (en miles) de la canción: {inicio: índice de semana, valores: [...]}, o null. */
 async function pedirPopularidad(idx) {
