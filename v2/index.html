@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-10-07a">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-10-08a">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
 </head>
@@ -21,6 +21,9 @@
         <h1>¿Qué suena en el mundo?</h1>
         <p>La canción #1 en Spotify de cada país. Pasa el cursor por un país para escucharla; haz click para seguirla en el tiempo.</p>
       </div>
+      <button type="button" class="boton-recorrido" id="ver-recorrido" title="Un minuto: de 2017 a hoy, y un hit global con sus aplausos">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>Recorrido de 1 min
+      </button>
       <div class="buscador" role="search">
         <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
         <input type="search" id="buscar" placeholder="Buscar una canción o artista" autocomplete="off" spellcheck="false"
@@ -76,6 +79,15 @@
         </div>
 
         <div class="globo" id="globo" hidden></div>
+
+        <!-- Recorrido guiado: el texto de cada paso -->
+        <div class="relato" id="relato" role="status" aria-live="polite" hidden>
+          <p id="relato-texto"></p>
+          <div class="relato-pie">
+            <span id="relato-paso"></span>
+            <button type="button" id="relato-saltar">Saltar (Esc)</button>
+          </div>
+        </div>
       </div>
       <div class="acercar" role="group" aria-label="Elegir una región: acerca el mapa y muestra su top 5">
         <button type="button" data-region="mundo" class="activo">Mundo</button>
@@ -196,28 +208,30 @@
         <figcaption>Desde 2017 · % de países según su #1 diario (promedio mensual)</figcaption>
         <div id="r-grafico"></div>
       </figure>
+      <button type="button" class="r-global" id="r-global" title="Seguir esta canción en el mapa">
+        <img id="r-global-portada" alt="">
+        <span class="r-global-texto">
+          <span class="r-global-etiqueta">El #1 del mundo · <span id="r-global-n"></span></span>
+          <strong id="r-global-titulo"></strong>
+          <span id="r-global-artistas"></span>
+        </span>
+        <span class="r-global-accion">Seguir</span>
+      </button>
     </div>
 
-    <section class="p-top" aria-labelledby="p-top-titulo">
-      <div class="p-top-cabecera">
-        <h3 id="p-top-titulo">Top 5</h3>
-        <span id="p-top-periodo"></span>
-      </div>
-      <ol id="p-top"></ol>
-    </section>
   </aside>
 
-  <script src="../datos/mundo.js?v=2026-10-07a"></script>
-  <script src="../datos/paises.js?v=2026-10-07a"></script>
-  <script src="../datos/canciones.js?v=2026-10-07a"></script>
-  <script src="../datos/numero1.js?v=2026-10-07a"></script>
-  <script src="../datos/deezer.js?v=2026-10-07a" onerror="window.DEEZER = []"></script>
-  <script src="js/estado.js?v=2026-10-07a"></script>
-  <script src="js/reproductor.js?v=2026-10-07a"></script>
-  <script src="js/aplausos.js?v=2026-10-07a"></script>
-  <script src="js/buscador.js?v=2026-10-07a"></script>
-  <script src="js/mapa.js?v=2026-10-07a"></script>
-  <script src="js/panel.js?v=2026-10-07a"></script>
-  <script src="js/main.js?v=2026-10-07a"></script>
+  <script src="../datos/mundo.js?v=2026-10-08a"></script>
+  <script src="../datos/paises.js?v=2026-10-08a"></script>
+  <script src="../datos/canciones.js?v=2026-10-08a"></script>
+  <script src="../datos/numero1.js?v=2026-10-08a"></script>
+  <script src="../datos/deezer.js?v=2026-10-08a" onerror="window.DEEZER = []"></script>
+  <script src="js/estado.js?v=2026-10-08a"></script>
+  <script src="js/reproductor.js?v=2026-10-08a"></script>
+  <script src="js/aplausos.js?v=2026-10-08a"></script>
+  <script src="js/buscador.js?v=2026-10-08a"></script>
+  <script src="js/mapa.js?v=2026-10-08a"></script>
+  <script src="js/panel.js?v=2026-10-08a"></script>
+  <script src="js/main.js?v=2026-10-08a"></script>
 </body>
 </html>

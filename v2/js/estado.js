@@ -39,9 +39,15 @@ function urlPortada(portada) {
                                  : window.BASE_PORTADA + window.PREFIJO_PORTADA + portada;
 }
 
+/** Datos de una canción. Las del catálogo base (#1 o top 5) están siempre cargadas; las demás (buscador)
+    necesitan antes `asegurarCancion(idx)`. */
 function cancion(idx) {
-  const [id, titulo, artistas, portada, estreno] = window.CANCIONES[idx];
-  return { idx, id, titulo, artistas, estreno, portada: urlPortada(portada), deezer: window.DEEZER[idx] || 0 };
+  if (idx < window.CANCIONES.length) {
+    const [id, titulo, artistas, portada, estreno] = window.CANCIONES[idx];
+    return { idx, id, titulo, artistas, estreno, portada: urlPortada(portada), deezer: window.DEEZER[idx] || 0 };
+  }
+  const [id, portada, estreno] = _metaExtra.get(idx) ?? ['', '', ''];
+  return { idx, id, titulo: _buscar?.t[idx] ?? '', artistas: _buscar?.a[idx] ?? '', estreno, portada: urlPortada(portada), deezer: 0 };
 }
 
 // ---------- Períodos ↔ fechas ----------
@@ -279,21 +285,39 @@ const _SRC_CANCIONES = document.querySelector('script[src*="datos/canciones.js"]
 const BASE_DATOS = _SRC_CANCIONES.replace(/canciones\.js.*$/, '');
 const VERSION_DATOS = _SRC_CANCIONES.split('?v=')[1] ?? '';
 const pedirTop5 = cargadorScript('cargarTop5', clave => `${BASE_DATOS}top5/${clave}.js?v=${VERSION_DATOS}`);
-const _pedirFragmento = cargadorScript('cargarPopularidad', n => `${BASE_DATOS}popularidad/${n.padStart(2, '0')}.js?v=${VERSION_DATOS}`);
+// Catálogo completo (V2): las 250.790 canciones que alguna vez entraron al Top 200 de un país, repartidas en
+// 256 archivos por índice (scripts/06_catalogo_completo.py). Los índices del catálogo base no cambian.
+const FRAGMENTOS = 256;
+const _fragmento = (carpeta, n) => `${BASE_DATOS}${carpeta}/${n.padStart(3, '0')}.js?v=${VERSION_DATOS}`;
+const _pedirPopularidad = cargadorScript('cargarPopularidadTodas', n => _fragmento('popularidad_todas', n));
+const _pedirRanking = cargadorScript('cargarRanking', n => _fragmento('ranking', n));
+const _pedirMeta = cargadorScript('cargarMeta', n => _fragmento('catalogo/meta', n));
+const _pedirBuscar = cargadorScript('cargarBuscar', () => `${BASE_DATOS}catalogo/buscar.js?v=${VERSION_DATOS}`);
+const _metaExtra = new Map();
+let _buscar = null;
 
 /** Reproducciones semanales (en miles) de la canción: {inicio: índice de semana, valores: [...]}, o null. */
 async function pedirPopularidad(idx) {
-  const frag = await _pedirFragmento(String(idx % 64));
-  const d = frag[idx];
+  const d = (await _pedirPopularidad(String(idx % FRAGMENTOS)))[idx];
   return d ? { inicio: d[0], valores: d[1] } : null;
 }
 
-const _pedirRanking = cargadorScript('cargarRanking', n => `${BASE_DATOS}ranking/${n.padStart(2, '0')}.js?v=${VERSION_DATOS}`);
-
 /** Puestos semanales de la canción por país: {cc: [semana_inicio, [puestos...]]} (0 = fuera del Top 200). */
 async function pedirRanking(idx) {
-  const frag = await _pedirRanking(String(idx % 64));
-  return frag[idx] ?? {};
+  return (await _pedirRanking(String(idx % FRAGMENTOS)))[idx] ?? {};
+}
+
+/** Índice del buscador: {t: títulos, a: artistas, e: éxito 0–99}, en el orden del catálogo (~4,7 MB comprimido). */
+async function pedirBuscador() {
+  _buscar ??= await _pedirBuscar('todo');
+  return _buscar;
+}
+
+/** Carga los datos de una canción fuera del catálogo base (título y artistas del buscador; portada y estreno). */
+async function asegurarCancion(idx) {
+  if (idx < window.CANCIONES.length || _metaExtra.has(idx)) return;
+  const [frag] = await Promise.all([_pedirMeta(String(idx % FRAGMENTOS)), pedirBuscador()]);
+  _metaExtra.set(idx, frag[idx] ?? ['', '', '']);
 }
 
 const CONFIG_PLOTLY = { displayModeBar: false, responsive: true, locale: 'es' };

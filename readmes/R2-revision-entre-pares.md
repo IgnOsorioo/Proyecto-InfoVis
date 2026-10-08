@@ -6,7 +6,7 @@
 
 1. Al entrar, sin que nadie explique nada: **¿qué mensaje leen en el mapa y en el resumen?** ¿Se entiende qué significan el azul (#1 mundial), el gris (compartido) y el coral (propio)?
 2. Al seguir una canción, **¿qué creen que codifican los aplausos y los silbidos?** ¿Se entienden sin explicación? ¿Ayudan a leer la popularidad o tapan la canción?
-3. **¿Es claro cuándo están explorando** (pasar el cursor) **y cuándo siguiendo una canción** (click)? ¿Encuentran cómo volver al resumen?
+3. **¿Es claro cuándo están explorando** (pasar el cursor) **y cuándo siguiendo una canción** (click)? ¿Encuentran cómo volver al resumen? ¿El recorrido de 1 minuto les deja el mensaje, o prefieren explorar solos?
 
 ---
 

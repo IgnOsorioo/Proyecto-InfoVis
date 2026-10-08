@@ -124,11 +124,10 @@
 
   // ---------- Explorar: el #1 de cada país ----------
 
-  /** El panel pasa a mostrar el país: su #1 (que suena si el cursor está encima) y su top 5.
+  /** El panel pasa a mostrar el país: su #1 (que suena si el cursor está encima).
       Si el país todavía no tenía chart en esta fecha, el panel muestra solo un mensaje. */
   function elegirDesdePais(cc) {
     Estado.vistaPais = cc;
-    Estado.ambito = cc;
     const r = numero1(cc);
     if (!r) {
       Estado.mensaje = true;
@@ -143,7 +142,7 @@
     Panel.mostrar();
   }
 
-  /** Vuelve al panorama: resumen del mundo (o de la región elegida) y su top 5. */
+  /** Vuelve al panorama: resumen del mundo o de la región elegida. */
   function volverAlResumen() {
     Estado.vistaPais = null;
     Estado.mensaje = false;
@@ -219,6 +218,7 @@
     const [ranking, popularidad] = await Promise.all([
       pedirRanking(idx).catch(() => ({})),
       pedirPopularidad(idx).catch(() => null),
+      asegurarCancion(idx).catch(() => {}),             // título, portada y estreno si no es del catálogo base
     ]);
     if (mio !== pedidoSeguir) return;
     seguida = { idx, ranking, popularidad };
@@ -227,7 +227,6 @@
     Estado.origen = origen;
     Estado.mensaje = false;
     Estado.vistaPais = null;
-    Estado.ambito = origen ?? region;
     territorio = null;
     document.body.classList.add('modo-seguir');
     const c = cancion(idx);
@@ -350,6 +349,113 @@
     actualizarBotonSonido();
   }
 
+  // ---------- Recorrido guiado (1 min) ----------
+  // Cuenta el mensaje sin que nadie lo explique: 2017 → hoy mes a mes (crece el coral, el #1 propio) y
+  // luego el hit más global de los datos, semana a semana, con sus aplausos. Esc o "Saltar" lo terminan.
+
+  let recorrido = null;
+  const MS_POR_MES = 190, MS_POR_SEMANA = 330, SEMANAS_DEL_HIT = 60;
+
+  /** El hit más global de los datos: la canción con más semanas-país en el #1. */
+  function hitMasGlobal() {
+    const semanas = new Map();
+    for (const [cc, tramos] of Object.entries(window.NUMERO1.semana)) {
+      if (cc === 'global') continue;
+      tramos.forEach(([ini, idx], i) => {
+        const fin = i + 1 < tramos.length ? tramos[i + 1][0] : window.PERIODOS.semana.n;
+        semanas.set(idx, (semanas.get(idx) ?? 0) + fin - ini);
+      });
+    }
+    return [...semanas].sort((a, b) => b[1] - a[1])[0][0];
+  }
+
+  /** "33 de 55 países (60 %)": cuántos países del mundo tienen un #1 de la categoría en la fecha en pantalla
+      (las mismas cifras que muestra el panel). */
+  function cuantos(k) {
+    const { cat } = categorias();
+    const total = Object.keys(cat).length;
+    const n = Object.values(cat).filter(c => c === k).length;
+    return `${n} de ${total} países (${Math.round(100 * n / total)} %)`;
+  }
+
+  function relato(texto, paso, total) {
+    $('relato-texto').textContent = texto;
+    $('relato-paso').textContent = `${paso} / ${total}`;
+    $('relato').hidden = false;
+  }
+
+  async function verRecorrido() {
+    if (recorrido) return;
+    const r = recorrido = { activo: true, cortar: null };
+    // Espera que se corta de inmediato si se termina el recorrido (Esc o "Saltar").
+    const esperar = ms => new Promise((ok, no) => {
+      const t = setTimeout(ok, ms);
+      r.cortar = () => { clearTimeout(t); no(new Error('recorrido terminado')); };
+    });
+    document.body.classList.add('en-recorrido');
+    try {
+      if (Estado.reproduciendo) pausar();
+      dejarDeSeguir();
+      marcarRegion(document.querySelector('.acercar button[data-region="mundo"]'));
+      region = 'global';
+      Estado.ambito = region;
+      Mapa.enfocar('mundo');
+      volverAlResumen();
+      cambiarGrano('mes');
+      irAPeriodo(0);
+      const TOTAL = 5;
+
+      relato(`En ${textoPeriodo('mes', 0)}, ${cuantos('mundial')} tenían como #1 la misma canción que el mundo (azul).`, 1, TOTAL);
+      await esperar(5000);
+
+      relato('Mes a mes crece el coral: países cuyo #1 es una canción que no es #1 en ningún otro lugar.', 2, TOTAL);
+      for (let p = 1; p < window.PERIODOS.mes.n; p++) {
+        irAPeriodo(p);
+        await esperar(MS_POR_MES);
+      }
+
+      const inicio2017 = categorias('mes', 0).cat;
+      const propios2017 = Object.values(inicio2017).filter(c => c === 'propio').length;
+      relato(`En ${textoPeriodo('mes', Estado.periodo)}, ${cuantos('propio')} tienen un #1 propio. En ${textoPeriodo('mes', 0)} eran ${propios2017}.`, 3, TOTAL);
+      await esperar(5500);
+
+      const hit = hitMasGlobal();
+      cambiarGrano('semana');
+      await seguir(hit, {});
+      if (!r.activo) throw new Error('recorrido terminado');
+      const c = cancion(hit);
+      relato(`Los hits globales siguen existiendo: «${c.titulo}». Escucha: los aplausos crecen con sus reproducciones y los silbidos, con los países donde es #1.`, 4, TOTAL);
+      const inicio = seguida?.popularidad ? periodoDeFecha('semana', fechaDeSemana(seguida.popularidad.inicio)) : 0;
+      irAPeriodo(inicio);
+      Aplausos.continuo(true);
+      for (let k = 0; k < SEMANAS_DEL_HIT && Estado.periodo < window.PERIODOS.semana.n - 1; k++) {
+        await esperar(MS_POR_SEMANA);
+        irAPeriodo(Estado.periodo + 1);
+      }
+      Aplausos.continuo(false);
+
+      relato('Ahora tú: pasa el cursor por un país para escuchar su #1, haz click para seguirlo o busca cualquier canción.', 5, TOTAL);
+      await esperar(5000);
+    } catch (e) {
+      // Terminado con Esc o "Saltar": se vuelve al estado de inicio igual que al final.
+    } finally {
+      r.activo = false;
+      recorrido = null;
+      $('relato').hidden = true;
+      document.body.classList.remove('en-recorrido');
+      Aplausos.continuo(false);
+      dejarDeSeguir();
+      cambiarGrano('dia');
+      irAPeriodo(window.PERIODOS.dia.n - 1);
+    }
+  }
+
+  function terminarRecorrido() {
+    if (!recorrido) return;
+    recorrido.activo = false;
+    recorrido.cortar?.();
+  }
+
   // ---------- Inicio ----------
 
   document.addEventListener('pointerdown', primerGesto, true);
@@ -375,20 +481,21 @@
     marcarRegion(b);
     region = b.dataset.region === 'mundo' ? 'global' : b.dataset.region;
     Mapa.enfocar(b.dataset.region);
-    if (Estado.modo === 'seguir') {
-      Estado.ambito = region;                            // el top 5 pasa a la región
-      Panel.mostrar();
-    } else {
+    Estado.ambito = region;                              // el resumen pasa a la región
+    if (Estado.modo !== 'seguir') {
       territorio = null;
       volverAlResumen();
     }
   }));
   $('seguir-cerrar').addEventListener('click', dejarDeSeguir);
+  $('ver-recorrido').addEventListener('click', verRecorrido);
+  $('relato-saltar').addEventListener('click', terminarRecorrido);
 
   document.addEventListener('keydown', e => {
     if (e.target.closest('input')) return;
     if (e.key === 'Escape') {
-      if (Estado.modo === 'seguir') dejarDeSeguir();
+      if (recorrido) terminarRecorrido();
+      else if (Estado.modo === 'seguir') dejarDeSeguir();
       else if (Estado.vistaPais) volverAlResumen();
       return;
     }
@@ -403,7 +510,7 @@
             alElegir: cc => { const r = numero1(cc); if (r) seguir(r.idx, { origen: cc }); } });
   $('mapa').addEventListener('mousemove', moverGlobo);
   Panel.iniciar({
-    alElegirCancion: idx => seguir(idx, { origen: null }),
+    alElegirCancion: idx => seguir(idx, { origen: null }),   // tarjeta "El #1 del mundo" del resumen
     alVolverAlResumen: () => (Estado.modo === 'seguir' ? dejarDeSeguir() : volverAlResumen()),
   });
   Buscador.iniciar({ alElegirCancion: idx => seguir(idx, { saltar: true }) });
