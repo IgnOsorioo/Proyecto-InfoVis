@@ -80,7 +80,7 @@ cd scripts
 ~/.venvs/infovis/bin/python 02_construir_datos.py   # catálogo, #1, top 5 y popularidad → datos/ (≈20 s)
 ~/.venvs/infovis/bin/python 03_deezer.py            # ids de Deezer para los previews (usa caché)
 ~/.venvs/infovis/bin/python 04_mapa_mundial.py      # geometría del mapa desde Natural Earth → datos/mundo.js
-~/.venvs/infovis/bin/python 05_ranking_por_pais.py  # puesto semanal de cada canción en cada país → datos/ranking/ (V2, ≈6 s)
+~/.venvs/infovis/bin/python 06_catalogo_completo.py  # V2: catálogo completo del buscador, popularidad y puesto por país (≈40 s)
 ```
 
 La carpeta de datos crudos se puede cambiar con la variable `INFOVIS_RAW_DIR`.
