@@ -2,11 +2,11 @@
 
 > En la R2 cada grupo presenta su V2, **recibe** feedback de otro grupo y **da** el suyo. El feedback que *damos* también se evalúa (10 % de la nota): tiene que ser específico, anclado en los principios del curso y constructivo. Llevar la [V2](../v2/README.md) funcionando y 2–3 preguntas concretas.
 
-## Preguntas que llevamos (borrador, ajustar antes de la sesión)
+## Preguntas que llevamos (sobre la versión actual, en /v3/)
 
-1. Al entrar, sin que nadie explique nada: **¿qué mensaje leen en el mapa y en el resumen?** ¿Se entiende qué significan el azul (#1 mundial), el gris (compartido) y el coral (propio)?
-2. Al seguir una canción, **¿qué creen que codifican los aplausos y los silbidos?** ¿Se entienden sin explicación? ¿Ayudan a leer la popularidad o tapan la canción?
-3. **¿Es claro cuándo están explorando** (pasar el cursor) **y cuándo siguiendo una canción** (click)? ¿Encuentran cómo volver al resumen? ¿El recorrido de 1 minuto les deja el mensaje, o prefieren explorar solos?
+1. Sin explicación: **¿qué mensaje leen en el mapa?** ¿Se entiende que el coral significa "este país escucha lo mismo que el mundo (#1 global)"? ¿Ven la diferencia entre continentes, por ejemplo América frente a África y Asia?
+2. Al reproducir el tiempo, **¿qué creen que codifica el tono grave** (una voz por continente que se junta o se separa)? ¿Ayuda a escuchar si el mundo escucha lo mismo, o molesta bajo la canción?
+3. **Click en un país para quedarse escuchándolo mientras avanza el tiempo:** ¿lo descubren solos? ¿Es claro qué está sonando en cada momento (país fijado, país bajo el cursor o el #1 global)?
 
 ---
 
