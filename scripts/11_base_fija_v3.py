@@ -1,4 +1,4 @@
-"""Base fija de la V3: sin datos de un solo día, inicio sin huecos y total real de países por continente.
+"""Base fija de la V3: sin datos de un solo día, inicio sin huecos y muestra fija de países.
 
 0. Un solo día de datos = sin datos. La foto de Apple Music (el chart del 14-oct-2026, sin historia) era la
    única fuente de 92 países: se quita, y esos países pasan a "sin datos" (fuera de datos/v3/paises.js, de
@@ -8,23 +8,21 @@
    semanal de jfreyberg), así que la línea de tiempo tenía un hueco. La V3 empieza después: el 1-may-2015
    (día y mes), la semana del 27-abr-2015 y el año 2015. Se recortan datos/v3/numero1.js y datos/v3/top3/:
    cada granularidad parte en su nueva base y los tramos se corren.
-2. Total real de países por continente (datos/v3/continentes.js). Los conteos del panel ("15 de 41 países
-   de América") usan siempre el mismo total: todos los países independientes (countries_mledoze.json) más
-   los territorios que tienen chart propio (Hong Kong, Taiwán, Puerto Rico…). Antes el total eran los
-   países con datos en esa fecha, y cambiaba con el tiempo (África llegó a contar 1 de 1).
+2. Muestra fija (datos/v3/muestra.js): los países con #1 en todos los días, del 1-may-2015 al último día.
+   Toda la tendencia se cuenta sobre ellos (siempre los mismos y siempre con datos): así la cifra no cambia
+   porque se sumen países con el tiempo. Reemplaza al total de 196 países, que contaba como "no escucha el
+   #1 global" a los países sin datos.
 
 Uso: python scripts/11_base_fija_v3.py   (después de 09_datos_v3.py y 10_top3_v3.py; se puede repetir: lo que
 ya está aplicado no cambia)
 """
 import datetime as dt
 import json
-import os
 import re
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 DATOS = RAIZ / "datos" / "v3"
-MLEDOZE = Path(os.environ.get("INFOVIS_MLEDOZE", Path.home() / "InfoVis-datos" / "countries_mledoze.json"))
 NUEVAS_BASES = {"dia": dt.date(2015, 5, 1), "semana": dt.date(2015, 4, 27), "mes": dt.date(2015, 5, 1), "anio": dt.date(2015, 1, 1)}
 
 
@@ -147,32 +145,15 @@ else:
     print(f"recortado desde {NUEVAS_BASES['dia']} · períodos {periodos}")
 ruta_n1.write_text(js("FECHA_MAX", fecha_max) + js("PERIODOS", periodos) + js("NUMERO1", numero1), encoding="utf-8")
 
-# ---------- 2. Total real de países por continente ----------
-mledoze = {c["cca2"].lower(): c for c in json.load(open(MLEDOZE, encoding="utf-8"))}
-
-
-def continente(cc):
-    """La misma regla de 09_datos_v3.py (Medio Oriente va con África)."""
-    m = mledoze[cc]
-    if m["region"] == "Antarctic":
-        return None
-    if m["region"] == "Americas":
-        return "america"
-    if m["region"] == "Europe":
-        return "europa"
-    if m["region"] == "Oceania":
-        return "oceania"
-    if m["region"] == "Africa" or m.get("subregion") == "Western Asia":
-        return "africa"
-    return "asia"
-
-
-independientes = {cc for cc, m in mledoze.items() if m.get("independent")}
-con_chart = {cc for cc in paises if cc != "global"}
-por_continente = {}
-for cc in sorted(independientes | con_chart):
-    k = paises.get(cc, {}).get("continente") or continente(cc)
-    if k:
-        por_continente.setdefault(k, []).append(cc)
-(DATOS / "continentes.js").write_text(js("PAISES_POR_CONTINENTE", por_continente), encoding="utf-8")
-print("países por continente:", {k: len(v) for k, v in por_continente.items()}, "· total", sum(map(len, por_continente.values())))
+# ---------- 2. Muestra fija ----------
+# Los países con #1 en todos los días, del primero al último: la base de toda la tendencia (eje de tiempo,
+# titular, barras, diversidad y aplausos). Los demás se ven en el mapa desde que tienen datos, pero no entran
+# en la cuenta: si entraran, la cifra cambiaría también porque se suman países, no solo porque cambian los gustos.
+n = periodos["dia"]["n"]
+muestra = {}
+for cc in sorted(numero1["dia"]):
+    if cc != "global" and all(por_periodo(numero1["dia"][cc], n, lambda t: t[1] is not None)):
+        muestra.setdefault(paises[cc]["continente"], []).append(cc)
+(DATOS / "muestra.js").write_text(js("MUESTRA", muestra), encoding="utf-8")
+(DATOS / "continentes.js").unlink(missing_ok=True)       # el total de 196 países (reemplazado por la muestra)
+print("muestra fija:", {k: len(v) for k, v in muestra.items()}, "· total", sum(map(len, muestra.values())))

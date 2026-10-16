@@ -1,0 +1,1 @@
+window.MUESTRA = {"america":["ar","bo","br","ca","cl","co","cr","do","ec","gt","hn","mx","ni","pa","pe","py","sv","us","uy"],"europa":["at","be","bg","ch","cz","de","dk","ee","es","fi","fr","gb","gr","hu","ie","is","it","lt","lv","nl","no","pl","pt","se","sk"],"oceania":["au","nz"],"asia":["hk","my","ph","sg","tw"],"africa":["tr"]};
