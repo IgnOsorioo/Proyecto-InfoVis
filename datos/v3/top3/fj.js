@@ -1,1 +1,0 @@
-window.cargarTop3("fj", {"c":[["Heaven Baby (feat. ZAYN)","Ayra Starr, ZAYN"],["Ah Naita (feat. MR.SAM)","Vly"],["Kabasi","Kayzia"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

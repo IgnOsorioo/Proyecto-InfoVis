@@ -1,1 +1,0 @@
-window.cargarTop3("ao", {"c":[["FICAR ( (feat. Nivas C & Kenny André)","Evas"],["ÁRABE","Bahamas"],["Heaven Baby (feat. ZAYN)","Ayra Starr"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

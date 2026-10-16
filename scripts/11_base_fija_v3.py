@@ -1,4 +1,8 @@
-"""Base fija de la V3: inicio sin huecos y total real de países por continente.
+"""Base fija de la V3: sin datos de un solo día, inicio sin huecos y total real de países por continente.
+
+0. Un solo día de datos = sin datos. La foto de Apple Music (el chart del 14-oct-2026, sin historia) era la
+   única fuente de 92 países: se quita, y esos países pasan a "sin datos" (fuera de datos/v3/paises.js, de
+   numero1.js y de top3/). Lo mismo con cualquier país que tenga un solo día con datos.
 
 1. Recorte del inicio. Entre el 23-mar y el 23-abr-2015 no hay chart global de Spotify (falta en el dataset
    semanal de jfreyberg), así que la línea de tiempo tenía un hueco. La V3 empieza después: el 1-may-2015
@@ -9,8 +13,8 @@
    los territorios que tienen chart propio (Hong Kong, Taiwán, Puerto Rico…). Antes el total eran los
    países con datos en esa fecha, y cambiaba con el tiempo (África llegó a contar 1 de 1).
 
-Uso: python scripts/11_base_fija_v3.py   (después de 09_datos_v3.py y 10_top3_v3.py; no repetir sobre datos
-ya recortados: el script lo detecta y no hace nada)
+Uso: python scripts/11_base_fija_v3.py   (después de 09_datos_v3.py y 10_top3_v3.py; se puede repetir: lo que
+ya está aplicado no cambia)
 """
 import datetime as dt
 import json
@@ -56,13 +60,77 @@ def recortar(tramos, d, sin_dato):
     return salida
 
 
-# ---------- 1. Recorte del inicio ----------
+def leer_top3(ruta):
+    cc, cuerpo = re.match(r'window\.cargarTop3\("(\w+)", (.*)\);\n', ruta.read_text(encoding="utf-8"), re.S).groups()
+    return cc, json.loads(cuerpo)
+
+
+def escribir_top3(ruta, cc, datos):
+    ruta.write_text(f"window.cargarTop3({json.dumps(cc)}, {json.dumps(datos, ensure_ascii=False, separators=(',', ':'))});\n",
+                    encoding="utf-8")
+
+
+def por_periodo(tramos, n, hay_dato):
+    """Tramos → lista por período: True donde el tramo vigente tiene dato."""
+    salida = [False] * n
+    for i, t in enumerate(tramos):
+        fin = tramos[i + 1][0] if i + 1 < len(tramos) else n
+        for q in range(t[0], min(fin, n)):
+            salida[q] = hay_dato(t)
+    return salida
+
+
 ruta_n1 = DATOS / "numero1.js"
 fecha_max = leer(ruta_n1, "FECHA_MAX")
 periodos = leer(ruta_n1, "PERIODOS")
 numero1 = leer(ruta_n1, "NUMERO1")
+
+# ---------- 0. Un solo día de datos = sin datos ----------
+ruta_paises = DATOS / "paises.js"
+paises = leer(ruta_paises, "PAISES")
+quitados = []
+for grano in periodos:
+    for cc, tramos in numero1[grano].items():           # la foto de Apple pasa a "sin dato"
+        limpio = []
+        for t in tramos:
+            t = [t[0], None, None] if t[2] == "a" else t
+            if limpio and limpio[-1][1:] == t[1:]:
+                continue
+            if not limpio and t[1] is None:
+                continue
+            limpio.append(t)
+        numero1[grano][cc] = limpio
+for cc in list(numero1["dia"]):
+    if cc != "global" and sum(por_periodo(numero1["dia"][cc], periodos["dia"]["n"], lambda t: t[1] is not None)) <= 1:
+        quitados.append(cc)
+for cc in quitados:
+    for grano in periodos:
+        numero1[grano].pop(cc, None)
+    paises.pop(cc, None)
+    (DATOS / "top3" / f"{cc}.js").unlink(missing_ok=True)
+for ruta in sorted((DATOS / "top3").glob("*.js")):     # el top 3 solo donde el mapa tiene #1
+    cc, datos = leer_top3(ruta)
+    for grano, info in periodos.items():
+        con_n1 = por_periodo(numero1[grano].get(cc, []), info["n"], lambda t: t[1] is not None)
+        con_top = por_periodo(datos[grano], info["n"], lambda t: len(t) > 1)
+        if con_top == [a and b for a, b in zip(con_top, con_n1)]:
+            continue
+        vigente = {t[0]: t for t in datos[grano]}
+        nuevos, actual, previo = [], None, None
+        for q in range(info["n"]):
+            actual = vigente.get(q, actual)
+            fila = tuple(actual[1:]) if actual and len(actual) > 1 and con_n1[q] else None
+            if fila != previo:
+                nuevos.append([q, *fila] if fila else [q])
+                previo = fila
+        datos[grano] = nuevos
+    escribir_top3(ruta, cc, datos)
+ruta_paises.write_text(js("PAISES", paises), encoding="utf-8")
+print(f"sin datos por tener un solo día: {len(quitados)} países")
+
+# ---------- 1. Recorte del inicio ----------
 if dt.date.fromisoformat(periodos["dia"]["base"]) >= NUEVAS_BASES["dia"]:
-    print("numero1.js ya está recortado: no se toca")
+    print("numero1.js ya está recortado")
 else:
     corrimiento = {}
     for grano, info in periodos.items():
@@ -71,20 +139,16 @@ else:
         periodos[grano] = {"base": NUEVAS_BASES[grano].isoformat(), "n": info["n"] - d}
         numero1[grano] = {cc: r for cc, tramos in numero1[grano].items()
                           if (r := recortar(tramos, d, lambda t: t[1] is None))}
-    ruta_n1.write_text(js("FECHA_MAX", fecha_max) + js("PERIODOS", periodos) + js("NUMERO1", numero1), encoding="utf-8")
     for ruta in sorted((DATOS / "top3").glob("*.js")):
-        texto = ruta.read_text(encoding="utf-8")
-        cc, cuerpo = re.match(r'window\.cargarTop3\("(\w+)", (.*)\);\n', texto, re.S).groups()
-        datos = json.loads(cuerpo)
+        cc, datos = leer_top3(ruta)
         for grano, d in corrimiento.items():
             datos[grano] = recortar(datos[grano], d, lambda t: len(t) == 1)
-        ruta.write_text(f"window.cargarTop3({json.dumps(cc)}, {json.dumps(datos, ensure_ascii=False, separators=(',', ':'))});\n",
-                        encoding="utf-8")
+        escribir_top3(ruta, cc, datos)
     print(f"recortado desde {NUEVAS_BASES['dia']} · períodos {periodos}")
+ruta_n1.write_text(js("FECHA_MAX", fecha_max) + js("PERIODOS", periodos) + js("NUMERO1", numero1), encoding="utf-8")
 
 # ---------- 2. Total real de países por continente ----------
 mledoze = {c["cca2"].lower(): c for c in json.load(open(MLEDOZE, encoding="utf-8"))}
-paises = leer(DATOS / "paises.js", "PAISES")
 
 
 def continente(cc):

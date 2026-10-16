@@ -1,1 +1,0 @@
-window.cargarTop3("ba", {"c":[["Glasine","Klijent & Jala Brat"],["Kababa","Aleksandra Prijović"],["Trag","Seka Aleksić & Rasta"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

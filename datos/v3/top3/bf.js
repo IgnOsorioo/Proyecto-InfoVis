@@ -1,1 +1,0 @@
-window.cargarTop3("bf", {"c":[["Armageddon","døpelym, Himra & Genezio"],["DJOROBITER","JP N'DA & Wantché"],["MONEY CONSTANT","DJ Maphorisa, DJ Tunez, Wizkid & Mavo"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

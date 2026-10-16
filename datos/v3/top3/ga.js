@@ -1,1 +1,0 @@
-window.cargarTop3("ga", {"c":[["MORPHINE 2","Waza no limite"],["Alov","Emma'a"],["Jet Lag","Tiakola & Jorja Smith"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

@@ -1,1 +1,0 @@
-window.cargarTop3("zm", {"c":[["Its Over","Yo Maps & Makhadzi"],["40 Ng'ombe (feat. Chanda na Kay & SHANGA love)","76 Drums"],["Bae Bae","Yo Maps"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

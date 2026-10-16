@@ -1,1 +1,0 @@
-window.cargarTop3("bw", {"c":[["Nayvee's Prayer","DJ Zinhle, Nayvee Womculo, Young Stunna"],["Remember","Tman Xpress & Mellow & Sleazy"],["Ama hem hem (feat. ShaunMusiq)","Thatohatsi & Sjava"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

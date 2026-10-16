@@ -1,1 +1,0 @@
-window.cargarTop3("bz", {"c":[["BbY WOW","KAROL G, Judeline, rusowsky"],["Ahí","KAROL G & Drake"],["Vancleef Pt 2","Malie Donn"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

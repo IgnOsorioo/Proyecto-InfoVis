@@ -1,1 +1,0 @@
-window.cargarTop3("gw", {"c":[["Die With A Smile","Lady Gaga, Bruno Mars"],["Allo Allo","Les Patrons"],["Chatice","As One 1820"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

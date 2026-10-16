@@ -1,1 +1,0 @@
-window.cargarTop3("lk", {"c":[["Bowitiya Mal (feat. Nipuni Sharada)","Ravi Jay"],["Nura Ananthe (feat. Kshia)","Cozzy"],["Mandaaram Handaawe","Channuka & Cozzy"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

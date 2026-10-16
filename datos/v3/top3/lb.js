@@ -1,1 +1,0 @@
-window.cargarTop3("lb", {"c":[["Shoft Kalam","Marwan Pablo, Lege-Cy, HatemBas"],["عيوني","Al Walid Hallani"],["Khatem","Zaid Khaled & Ahmed Diaa"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

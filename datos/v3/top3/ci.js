@@ -1,1 +1,0 @@
-window.cargarTop3("ci", {"c":[["BIRDMAN & WEEZY (feat. Himra)","AsapJo"],["Caméléon","Tiakola"],["cœur De Pirate","Tiakola"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});
