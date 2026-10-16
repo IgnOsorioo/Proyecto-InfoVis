@@ -31,10 +31,6 @@ const CONTINENTES = {
   america: 'América', europa: 'Europa', africa: 'África y Medio Oriente', asia: 'Asia', oceania: 'Oceanía',
 };
 
-/** Apple Music no tiene historia: su foto del día se muestra, pero no entra en los conteos ni en la evolución
-    (sumarla inflaría la última fecha de 77 a 172 países y sesgaría la comparación entre continentes). */
-const esFoto = r => r?.fuente === 'a';
-
 /** Lee un token de color de css/estilo.css. */
 function token(nombre) {
   return getComputedStyle(document.documentElement).getPropertyValue(`--${nombre}`).trim();
@@ -170,11 +166,6 @@ function paisesDelAmbito(ambito) {
   return ambito === 'global' ? PAISES_MAPA : PAISES_MAPA.filter(cc => window.PAISES[cc].continente === ambito);
 }
 
-/** Países donde la canción idx es #1 en el período (sin las fotos de Apple Music, que no tienen historia). */
-function paisesDondeEsNumero1(idx, grano = Estado.grano, p = Estado.periodo) {
-  return paisesConDatos(grano, p).filter(cc => { const r = numero1(cc, grano, p); return r.idx === idx && !esFoto(r); });
-}
-
 // ---------- ¿El país escucha lo mismo que el mundo? ----------
 
 /** El país tiene como #1 el mismo #1 del chart global (null si no hay dato). */
@@ -198,7 +189,6 @@ function totalPaises(ambito) {
 function cuentaGlobal(ambito, grano = Estado.grano, p = Estado.periodo) {
   let n = 0, total = 0;
   for (const cc of paisesDelAmbito(ambito)) {
-    if (esFoto(numero1(cc, grano, p))) continue;        // Apple: sin historia, fuera del conteo
     const s = sigueAlGlobal(cc, grano, p);
     if (s === null) continue;
     total++;

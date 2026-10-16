@@ -51,7 +51,6 @@ const Panel = (() => {
     if ($('p-portada').dataset.idx === String(c.idx)) return;
     $('p-portada').dataset.idx = c.idx;
     $('p-portada').src = c.portada;
-    $('p-fondo').src = c.portada;                       // misma portada, desenfocada, llena los lados si falta alto
     $('p-portada').alt = `Portada de ${c.titulo}`;
     $('p-titulo').textContent = c.titulo;
     $('p-titulo').title = c.titulo;
@@ -81,30 +80,25 @@ const Panel = (() => {
     dibujarEstadisticas(c, popularidad);
   }
 
-  /** Estreno, reproducciones acumuladas hasta la fecha y gráfico de popularidad. Apple Music no tiene historia:
-      el bloque no se muestra. Estreno: el más antiguo entre el lanzamiento y la primera semana en los charts. */
+  /** Estreno, reproducciones acumuladas hasta la fecha y gráfico de popularidad. Una sola métrica para todas las
+      fuentes: las vistas de YouTube Music también se llaman reproducciones. Estreno: el más antiguo entre el
+      lanzamiento y la primera semana en los charts. */
   function dibujarEstadisticas(c, popularidad) {
-    const sinHistoria = c.fuente === 'Apple Music';
-    panel.classList.toggle('sin-historia', sinHistoria);
-    if (sinHistoria) return;
     const primeraSemana = popularidad ? fechaSemana(popularidad.inicio) : '';
     const estreno = [c.estreno, primeraSemana].filter(Boolean).sort()[0];
     $('p-estreno').textContent = estreno ? estreno.split('-').reverse().join('/') : '—';   // DD/MM/AAAA
     const hasta = semanaDe(finDelPeriodo());
     const corte = popularidad ? hasta - popularidad.inicio : 0;     // índice de la semana de la fecha en la serie
     const total = popularidad ? popularidad.valores.slice(0, Math.max(0, corte + 1)).reduce((a, b) => a + b, 0) * 1000 : 0;
-    const vistas = c.fuente === 'YouTube Music';
-    $('p-reproducciones-titulo').textContent = vistas ? 'Vistas' : 'Reproducciones';
     $('p-reproducciones').textContent = total ? textoCantidad(total) : '—';
-    $('p-popularidad-titulo').textContent = vistas ? 'Vistas por semana en YouTube' : 'Reproducciones por semana';
-    dibujarGrafico(popularidad, hasta, vistas ? 'vistas' : 'reproducciones');
+    dibujarGrafico(popularidad, hasta);
   }
 
   /** Popularidad de toda la vida de la canción (hasta hoy), partida en la fecha de la visualización: lo anterior
       en verde y lo posterior (su futuro respecto de esa fecha) en gris, con una franja en la fecha. Al reproducir
       el tiempo, la franja avanza y el verde va cubriendo el gráfico. Las dos partes son líneas rectas entre
       semanas: con curvas suavizadas no calzarían en la franja. */
-  function dibujarGrafico(popularidad, semanaActual, unidad) {
+  function dibujarGrafico(popularidad, semanaActual) {
     const nodo = $('p-grafico');
     const aviso = $('p-grafico-aviso');
     if (!popularidad?.valores.length) {
@@ -130,7 +124,7 @@ const Panel = (() => {
     const parte = (ini, fin, color, relleno) => ({
       type: 'scatter', mode: corta ? 'lines+markers' : 'lines', x: x.slice(ini, fin), y: y.slice(ini, fin),
       line: { color, width: 2 }, marker: { color, size: 7 }, fill: 'tozeroy', fillcolor: relleno,
-      hovertemplate: `Semana del %{x|%d %b %Y}<br><b>%{y:.3s}</b> ${unidad}<extra></extra>`,
+      hovertemplate: 'Semana del %{x|%d %b %Y}<br><b>%{y:.3s}</b> reproducciones<extra></extra>',
     });
     Plotly.react(nodo, [
       parte(futuro, x.length, gris, 'rgba(89, 89, 89, 0.22)'),
@@ -159,7 +153,6 @@ const Panel = (() => {
     await conEspera(mio, precargarPortada(c?.portada));
     if (mio !== pedido) return;
     modo('mundo');
-    panel.classList.remove('sin-historia');
     if (c) dibujarCancion(c);
     $('p-contexto').textContent = '#1 global';
     $('p-insignia').hidden = true;

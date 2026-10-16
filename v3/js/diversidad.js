@@ -2,9 +2,8 @@
    Complementa el titular "La escuchan N de M países": si el mundo escuchara lo mismo habría una sola.
 
    Mismo criterio que el mapa:
-   - países: los del ámbito (el mundo o la región elegida) con #1 en la fecha, sin las fotos de Apple Music
-     (sin historia). A diferencia del titular, la base no puede ser el total real de países (del resto no se
-     sabe cuál es su #1): por eso la frase dice "con datos";
+   - países: los del ámbito (el mundo o la región elegida) con #1 en la fecha. A diferencia del titular, la
+     base no puede ser el total real de países (del resto no se sabe cuál es su #1): por eso dice "con datos";
    - canciones: por índice del catálogo, el mismo con que el mapa decide si un #1 es el #1 global (las de
      YouTube Music se cruzan con el catálogo de Spotify por título y artista en scripts/08_fuentes_extra.py;
      las ediciones con otro ID de Spotify cuentan aparte).
@@ -15,7 +14,7 @@ const Diversidad = (() => {
     let paises = 0;
     for (const cc of paisesDelAmbito(ambito)) {
       const r = numero1(cc, grano, periodo);
-      if (!r || esFoto(r)) continue;
+      if (!r) continue;
       paises++;
       canciones.add(r.idx);
     }

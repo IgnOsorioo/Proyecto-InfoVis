@@ -56,7 +56,7 @@ const Mapa = (() => {
     const elegido = referencia ? numero1(referencia)?.idx : undefined;
     const z = conDatos.map(cc => {
       const r = numero1(cc);
-      return (r.idx === global ? 0 : 1) + ((elegido !== undefined && r.idx !== elegido) || esFoto(r) ? 2 : 0);
+      return (r.idx === global ? 0 : 1) + (elegido !== undefined && r.idx !== elegido ? 2 : 0);
     });
     const plenos = [token('global'), token('otra')];
     return { z, colores: [...plenos, ...plenos.map(c => atenuar(c, 0.35))] };
