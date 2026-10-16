@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
   <link rel="stylesheet" href="css/estilo.css?v=2026-10-16h">
+  <link rel="stylesheet" href="css/diversidad.css?v=2026-10-16h">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
 </head>
@@ -148,6 +149,15 @@
         <section class="p-mundo">
           <h3 class="r-titular" id="r-titular"></h3>
           <ul class="r-continentes" id="r-continentes" aria-label="Países que escuchan el #1 global, por continente"></ul>
+          <section class="diversidad" id="diversidad" aria-labelledby="diversidad-titulo">
+            <h3 id="diversidad-titulo">Diversidad de líderes musicales</h3>
+            <p id="diversidad-contexto"></p>
+            <p id="diversidad-total"></p>
+            <ol id="diversidad-top" aria-label="Hasta tres pistas líderes por cantidad de países"></ol>
+            <p id="diversidad-nota"></p>
+            <p id="diversidad-cobertura"></p>
+            <p>Esta medida representa la diversidad de canciones que ocupan el primer puesto en los países con datos disponibles, no la diversidad total de la música escuchada.</p>
+          </section>
         </section>
 
         <!-- País: estreno, reproducciones y popularidad semanal hasta la fecha -->
@@ -181,6 +191,7 @@
   <script src="js/mapa.js?v=2026-10-16h"></script>
   <script src="js/panel.js?v=2026-10-16h"></script>
   <script src="js/linea.js?v=2026-10-16h"></script>
+  <script src="js/diversidad.js?v=2026-10-16h"></script>
   <script src="js/main.js?v=2026-10-16h"></script>
 </body>
 </html>

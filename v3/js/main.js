@@ -54,6 +54,7 @@
     actualizarFijado();
     if (globo?.cc) llenarGlobo(globo.cc);
     Mapa.dibujar();
+    Diversidad.actualizar(region);
   }
 
   function cambiarGrano(grano) {
@@ -410,6 +411,7 @@
     Mapa.enfocar(b.dataset.region);
     if (!Estado.fijado) volverAlResumen();               // el panel pasa a la región
     else Estado.ambito = region;
+    Diversidad.actualizar(region);
   }));
   $('fijado-cerrar').addEventListener('click', soltar);
   $('ver-recorrido').addEventListener('click', verRecorrido);
