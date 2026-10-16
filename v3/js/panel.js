@@ -124,10 +124,12 @@ const Panel = (() => {
     const desde = actual < x[0] ? actual : x[0], hasta = actual > x.at(-1) ? actual : x.at(-1);
     const semanas = (new Date(hasta) - new Date(desde)) / (7 * DIA_MS);
     const formatoEje = semanas <= 20 ? '%d %b' : semanas <= 110 ? '%b %Y' : '%Y';
+    const margen = (fecha, signo) => new Date(new Date(fecha).getTime() + signo * 3.5 * DIA_MS).toISOString().slice(0, 10);   // media semana: los puntos de los bordes no quedan cortados
     const verde = token('global'), gris = token('otra');
+    const corta = x.length <= 3;                         // con 1–3 semanas la línea casi no se ve: se marcan los puntos
     const parte = (ini, fin, color, relleno) => ({
-      type: 'scatter', mode: 'lines', x: x.slice(ini, fin), y: y.slice(ini, fin),
-      line: { color, width: 2 }, fill: 'tozeroy', fillcolor: relleno,
+      type: 'scatter', mode: corta ? 'lines+markers' : 'lines', x: x.slice(ini, fin), y: y.slice(ini, fin),
+      line: { color, width: 2 }, marker: { color, size: 7 }, fill: 'tozeroy', fillcolor: relleno,
       hovertemplate: `Semana del %{x|%d %b %Y}<br><b>%{y:.3s}</b> ${unidad}<extra></extra>`,
     });
     Plotly.react(nodo, [
@@ -140,7 +142,7 @@ const Panel = (() => {
       showlegend: false,
       font: { family: token('fuente'), size: 10, color: token('tinta-3') },
       hoverlabel: { bgcolor: token('superficie'), bordercolor: token('eje'), font: { family: token('fuente'), size: 12, color: token('tinta') } },
-      xaxis: { showgrid: false, zeroline: false, linecolor: token('eje'), fixedrange: true, nticks: 4, tickformat: formatoEje, range: [desde, hasta] },
+      xaxis: { showgrid: false, zeroline: false, linecolor: token('eje'), fixedrange: true, nticks: 4, tickformat: formatoEje, range: [margen(desde, -1), margen(hasta, 1)] },
       yaxis: { gridcolor: token('grilla'), zeroline: false, tickformat: '~s', fixedrange: true, nticks: 4, range: [0, Math.max(...y) * 1.08] },
       shapes: [{ type: 'line', xref: 'x', yref: 'paper', x0: actual, x1: actual, y0: 0, y1: 1, line: { color: token('tinta'), width: 2 } }],
     }, CONFIG_PLOTLY);
