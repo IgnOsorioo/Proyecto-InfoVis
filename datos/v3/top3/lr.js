@@ -1,1 +1,1 @@
-window.cargarTop3("lr", {"c":[["B4 B4 (with Mayorkun & FOLA)","Davido, Mayorkun, FOLA"],["B4 B4","Davido, Mayorkun & FOLA"],["Gratitude","Asake"]],"dia":[[4744,0,1,2]],"semana":[[677,0,1,2]],"mes":[[155,0,1,2]],"anio":[[13,0,1,2]]});
+window.cargarTop3("lr", {"c":[["B4 B4 (with Mayorkun & FOLA)","Davido, Mayorkun, FOLA"],["B4 B4","Davido, Mayorkun & FOLA"],["Gratitude","Asake"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

@@ -1,1 +1,1 @@
-window.cargarTop3("tj", {"c":[["Дай знать","NAVAI"],["Шадэ","By Индия, Xcho & МОТ"],["Beni Al (Ta Ki Seni Görene Kadar) [Beni Al Afro House Remix]","Ankara Echoes"]],"dia":[[4744,0,1,2]],"semana":[[677,0,1,2]],"mes":[[155,0,1,2]],"anio":[[13,0,1,2]]});
+window.cargarTop3("tj", {"c":[["Дай знать","NAVAI"],["Шадэ","By Индия, Xcho & МОТ"],["Beni Al (Ta Ki Seni Görene Kadar) [Beni Al Afro House Remix]","Ankara Echoes"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});

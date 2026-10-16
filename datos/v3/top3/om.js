@@ -1,1 +1,1 @@
-window.cargarTop3("om", {"c":[["BbY WOW","KAROL G, Judeline, rusowsky"],["Kelma","Ramy Sabry"],["Garee2a Awy - A COLORS SHOW","TUL8TE"]],"dia":[[4744,0,1,2]],"semana":[[677,0,1,2]],"mes":[[155,0,1,2]],"anio":[[13,0,1,2]]});
+window.cargarTop3("om", {"c":[["BbY WOW","KAROL G, Judeline, rusowsky"],["Kelma","Ramy Sabry"],["Garee2a Awy - A COLORS SHOW","TUL8TE"]],"dia":[[4167,0,1,2]],"semana":[[595,0,1,2]],"mes":[[136,0,1,2]],"anio":[[11,0,1,2]]});
