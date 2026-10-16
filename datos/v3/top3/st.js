@@ -1,0 +1,1 @@
+window.cargarTop3("st", {"c":[["I Knew It, I Knew You","Taylor Swift"],["I Knew It, I Knew You (From \"Toy Story 5\")","Taylor Swift"],["Hard To Get","Richie Campbell"]],"dia":[[4744,0,1,2]],"semana":[[677,0,1,2]],"mes":[[155,0,1,2]],"anio":[[13,0,1,2]]});

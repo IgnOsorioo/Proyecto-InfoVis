@@ -1,0 +1,1 @@
+window.cargarTop3("sr", {"c":[["Heaven Baby (feat. ZAYN)","Ayra Starr, ZAYN"],["Is It a Crime","Mariah the Scientist & Kali Uchis"],["Quebec","Drake"]],"dia":[[4744,0,1,2]],"semana":[[677,0,1,2]],"mes":[[155,0,1,2]],"anio":[[13,0,1,2]]});

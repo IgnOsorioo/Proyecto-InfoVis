@@ -1,0 +1,1 @@
+window.cargarTop3("bt", {"c":[["Solar Eclipse","Drake & Don Toliver"],["Hold On, We're Going Home (feat. Majid Jordan)","Drake"],["Coming Up Roses","Harry Styles"]],"dia":[[4744,0,1,2]],"semana":[[677,0,1,2]],"mes":[[155,0,1,2]],"anio":[[13,0,1,2]]});
