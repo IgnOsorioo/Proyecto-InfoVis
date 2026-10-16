@@ -4,7 +4,8 @@ Regla (cuando varias fuentes tienen chart para un país, manda la primera):
   1. Spotify (datos ya construidos por 02_construir_datos.py): 70 países, 2017–2026.
   2. YouTube Music: top 100 semanal por vistas, desde mayo de 2018 (suma Rusia, Serbia, Kenia, Tanzania,
      Uganda y Zimbabue).
-  3. Apple Music, luego iTunes, luego Deezer: solo la foto del día descargada (sin historia). Se descartan las
+  3. QQ Music, para China: semanal desde 2018 y diario desde 2022 (descarga de 12_descargar_qq.py).
+  4. Apple Music, luego iTunes, luego Deezer: solo la foto del día descargada (sin historia). Se descartan las
      tiendas cuya lista es idéntica a la de otra (tiendas pequeñas que muestran la lista de otro país).
 
 Las canciones de otras fuentes se cruzan con el catálogo de Spotify por título y primer artista normalizados,
@@ -82,6 +83,8 @@ def indice_de(titulo, artistas, portada, fuente):
     if k not in por_clave_extra:
         por_clave_extra[k] = BASE_EXTRA + len(canciones_extra)
         canciones_extra.append([titulo, artistas, portada, fuente])
+    elif portada and not canciones_extra[por_clave_extra[k] - BASE_EXTRA][2]:
+        canciones_extra[por_clave_extra[k] - BASE_EXTRA][2] = portada    # la primera vez vino sin portada
     return por_clave_extra[k]
 
 
@@ -184,6 +187,62 @@ for archivo in sorted((EXTRA / "youtube").glob("*.jsonl")):
     salida["paises"][cc] = {"iso3": m["cca3"], "nombre": m["translations"]["spa"]["common"],
                             "continente": continente(cc), "inicio": primera.isoformat()}
     salida["fuentes"][cc] = "YouTube Music · vistas semanales"
+
+# ---------- QQ Music: historia de China (descarga de 12_descargar_qq.py) ----------
+# El 热歌榜 (canciones más escuchadas): semanal de 2018 a mediados de 2022 ("AAAA_S", semana ISO) y diario
+# después. Cada día toma su chart diario o, si no hay, el semanal que lo cubre. QQ no publica reproducciones:
+# en mes y año gana la canción con más puntos sumando los días del período (11 − puesto, en su top 10).
+QQ = EXTRA / "qq"
+por_dia_qq = {}                                      # fecha → [(puesto, idx)]
+for nombre in ("semanal", "diario"):
+    ruta = QQ / f"{nombre}.jsonl"
+    if not ruta.exists():
+        continue
+    for linea in ruta.open(encoding="utf-8"):
+        d = json.loads(linea)
+        if not d["periodo"] or not d["filas"]:
+            continue
+        filas = [(puesto, indice_de(t, a, portada, "QQ Music")) for puesto, t, a, portada in d["filas"] if t]
+        if "_" in d["periodo"]:                      # semanal: los 7 días de la semana ISO (el diario, si existe, manda)
+            anio, semana = map(int, d["periodo"].split("_"))
+            lunes = dt.date.fromisocalendar(anio, semana, 1)
+            for i in range(7):
+                por_dia_qq.setdefault(lunes + dt.timedelta(days=i), filas)
+        else:
+            por_dia_qq[dt.date.fromisoformat(d["periodo"])] = filas
+por_dia_qq = {f: v for f, v in por_dia_qq.items() if f <= fecha_max}
+# Al chart diario le faltan 17 días sueltos (huecos de 1 a 2 días): con un hueco de hasta 3 días vale el chart del
+# día anterior, para que China no aparezca y desaparezca. Los huecos más largos quedan sin datos.
+for f in sorted(por_dia_qq):
+    for i in range(1, 4):
+        siguiente = f + dt.timedelta(days=i)
+        if siguiente in por_dia_qq:
+            break
+        if any(f + dt.timedelta(days=j) in por_dia_qq for j in range(i + 1, 5)):
+            por_dia_qq[siguiente] = por_dia_qq[f]
+if por_dia_qq:
+    for grano, info in periodos.items():
+        lista = []
+        for p in range(info["n"]):
+            ini, fin = fecha_periodo(grano, p), fin_periodo(grano, p)
+            if fin < min(por_dia_qq):
+                continue
+            if grano in ("dia", "semana"):
+                filas = por_dia_qq.get(ini + dt.timedelta(days=3) if grano == "semana" else ini)
+                if filas:
+                    lista.append((p, filas[0][1]))
+            else:
+                puntos = {}
+                for i in range((fin - ini).days + 1):
+                    for puesto, idx in por_dia_qq.get(ini + dt.timedelta(days=i), []):
+                        puntos[idx] = puntos.get(idx, 0) + 11 - puesto
+                if puntos:
+                    lista.append((p, max(puntos, key=lambda k: (puntos[k], -k))))
+        salida["numero1"][grano]["cn"] = comprimir(lista)
+    m = mledoze["cn"]
+    salida["paises"]["cn"] = {"iso3": m["cca3"], "nombre": m["translations"]["spa"]["common"],
+                              "continente": continente("cn"), "inicio": min(por_dia_qq).isoformat()}
+    salida["fuentes"]["cn"] = "QQ Music · chart semanal y diario"
 
 # ---------- Foto del día: Apple Music, iTunes, Deezer ----------
 def fotos(fuente):

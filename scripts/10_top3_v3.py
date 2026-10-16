@@ -5,6 +5,7 @@ siempre el del mapa:
   s  Spotify diario 2017–2026: el top 5 de la V2 (datos/top5/<país>.js)
   s  Spotify semanal 2013–2023 (Kaggle jfreyberg): antes de 2017 y en los países que el diario no cubre
   y  YouTube Music, semanal desde 2018 (descarga de 07_descargar_charts.py)
+  q  QQ Music (China), semanal desde 2018 y diario desde 2022 (descarga de 12_descargar_qq.py)
   a  Apple Music: la foto del día
 Como en el #1: día y semana = puestos del chart que cubre ese día; mes y año = lo más escuchado sumando el período.
 
@@ -166,6 +167,48 @@ archivos_apple = sorted((EXTRA_DIR / "charts_extra" / "apple").glob("*.json"))
 apple = json.load(open(archivos_apple[-1], encoding="utf-8")) if archivos_apple else {}
 
 
+# ---------- QQ Music (China): como en 08_fuentes_extra.py, cada día su chart diario o el semanal que lo cubre ----------
+qq = {}                                          # fecha → [(título, artistas)] en orden de puesto
+for nombre_qq in ("semanal", "diario"):
+    ruta = EXTRA_DIR / "charts_extra" / "qq" / f"{nombre_qq}.jsonl"
+    if not ruta.exists():
+        continue
+    for linea in ruta.open(encoding="utf-8"):
+        d = json.loads(linea)
+        if not d["periodo"] or not d["filas"]:
+            continue
+        filas = [(t, a) for _, t, a, _ in sorted(d["filas"]) if t]
+        if "_" in d["periodo"]:
+            anio, semana = map(int, d["periodo"].split("_"))
+            lunes = dt.date.fromisocalendar(anio, semana, 1)
+            for i in range(7):
+                qq.setdefault(lunes + dt.timedelta(days=i), filas)
+        else:
+            qq[dt.date.fromisoformat(d["periodo"])] = filas
+
+
+# Como en 08: un hueco de hasta 3 días en el chart diario toma el del día anterior.
+for f in sorted(qq):
+    for i in range(1, 4):
+        siguiente = f + dt.timedelta(days=i)
+        if siguiente in qq:
+            break
+        if any(f + dt.timedelta(days=j) in qq for j in range(i + 1, 5)):
+            qq[siguiente] = qq[f]
+
+
+def top_qq(grano, p):
+    ini = fecha_periodo(grano, p)
+    if grano in ("dia", "semana"):
+        filas = qq.get(ini + dt.timedelta(days=3) if grano == "semana" else ini)
+        return filas[:3] if filas else None
+    puntos = {}                                  # mes y año: puntos por puesto (QQ no publica reproducciones)
+    for i in range((fin_periodo(grano, p) - ini).days + 1):
+        for puesto, x in enumerate(qq.get(ini + dt.timedelta(days=i), []), start=1):
+            puntos[x] = puntos.get(x, 0) + 11 - puesto
+    return sorted(puntos, key=lambda x: (-puntos[x], x))[:3] or None
+
+
 # ---------- Unir: el top 3 de la fuente que dio el #1 ----------
 def clave(t):
     return re.sub(r"\W+", "", (t or "").lower())
@@ -174,6 +217,7 @@ def clave(t):
 shutil.rmtree(SALIDA, ignore_errors=True)
 SALIDA.mkdir(parents=True)
 total_kb, coinciden, revisados = 0, 0, 0
+por_fuente = {}
 for cc in sorted(numero1["dia"]):
     if cc == "global":
         continue
@@ -192,13 +236,18 @@ for cc in sorted(numero1["dia"]):
                     top = (diario or {}).get(grano, {}).get(p) or top_semanal(cc, grano, p)
                 elif fuente == "y":
                     top = top_youtube(cc, grano, p)
+                elif fuente == "q":
+                    top = top_qq(grano, p)
                 elif fuente == "a" and cc in apple:
                     top = [(t, a) for _, t, a, _ in apple[cc][:3]]
                 # El #1 es el del mapa; el 2.º y el 3.º, los siguientes de esa fuente.
                 primero = nombre(idx)
                 resto = [x for x in (top or []) if x[0] and clave(x[0]) != clave(primero[0])]
                 revisados += 1
-                coinciden += bool(top) and clave(top[0][0]) == clave(primero[0])
+                igual = bool(top) and clave(top[0][0]) == clave(primero[0])
+                coinciden += igual
+                por_fuente.setdefault(fuente, [0, 0])[0] += igual
+                por_fuente[fuente][1] += 1
                 top = [primero, *resto][:3]
             fila = tuple(indices.setdefault((t, a), len(indices)) for t, a in top) if top else None
             if fila != previo:
@@ -213,3 +262,4 @@ for cc in sorted(numero1["dia"]):
 
 print(f"{len(list(SALIDA.glob('*.js')))} países · {total_kb:,.0f} KB · el #1 de la fuente coincide con el del mapa "
       f"en {100 * coinciden / max(1, revisados):.1f} % de los períodos")
+print("  por fuente:", {f: f"{100 * a / b:.1f} % de {b}" for f, (a, b) in sorted(por_fuente.items())})

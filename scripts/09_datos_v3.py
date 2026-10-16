@@ -5,7 +5,8 @@ Fuentes por orden de prioridad (para cada país y período manda la primera que 
   s  Spotify semanal 2013–2023 (Kaggle jfreyberg, tomado de kworb): antes de 2017 y en países que el diario
      no incluye (Rusia 2020–2022, Bielorrusia, Israel, Malta, Andorra…)
   y  YouTube Music Charts, semanal desde 2018 (datos/extra.js, de 08_fuentes_extra.py)
-  a  Apple Music: solo el chart descargado del día (datos/extra.js)
+  q  QQ Music, solo China: semanal desde 2018 y diario desde 2022 (datos/extra.js)
+  a  Apple Music: solo el chart descargado del día (datos/extra.js; 11_base_fija_v3.py lo quita)
 El #1 global (chart "global" de Spotify) existe desde el 29-sep-2013: por eso la V3 empieza en octubre de 2013.
 
 No modifica datos/ (lo usan la V1 y la V2). Salidas:
@@ -197,7 +198,7 @@ for cc in todos:
         capas = [
             ("s", expandir(viejo_n1[grano].get(cc, []), n, desplazamiento[grano])),
             ("s", semanal_por_periodo(cc, grano, n)),
-            ("y" if extra["fuentes"].get(cc, "").startswith("YouTube") else "a",
+            ({"YouTube Music": "y", "QQ Music": "q"}.get(extra["fuentes"].get(cc, "").split(" · ")[0], "a"),
              [a_v3(i) for i in expandir(extra["numero1"][grano].get(cc, []), n, desplazamiento[grano])]),
         ]
         tramos, previo = [], None
