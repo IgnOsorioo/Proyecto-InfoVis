@@ -4,8 +4,11 @@
    - vacío (solo contorno): sin datos (ninguna fuente tiene su chart en esa fecha).
    Con el cursor sobre un país, se atenúan los que no comparten su #1 (dónde más suena esa canción).
    El país fijado lleva un contorno blanco permanente; el que está bajo el cursor, uno más fino.
+   El mapa "se enciende": al avanzar el tiempo, el país que empieza a tener datos (llega Spotify, o su chart
+   empieza a publicarse) destella un momento con un contorno que se apaga. Así la llegada se ve sin texto.
    Geometría: Natural Earth 1:50m (datos/mundo.js), con los territorios de ultramar separados de su país.
-   Trazas: 0 sin datos · 1 países con datos · 2 contorno del país fijado y del país bajo el cursor. */
+   Trazas: 0 sin datos · 1 países con datos · 2 contorno del país fijado y del país bajo el cursor ·
+   3 destello de los recién llegados. */
 
 const Mapa = (() => {
   const EL = 'mapa';
@@ -15,8 +18,9 @@ const Mapa = (() => {
   const SIN_CHART = Object.fromEntries(window.MUNDO.features
     .filter(f => !ISO3_A_CC[f.properties.iso3])
     .map(f => [f.properties.iso3, f.properties]));
-  // Recuadro (longitud, latitud) que debe verse completo con cada botón de región. Plotly ajusta el mapa
-  // para que el recuadro entero quepa, aunque eso muestre también partes de otros continentes.
+  // Recuadro (longitud, latitud) que debe verse completo con cada botón de región. El mapa se centra en el
+  // recuadro y se acerca hasta que quepa entero; alrededor se siguen viendo los otros continentes (no se recorta
+  // el mapa al recuadro, que dejaba bordes rectos cortando países).
   const REGIONES = {
     mundo:   { lon: [-180, 180], lat: [-57, 84] },
     america: { lon: [-170, -30], lat: [-57, 84] },   // de Alaska y el Ártico canadiense a Tierra del Fuego
@@ -32,6 +36,11 @@ const Mapa = (() => {
   let marcado = null;                  // país bajo el cursor (contorno claro); el fijado está en Estado.fijado
   let eventos = { alPasar: () => {}, alPasarSinChart: () => {}, alSalir: () => {}, alElegir: () => {} };
   let eventosConectados = false;
+  const DESTELLO_MS = 1600;
+  const MAX_LLEGADAS = 8;              // si llegan más de una vez (un salto grande en el tiempo) no es una llegada
+  let anterior = null;                 // {grano, periodo, conDatos: Set} de lo último dibujado
+  const llegadas = new Map();          // país → instante (performance.now()) en que empezó a tener datos
+  let timerDestello = null;
 
   /** Escala de colores discreta: el valor i (0..k-1) toma exactamente el color i. */
   function escalaDiscreta(colores) {
@@ -46,8 +55,7 @@ const Mapa = (() => {
     return `#${canal(16)}${canal(8)}${canal(0)}`;
   }
 
-  /** z (0 = sigue al #1 global, 1 = otra canción; +2 atenuado) de cada país con datos y la lista de colores.
-      Los países que solo tienen la foto de Apple Music van siempre atenuados: se ven, pero no cuentan. */
+  /** z (0 = sigue al #1 global, 1 = otra canción; +2 atenuado) de cada país con datos y la lista de colores. */
   function relleno(conDatos) {
     const global = numero1('global')?.idx;
     // Con el cursor sobre un país (o con uno fijado), los que no comparten su #1 pasan a la versión atenuada de
@@ -62,8 +70,25 @@ const Mapa = (() => {
     return { z, colores: [...plenos, ...plenos.map(c => atenuar(c, 0.35))] };
   }
 
+  /** Registra los países que empiezan a tener datos al avanzar el tiempo (no al saltar ni al retroceder). */
+  function registrarLlegadas(conDatos) {
+    const ahora = performance.now();
+    if (anterior && anterior.grano === Estado.grano && Estado.periodo > anterior.periodo) {
+      const nuevos = conDatos.filter(cc => !anterior.conDatos.has(cc));
+      if (nuevos.length <= MAX_LLEGADAS) nuevos.forEach(cc => llegadas.set(cc, ahora));
+    }
+    if (!anterior || anterior.grano !== Estado.grano || anterior.periodo !== Estado.periodo) {
+      anterior = { grano: Estado.grano, periodo: Estado.periodo, conDatos: new Set(conDatos) };
+    }
+    for (const [cc, t] of llegadas) if (ahora - t > DESTELLO_MS) llegadas.delete(cc);
+    // Mientras haya destellos, se redibuja para que el contorno se apague de a poco.
+    if (llegadas.size && !timerDestello) timerDestello = setTimeout(() => { timerDestello = null; dibujar(); }, 80);
+    return [...llegadas].map(([cc, t]) => [cc, 1 - (ahora - t) / DESTELLO_MS]);
+  }
+
   function trazas() {
     const conDatos = paisesConDatos();
+    const destellos = registrarLlegadas(conDatos);
     const iso3 = cc => window.PAISES[cc].iso3;
     // Sin datos: países cuyo chart aún no empezaba en esta fecha + países sin chart de Spotify.
     const sinDatos = [
@@ -88,6 +113,9 @@ const Mapa = (() => {
       { ...base, locations: contornos.map(iso3), z: contornos.map(() => 0), colorscale: plano('rgba(0,0,0,0)'),
         marker: { line: { color: token('resalte'), width: contornos.map(cc => (cc === Estado.fijado ? 2.6 : 1.4)) } },
         hoverinfo: 'skip' },
+      { ...base, locations: destellos.map(([cc]) => iso3(cc)), z: destellos.map(() => 0), colorscale: plano('rgba(0,0,0,0)'),
+        marker: { line: { color: token('global'), width: destellos.map(([, k]) => 0.5 + 3.5 * k) } },
+        hoverinfo: 'skip' },
     ];
   }
 
@@ -100,8 +128,11 @@ const Mapa = (() => {
       showlegend: false,
       geo: {
         projection: { type: 'natural earth', scale: escala },
-        lonaxis: { range: REGIONES[region].lon },
-        lataxis: { range: REGIONES[region].lat },  // el mundo, sin la Antártida
+        lonaxis: { range: REGIONES.mundo.lon },
+        // El mundo sin la Antártida. En una región, todas las latitudes: así el área del mapa ocupa todo el alto
+        // disponible (con el rango del mundo quedaba una franja vacía arriba y abajo).
+        lataxis: { range: region === 'mundo' ? REGIONES.mundo.lat : [-90, 90] },
+        center: centro(region),
         showframe: false, showocean: false, showland: false, showcountries: false, showcoastlines: false, showlakes: false,
         bgcolor: 'rgba(0,0,0,0)',
       },
@@ -147,11 +178,18 @@ const Mapa = (() => {
       if (cc) eventos.alPasar(cc, raton);
       else if (territorio) eventos.alPasarSinChart(territorio, raton);
     });
-    el.on('plotly_unhover', () => eventos.alSalir());
+    el.on('plotly_unhover', ev => eventos.alSalir(ev?.event));   // el evento del mouse (no hay si vino de un redibujo)
     el.on('plotly_click', ev => {          // click (o toque en pantallas táctiles): seguir la canción del país
       const { cc } = leer(ev);
       if (cc) eventos.alElegir(cc);
     });
+  }
+
+  /** Centro del recuadro de la región (el del mundo: el ecuador en el meridiano 0, desplazado al centro de las
+      latitudes visibles). */
+  function centro(nombre) {
+    const { lon: [lon0, lon1], lat: [lat0, lat1] } = REGIONES[nombre];
+    return { lon: (lon0 + lon1) / 2, lat: (lat0 + lat1) / 2 };
   }
 
   /** Acerca el mapa a una región ('mundo', 'america', 'europa', 'africa', 'asia', 'oceania'). */
@@ -162,9 +200,9 @@ const Mapa = (() => {
     dibujar().then(asegurarRegionCompleta);
   }
 
-  /** Plotly encuadra el recuadro de la región solo de forma aproximada (en esta proyección los bordes son
-      curvos), así que algunas esquinas pueden quedar fuera. Se mide dónde cae el borde del recuadro en
-      pantalla y, si se sale, se reduce el zoom lo justo para que quepa completo. */
+  /** Encuadre de la región: se mide dónde cae en pantalla el borde de su recuadro (en esta proyección los bordes
+      son curvos) y se ajusta el zoom para que quepa completo y lo más grande posible. En el mundo solo se aleja
+      (si el recuadro no cabe); en una región también se acerca. */
   function asegurarRegionCompleta() {
     const gd = document.getElementById(EL);
     const sub = gd._fullLayout?.geo?._subplot;
@@ -184,7 +222,7 @@ const Mapa = (() => {
       }
     }
     const factor = Math.min((cx - MARGEN_PX) / dx, (cy - MARGEN_PX) / dy);
-    if (factor < 0.999) {
+    if (factor < 0.999 || (region !== 'mundo' && factor > 1.001)) {
       escala *= factor;
       dibujar();
     }

@@ -3,22 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>¿El mundo escucha lo mismo?</title>
-  <meta name="description" content="¿El mundo escucha lo mismo? Mapa interactivo y sonoro con los países cuyo #1 nacional es el #1 global, desde 2015 (Spotify y YouTube Music).">
+  <title>¿Qué escucha el mundo?</title>
+  <meta name="description" content="¿Qué escucha el mundo? Mapa interactivo y sonoro con los países cuyo #1 nacional es el #1 global, desde 2015 (Spotify y YouTube Music).">
   <meta name="theme-color" content="#000000">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23000000'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%231ed760' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ffffff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-10-16n">
-  <link rel="stylesheet" href="css/diversidad.css?v=2026-10-16n">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-10-17s">
+  <link rel="stylesheet" href="css/diversidad.css?v=2026-10-17s">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
 </head>
 <body>
   <div class="principal">
     <header class="barra">
-      <h1>¿El mundo escucha lo mismo?</h1>
+      <div class="barra-titulo">
+        <h1>¿Qué escucha el mundo?</h1>
+        <p class="subtitulo">El alcance mundial de la música en streaming, de 2015 a hoy.</p>
+      </div>
       <button type="button" class="boton-recorrido" id="ver-recorrido" title="De 2013 a hoy en un minuto">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>Recorrido
       </button>
@@ -51,16 +54,12 @@
       </div>
 
       <div class="pie-mapa">
-        <div class="leyenda">
-          <p>
-            <span><i class="muestra muestra-global"></i>#1 global</span>
-            <span><i class="muestra muestra-otra"></i>otra canción</span>
-            <span><i class="muestra muestra-vacio"></i>sin datos</span>
-          </p>
-          <p title="Al reproducir el tiempo suena un tono grave por continente">
-            <span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5v8.2a2.3 2.3 0 1 0 1.5 2.1V5.5l5-1.3v4.5a2.3 2.3 0 1 0 1.5 2.1V1z"/></svg>un tono por continente: juntos = mismo #1</span>
-          </p>
-        </div>
+        <ul class="leyenda">
+          <li><i class="muestra muestra-global"></i>#1 global</li>
+          <li><i class="muestra muestra-otra"></i>otra canción</li>
+          <li><i class="muestra muestra-vacio"></i>sin datos</li>
+          <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5v8.2a2.3 2.3 0 1 0 1.5 2.1V5.5l5-1.3v4.5a2.3 2.3 0 1 0 1.5 2.1V1z"/></svg>aplausos: en cuántos países es #1</li>
+        </ul>
         <div class="acercar" role="group" aria-label="Acercar el mapa a una región">
           <button type="button" data-region="mundo" class="activo">Mundo</button>
           <button type="button" data-region="america">América</button>
@@ -91,14 +90,17 @@
           <div class="linea-cursor" id="linea-cursor" aria-hidden="true"></div>
           <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Fecha">
         </div>
-        <div class="linea-anios" id="linea-anios" aria-hidden="true"></div>
-        <p class="linea-titulo">Escuchan el #1 global (% de los países con datos)</p>
+        <div class="linea-pie">
+          <div class="linea-anios" id="linea-anios" aria-hidden="true"></div>
+          <div class="linea-hitos" id="linea-hitos" role="group" aria-label="Hitos: cuándo llega o se va Spotify"></div>
+        </div>
+        <p class="linea-titulo">Escuchan el #1 global (% de 52 países)</p>
       </div>
 
       <div class="granos" role="radiogroup" aria-label="Paso del tiempo">
-        <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
+        <button type="button" role="radio" data-grano="dia" aria-checked="false">Día</button>
         <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
-        <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
+        <button type="button" role="radio" data-grano="mes" aria-checked="true">Mes</button>
         <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
       </div>
 
@@ -118,16 +120,16 @@
   </div>
 
   <!-- Panel: lo que está sonando (el #1 global o el de un país) y, debajo, su contexto -->
-  <aside class="panel modo-mundo" id="panel" aria-label="Lo que está sonando" aria-live="polite">
+  <aside class="panel" id="panel" aria-label="Lo que está sonando" aria-live="polite">
     <div class="p-cargando" aria-hidden="true"><span class="giro"></span></div>
     <div class="p-mensaje" id="p-mensaje"><strong id="p-mensaje-titulo"></strong><span id="p-mensaje-texto"></span></div>
 
     <div class="p-contenido">
-      <!-- Portada de ancho completo; si falta alto, se achica cuadrada y centrada sobre la misma imagen desenfocada -->
+      <!-- Portada cuadrada, del ancho completo del panel -->
       <div class="p-hero">
         <img class="p-portada" id="p-portada" alt="" width="300" height="300">
-        <button type="button" class="p-volver" id="p-volver" title="Volver al mundo (Esc)">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>Mundo
+        <button type="button" class="p-volver" id="p-volver" title="Soltar el país (Esc)">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>Soltar
         </button>
       </div>
 
@@ -145,46 +147,48 @@
           </div>
         </section>
 
-        <!-- Mundo (o región): cuántos países escuchan el #1 global, por continente -->
-        <section class="p-mundo">
+        <!-- Una sola vista para cualquier canción (el #1 del mundo o de la región, o el de un país): dónde es #1,
+             en cuántos países suena en el top 50 y sus reproducciones en el tiempo -->
+        <section class="p-detalle">
           <h3 class="r-titular" id="r-titular"></h3>
-          <ul class="r-continentes" id="r-continentes" aria-label="Países que escuchan el #1 global, por continente"></ul>
-          <p class="diversidad" id="diversidad"></p>
-        </section>
-
-        <!-- País: estreno, reproducciones y popularidad semanal hasta la fecha -->
-        <section class="p-pais">
-          <dl class="p-stats">
-            <div><dt>Estreno</dt><dd id="p-estreno"></dd></div>
-            <div><dt>Reproducciones</dt><dd id="p-reproducciones"></dd></div>
-          </dl>
+          <ul class="r-continentes" id="r-continentes" aria-label="Países donde la canción es #1, por continente"></ul>
+          <figure class="r-anillo">
+            <svg viewBox="0 0 36 36" aria-hidden="true">
+              <circle class="r-anillo-fondo" cx="18" cy="18" r="15.9155" pathLength="100"/>
+              <circle class="r-anillo-valor" id="r-anillo-valor" cx="18" cy="18" r="15.9155" pathLength="100"/>
+            </svg>
+            <strong id="r-anillo-pct"></strong>
+            <figcaption id="r-anillo-texto"></figcaption>
+          </figure>
           <figure class="p-popularidad">
-            <figcaption>Reproducciones por semana</figcaption>
+            <figcaption id="p-popularidad-titulo">Reproducciones por semana</figcaption>
             <div class="p-grafico-caja">
               <div id="p-grafico"></div>
               <p class="p-grafico-aviso" id="p-grafico-aviso" hidden></p>
             </div>
           </figure>
+          <p class="diversidad" id="diversidad"></p>
         </section>
       </div>
     </div>
   </aside>
 
-  <script src="../datos/mundo.js?v=2026-10-16n"></script>
-  <script src="../datos/v3/paises.js?v=2026-10-16n"></script>
-  <script src="../datos/canciones.js?v=2026-10-16n"></script>
-  <script src="../datos/v3/numero1.js?v=2026-10-16n"></script>
-  <script src="../datos/v3/continentes.js?v=2026-10-16n"></script>
-  <script src="../datos/deezer.js?v=2026-10-16n" onerror="window.DEEZER = []"></script>
-  <script src="../datos/extra.js?v=2026-10-16n"></script>
-  <script src="../datos/v3/canciones.js?v=2026-10-16n"></script>
-  <script src="js/estado.js?v=2026-10-16n"></script>
-  <script src="js/reproductor.js?v=2026-10-16n"></script>
-  <script src="js/armonia.js?v=2026-10-16n"></script>
-  <script src="js/mapa.js?v=2026-10-16n"></script>
-  <script src="js/panel.js?v=2026-10-16n"></script>
-  <script src="js/linea.js?v=2026-10-16n"></script>
-  <script src="js/diversidad.js?v=2026-10-16n"></script>
-  <script src="js/main.js?v=2026-10-16n"></script>
+  <script src="../datos/mundo.js?v=2026-10-17s"></script>
+  <script src="../datos/v3/paises.js?v=2026-10-17s"></script>
+  <script src="../datos/canciones.js?v=2026-10-17s"></script>
+  <script src="../datos/v3/numero1.js?v=2026-10-17s"></script>
+  <script src="../datos/v3/muestra.js?v=2026-10-17s"></script>
+  <script src="../datos/deezer.js?v=2026-10-17s" onerror="window.DEEZER = []"></script>
+  <script src="../datos/extra.js?v=2026-10-17s"></script>
+  <script src="../datos/v3/canciones.js?v=2026-10-17s"></script>
+  <script src="js/estado.js?v=2026-10-17s"></script>
+  <script src="js/reproductor.js?v=2026-10-17s"></script>
+  <script src="js/aplausos.js?v=2026-10-17s"></script>
+  <script src="js/estatica.js?v=2026-10-17s"></script>
+  <script src="js/mapa.js?v=2026-10-17s"></script>
+  <script src="js/panel.js?v=2026-10-17s"></script>
+  <script src="js/linea.js?v=2026-10-17s"></script>
+  <script src="js/diversidad.js?v=2026-10-17s"></script>
+  <script src="js/main.js?v=2026-10-17s"></script>
 </body>
 </html>

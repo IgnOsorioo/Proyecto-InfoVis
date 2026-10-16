@@ -12,7 +12,7 @@
    Siempre suena el #1 de lo que muestra el panel: el país fijado, el país bajo el cursor o el mundo. */
 
 const Estado = {
-  grano: 'dia',         // dia | semana | mes | anio
+  grano: 'mes',         // dia | semana | mes | anio (por defecto, meses: el ritmo en que se entiende la historia)
   periodo: 0,           // índice del período dentro de la granularidad
   paisActivo: null,     // país bajo el cursor (código ISO2)
   fijado: null,         // país fijado con un click (código ISO2) o null
@@ -24,8 +24,11 @@ const Estado = {
   reproduciendo: false, // animación del tiempo
 };
 
-// Milisegundos por paso al animar el tiempo, según la granularidad.
-const MS_POR_PASO = { dia: 90, semana: 300, mes: 650, anio: 1800 };
+// Milisegundos por paso al animar el tiempo, según la granularidad. Y, cuando cambia la canción que suena, cuánto
+// dura como mínimo ese paso: para alcanzar a escuchar cada #1 nuevo (en meses, el #1 global cambia 78 veces en
+// 137 meses; a 0,65 s por mes era un desfile de cortes). En días y semanas no se espera: ahí se ve el detalle.
+const MS_POR_PASO = { dia: 90, semana: 400, mes: 1000, anio: 2500 };
+const MS_MINIMO_CANCION = { dia: 0, semana: 0, mes: 2600, anio: 3500 };
 
 const CONTINENTES = {
   america: 'América', europa: 'Europa', africa: 'África y Medio Oriente', asia: 'Asia', oceania: 'Oceanía',
@@ -161,10 +164,6 @@ function paisesConDatos(grano = Estado.grano, p = Estado.periodo) {
   return PAISES_MAPA.filter(cc => numero1(cc, grano, p));
 }
 
-/** Países de un ámbito ('global' = todos, o un continente). */
-function paisesDelAmbito(ambito) {
-  return ambito === 'global' ? PAISES_MAPA : PAISES_MAPA.filter(cc => window.PAISES[cc].continente === ambito);
-}
 
 // ---------- ¿El país escucha lo mismo que el mundo? ----------
 
@@ -175,55 +174,62 @@ function sigueAlGlobal(cc, grano = Estado.grano, p = Estado.periodo) {
   return r.idx === numero1('global', grano, p)?.idx;
 }
 
-/** Total real de países del ámbito ('global' = el mundo), el mismo en todas las fechas: los independientes más
-    los territorios con chart propio (datos/v3/continentes.js, de scripts/11_base_fija_v3.py). Es la base de los
-    conteos del panel; los países sin datos en la fecha cuentan como que no escuchan el #1 global. */
-function totalPaises(ambito) {
-  const listas = window.PAISES_POR_CONTINENTE;
-  return ambito === 'global' ? Object.values(listas).reduce((s, l) => s + l.length, 0) : listas[ambito]?.length ?? 0;
+// ---------- Muestra fija: la base de toda la tendencia ----------
+// Los 52 países con #1 en todos los días, del 1-may-2015 al último (datos/v3/muestra.js, de
+// scripts/11_base_fija_v3.py). Titular, barras, eje de tiempo, diversidad y aplausos cuentan siempre sobre
+// ellos: así una cifra no cambia porque se sumen países con el tiempo. Los demás países se ven en el mapa desde
+// que tienen datos, pero no entran en la cuenta.
+
+/** Países de la muestra en el ámbito ('global' = toda la muestra, o un continente). */
+function muestraDe(ambito) {
+  return ambito === 'global' ? Object.values(window.MUESTRA).flat() : window.MUESTRA[ambito] ?? [];
 }
 
-/** En el ámbito: {n: países que siguen al #1 global, total: países con datos}. El total con datos es la base de
-    las proporciones del eje de tiempo y del sonido (comparan fechas con distinta cobertura); el panel cuenta
-    sobre totalPaises(). */
+const MIN_MUESTRA = 3;          // con menos países en la muestra (África tiene 1, Oceanía 2) un continente no se mide
+
+/** El ámbito en que se cuenta: el continente elegido si tiene al menos MIN_MUESTRA países en la muestra; si no,
+    el mundo (contar "0 de 1 país de África" no dice nada del continente). */
+function ambitoMedible(ambito) {
+  return ambito !== 'global' && muestraDe(ambito).length < MIN_MUESTRA ? 'global' : ambito;
+}
+
+/** En el ámbito: {n: países de la muestra que escuchan el #1 global, total: países de la muestra}. */
 function cuentaGlobal(ambito, grano = Estado.grano, p = Estado.periodo) {
-  let n = 0, total = 0;
-  for (const cc of paisesDelAmbito(ambito)) {
-    const s = sigueAlGlobal(cc, grano, p);
-    if (s === null) continue;
-    total++;
-    if (s) n++;
-  }
-  return { n, total };
+  const paises = muestraDe(ambito);
+  return { n: paises.filter(cc => sigueAlGlobal(cc, grano, p)).length, total: paises.length };
 }
 
-let _serieContinentes = null;
-const MIN_PAISES = 3;          // con menos países el % salta entre 0 y 100 y no dice nada
-const VENTANA_SEMANAS = 26;    // promedio móvil centrado de 6 meses: la tendencia, no el ruido de cada semana
-/** Evolución del % de países de cada continente (y del mundo) cuyo #1 semanal es el #1 global. */
-function serieContinentes() {
-  if (_serieContinentes) return _serieContinentes;
-  const n = window.PERIODOS.semana.n;
-  const ambitos = ['global', ...Object.keys(CONTINENTES)];
-  const crudo = Object.fromEntries(ambitos.map(k => [k, []]));
-  for (let p = 0; p < n; p++) {
-    for (const k of ambitos) {
-      const { n: si, total } = cuentaGlobal(k, 'semana', p);
-      crudo[k].push(total >= MIN_PAISES ? 100 * si / total : null);
-    }
-  }
-  const serie = { x: Array.from({ length: n }, (_, p) => fechaDePeriodo('semana', p).toISOString().slice(0, 10)) };
-  const medio = VENTANA_SEMANAS >> 1;
-  for (const k of ambitos) {
-    serie[k] = crudo[k].map((v, i) => {
-      if (v === null) return null;
-      const ventana = crudo[k].slice(Math.max(0, i - medio), i + medio + 1).filter(x => x !== null);
-      return ventana.reduce((a, b) => a + b, 0) / ventana.length;
+const _series = {};
+/** % de la muestra que escucha el #1 global en cada período de la granularidad (el eje de tiempo). Sin
+    promedios: el valor bajo el cursor es el mismo del titular del panel. */
+function serieMuestra(grano = Estado.grano) {
+  if (!_series[grano]) {
+    const n = window.PERIODOS[grano].n;
+    _series[grano] = Array.from({ length: n }, (_, p) => {
+      const { n: si, total } = cuentaGlobal('global', grano, p);
+      return 100 * si / total;
     });
   }
-  _serieContinentes = serie;
-  return serie;
+  return _series[grano];
 }
+
+// ---------- Hitos: cuándo llega (o se va) Spotify ----------
+// Explican los vacíos del mapa: dónde no sabemos qué se escucha y por qué. Marcas en el eje de tiempo y paradas
+// del recorrido. corto: lo que se ve al pasar el cursor por la marca; largo: el texto del recorrido.
+const HITOS = [
+  { fecha: '2018-03-13', region: 'africa', corto: 'Spotify llega a Sudáfrica',
+    largo: 'Marzo de 2018: Spotify llega a Sudáfrica, su primer país africano.' },
+  { fecha: '2018-11-13', region: 'africa', corto: 'Llega a Medio Oriente',
+    largo: 'Noviembre de 2018: llega a Medio Oriente y el norte de África.' },
+  { fecha: '2019-02-26', region: 'asia', corto: 'Llega a India',
+    largo: 'Febrero de 2019: llega a India.' },
+  { fecha: '2020-07-15', region: 'europa', corto: 'Llega a Rusia',
+    largo: 'Julio de 2020: llega a Rusia.' },
+  { fecha: '2021-02-23', region: 'africa', corto: 'Llega a 85 países más',
+    largo: 'Febrero de 2021: llega a 85 países más, casi la mitad en África. Pero ahí no publica sus charts.' },
+  { fecha: '2022-04-11', region: 'europa', corto: 'Spotify deja Rusia',
+    largo: 'Abril de 2022: Spotify deja Rusia tras la ley que censura la información sobre la guerra. Su música sigue en YouTube.' },
+];
 
 // ---------- Carga bajo demanda (con <script>, funciona también abriendo index.html sin servidor) ----------
 
@@ -276,6 +282,23 @@ async function pedirPopularidad(idx) {
   if (!desde2017) return previa;
   const hueco = Array(Math.max(0, desde2017.inicio - (previa.inicio + previa.valores.length))).fill(0);
   return { inicio: previa.inicio, valores: [...previa.valores, ...hueco, ...desde2017.valores] };
+}
+
+// ---------- Alcance mundial de cada canción (scripts/13_alcance_v3.py) ----------
+// Semana a semana, en cuántos países de la muestra está en el top 50. Misma escala para toda canción y fecha.
+
+const _pedirAlcance = cargadorScript('cargarAlcance', n => `${BASE_DATOS}v3/alcance/${n.padStart(2, '0')}.js?v=${VERSION_DATOS}`);
+
+/** {inicio: semana (como semanaDe), valores: [países, …]}, o null si la canción no está en la muestra. */
+async function pedirAlcance(idx) {
+  const d = (await _pedirAlcance(String(idx % 32)))[idx];
+  return d ? { inicio: d[0], valores: d[1] } : null;
+}
+
+/** Países de la muestra con la canción en su top 50 en la semana s (0 si no está). */
+function alcanceEn(alcance, s) {
+  if (!alcance) return 0;
+  return alcance.valores[s - alcance.inicio] ?? 0;
 }
 
 // ---------- Top 3 de cada país (recuadro junto al cursor; scripts/10_top3_v3.py) ----------

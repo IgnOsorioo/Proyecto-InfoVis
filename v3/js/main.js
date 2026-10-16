@@ -4,10 +4,12 @@
    - Al entrar, el mapa muestra qué países escuchan el #1 global y el panel, cuántos lo escuchan por continente.
      El sonido se activa con el primer click o tecla (lo exigen los navegadores), sin bloquear nada.
    - Pasar el cursor por un país muestra al tiro un recuadro con su top 3 y, si se detiene un instante, el
-     panel pasa a ese país y suena su #1.
+     panel pasa a ese país y suena su #1. Al sacar el cursor, el panel vuelve al mundo (o a la pestaña elegida).
    - Click en un país lo fija: se queda escuchando ese país; al avanzar el tiempo, si cambia su #1, suena el
      nuevo. Se suelta con ✕, Esc o con otro click en el mismo país.
-   - Lo que suena es siempre el #1 de lo que muestra el panel (país fijado, país bajo el cursor o el mundo). */
+   - Lo que suena es siempre el #1 de lo que muestra el panel (país fijado, país bajo el cursor o el mundo).
+   - Encima, los aplausos: en cuántos países de la muestra es #1 esa canción.
+   - Donde no sabemos qué se escucha, estática de radio; las marcas del eje y el recorrido cuentan por qué. */
 
 (() => {
   const $ = id => document.getElementById(id);
@@ -16,32 +18,39 @@
   const ESPERA_AUDIO_MS = 120;        // al barrer el mapa o al reproducir rápido no se piden previews de cada cambio
   const ESPERA_INTENCION_MS = 140;    // hay que detenerse sobre un país para elegirlo
   const ESPERA_SALIDA_MS = 350;
-  const PULSO_ARMONIA_MS = 2500;
+  const PULSO_APLAUSOS_MS = 2500;
   let raf = null, ultimoPaso = 0;
   let timerAudio = null, timerSalida = null, timerIntencion = null;
   let sonidoDecidido = false;         // el usuario ya hizo un gesto (o usó el botón de sonido)
   let region = 'global';              // región elegida con los botones ('global' o un continente)
   let territorio = null;              // territorio sin chart bajo el cursor (el panel muestra un mensaje)
   let globo = null;                   // {cc | territorio, raton}: lo que muestra el recuadro junto al cursor
+  let entrada = null;                 // dónde estaba el cursor al entrar al país (para reconocer salidas falsas)
   let recorrido = null;
 
   // ---------- Tiempo ----------
 
-  function irAPeriodo(p) {
+  // Fecha elegida, independiente de la escala: al pasar de Mes a Año y volver, se vuelve al mismo mes (el período
+  // "2015" empieza en enero, pero la fecha elegida sigue siendo septiembre).
+  let fechaElegida = null;
+
+  function irAPeriodo(p, { conservarFecha = false } = {}) {
     Estado.periodo = p;
+    if (!conservarFecha) fechaElegida = fechaDePeriodo(Estado.grano, p);
     slider.value = p;
     Linea.mover(p);
     refrescar();
-    actualizarArmonia();
-    if (!Estado.reproduciendo && !recorrido) Armonia.pulso(PULSO_ARMONIA_MS);   // mover la fecha a mano: se escucha un momento
   }
 
-  /** Voces de la armonía: qué fracción de cada continente escucha el #1 global en la fecha. */
-  function actualizarArmonia() {
-    Armonia.actualizar(Object.fromEntries(Object.keys(CONTINENTES).map(k => {
-      const { n, total } = cuentaGlobal(k);
-      return [k, total >= 2 ? n / total : null];
-    })));
+  /** Aplausos: en cuántos países de la muestra es #1 la canción que suena, en la fecha (una persona por país; si
+      el país que se mira no está en la muestra, también cuenta). Sin canción (país sin datos), silencio. */
+  function actualizarAplausos() {
+    const muestra = muestraDe('global');
+    const idx = Estado.mensaje ? null : Estado.cancion;
+    if (idx === null) { Aplausos.actualizar(0, muestra.length); return; }
+    const origen = Estado.origen;
+    const fuera = origen && origen !== 'global' && !muestra.includes(origen) ? 1 : 0;
+    Aplausos.actualizar(muestra.filter(cc => numero1(cc)?.idx === idx).length + fuera, muestra.length);
   }
 
   /** Vuelve a dibujar el panel, el mapa, el recuadro y lo que suena para la fecha actual. */
@@ -58,20 +67,31 @@
   }
 
   function cambiarGrano(grano) {
-    const fecha = fechaDePeriodo(Estado.grano, Estado.periodo);
+    // La fecha elegida, si cae dentro del período actual; si no (se movió el tiempo), el inicio del período.
+    const inicio = fechaDePeriodo(Estado.grano, Estado.periodo);
+    const dentro = fechaElegida && fechaElegida >= inicio && fechaElegida <= finDelPeriodo();
+    const fecha = dentro ? fechaElegida : inicio;
     Estado.grano = grano;
     slider.max = window.PERIODOS[grano].n - 1;
     Linea.dibujar();
     document.querySelectorAll('.granos button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.grano === grano)));
-    irAPeriodo(periodoDeFecha(grano, fecha));
+    irAPeriodo(periodoDeFecha(grano, fecha), { conservarFecha: true });
+    if (!dentro) fechaElegida = fecha;
   }
 
+  /** Avanza un período cada MS_POR_PASO; si con el paso cambió la canción que suena, ese paso dura al menos
+      MS_MINIMO_CANCION, para alcanzar a escucharla. */
+  let esperaPaso = 0;
   function paso(ts) {
     if (!Estado.reproduciendo) return;
-    if (ts - ultimoPaso >= MS_POR_PASO[Estado.grano]) {
+    if (ts - ultimoPaso >= esperaPaso) {
       ultimoPaso = ts;
       if (Estado.periodo >= window.PERIODOS[Estado.grano].n - 1) { pausar(); return; }
+      const antes = Estado.cancion;
       irAPeriodo(Estado.periodo + 1);
+      esperaPaso = Estado.cancion !== antes
+        ? Math.max(MS_POR_PASO[Estado.grano], MS_MINIMO_CANCION[Estado.grano])
+        : MS_POR_PASO[Estado.grano];
     }
     raf = requestAnimationFrame(paso);
   }
@@ -81,8 +101,9 @@
     Estado.reproduciendo = true;
     botonPlay.classList.add('reproduciendo');
     botonPlay.setAttribute('aria-label', 'Pausar');
-    Armonia.continuo(true);
+    Aplausos.continuo(true);
     ultimoPaso = performance.now();
+    esperaPaso = MS_MINIMO_CANCION[Estado.grano] || MS_POR_PASO[Estado.grano];   // la primera canción también se escucha
     raf = requestAnimationFrame(paso);
   }
 
@@ -91,20 +112,24 @@
     cancelAnimationFrame(raf);
     botonPlay.classList.remove('reproduciendo');
     botonPlay.setAttribute('aria-label', 'Avanzar en el tiempo');
-    Armonia.continuo(false);
+    Aplausos.continuo(false);
   }
 
   // ---------- Lo que muestra el panel (y suena) ----------
 
+  /** Suena la canción idx y, encima, su alcance en aplausos (unos segundos si el tiempo no corre). */
   function tocarConEspera(idx) {
     clearTimeout(timerAudio);
     timerAudio = setTimeout(() => Reproductor.tocar(cancion(idx)), ESPERA_AUDIO_MS);
+    actualizarAplausos();
+    if (!Estado.reproduciendo && !recorrido) Aplausos.pulso(PULSO_APLAUSOS_MS);
   }
 
   function detenerAudio() {
     clearTimeout(timerAudio);
     Reproductor.detener();
     Panel.audio('pausa');
+    actualizarAplausos();
   }
 
   /** "Desde 2019" si el chart del país empieza después de la fecha; si no, nada. */
@@ -138,7 +163,7 @@
     const g = numero1('global');
     Estado.cancion = g?.idx ?? null;
     if (g) tocarConEspera(g.idx);
-    Panel.resumen();
+    Panel.mostrar();
   }
 
   function volverAlResumen() {
@@ -159,7 +184,7 @@
   function soltar() {
     if (!Estado.fijado) return;
     Estado.fijado = null;
-    Estado.vistaPais = null;
+    Estado.vistaPais = Estado.paisActivo;               // si el cursor está sobre un país, el panel pasa a ese país
     refrescar();
   }
 
@@ -231,9 +256,12 @@
   // ---------- Cursor sobre el mapa ----------
 
   function pasarPorPais(cc, raton) {
+    if (recorrido) return;                               // el recorrido no se altera (ni con eventos atrasados del mapa)
+    entrada = raton && { x: raton.clientX, y: raton.clientY };
     clearTimeout(timerSalida);
     clearTimeout(timerIntencion);
     mostrarGlobo(cc, raton);
+    Estatica.sonar(!numero1(cc));                        // sin datos en esta fecha: no hay señal (siempre)
     timerIntencion = setTimeout(() => {
       Estado.paisActivo = cc;
       territorio = null;
@@ -248,9 +276,12 @@
 
   /** País o territorio que ninguna fuente cubre: {iso3, nombre, nota?} (de datos/mundo.js). */
   function pasarSinChart(t, raton) {
+    if (recorrido) return;
+    entrada = raton && { x: raton.clientX, y: raton.clientY };
     clearTimeout(timerSalida);
     clearTimeout(timerIntencion);
     mostrarGloboTerritorio(t.nombre, raton);
+    Estatica.sonar(true);
     timerIntencion = setTimeout(() => {
       Estado.paisActivo = null;
       Mapa.marcar(null);
@@ -263,24 +294,32 @@
     }, ESPERA_INTENCION_MS);
   }
 
-  /** Al salir del mapa: se quita el contorno; el panel se queda con lo último que mostraba. */
-  function salir() {
+  /** Al salir de un país (al mar o fuera del mapa): un instante después (por si entra a otro país) se quita el
+      contorno, se apaga la estática y el panel vuelve al mundo o a la pestaña elegida (si no hay un país fijado). */
+  function salir(ev) {
+    // Al redibujar el mapa (por ejemplo, para marcar el contorno), Plotly puede avisar que el cursor salió aunque no
+    // se haya movido: esa salida no cuenta (si contara, la estática se cortaría con el cursor quieto sobre el país).
+    // Una salida real trae el movimiento del mouse que la causó, o es el cursor dejando el mapa.
+    if (ev !== 'fuera') {
+      if (ev?.clientX === undefined) return;
+      if (entrada && Math.hypot(ev.clientX - entrada.x, ev.clientY - entrada.y) < 2) return;
+    }
     clearTimeout(timerIntencion);
     ocultarGlobo();
     clearTimeout(timerSalida);
     timerSalida = setTimeout(() => {
+      Estatica.sonar(false);
       Estado.paisActivo = null;
       Mapa.marcar(null);
-      if (territorio) {                                  // vuelve a lo que mostraba antes del territorio sin datos
-        territorio = null;
-        refrescar();
-      }
-      Mapa.dibujar();
+      territorio = null;
+      if (!Estado.fijado) Estado.vistaPais = null;
+      refrescar();
     }, ESPERA_SALIDA_MS);
   }
 
   /** Click en un país: lo fija (o lo suelta si ya estaba fijado). */
   function clickEnPais(cc) {
+    if (recorrido) return;
     clearTimeout(timerIntencion);
     if (Estado.fijado === cc) soltar();
     else fijar(cc);
@@ -308,8 +347,9 @@
 
   function encenderSonido() {
     Reproductor.habilitar();
-    Armonia.iniciar();
-    actualizarArmonia();
+    Aplausos.iniciar();
+    Estatica.iniciar();
+    actualizarAplausos();
     if (Estado.cancion !== null && !Estado.mensaje) Reproductor.tocar(cancion(Estado.cancion));
   }
 
@@ -321,15 +361,24 @@
     actualizarBotonSonido();
   }
 
-  // ---------- Recorrido guiado (1 min) ----------
-  // De octubre de 2013 a hoy, mes a mes, mientras suena el #1 global. Esc o "Saltar" lo terminan.
+  // ---------- Recorrido guiado (~1 min) ----------
+  // De mayo de 2015 a hoy, mes a mes, mientras suena el #1 global y aplaude su alcance. Se detiene en cada hito
+  // (cuándo llega o se va Spotify) y acerca el mapa a esa región: así se ve por qué hay vacíos. Esc o "Saltar"
+  // lo terminan.
 
   const MS_POR_MES = 170;
+  const MS_POR_HITO = 3800;
 
   function relato(texto, paso, total) {
     $('relato-texto').textContent = texto.charAt(0).toUpperCase() + texto.slice(1);
     $('relato-paso').textContent = `${paso} / ${total}`;
     $('relato').hidden = false;
+  }
+
+  function irARegion(nombre) {
+    marcarRegion(document.querySelector(`.acercar button[data-region="${nombre}"]`));
+    region = nombre === 'mundo' ? 'global' : nombre;
+    Mapa.enfocar(nombre);
   }
 
   async function verRecorrido() {
@@ -342,30 +391,42 @@
     document.body.classList.add('en-recorrido');
     try {
       if (Estado.reproduciendo) pausar();
+      clearTimeout(timerIntencion);                     // un cursor que venía del mapa no cambia el panel después
+      Mapa.marcar(null);
       Estado.fijado = null;
       Estado.vistaPais = null;
       territorio = null;
       ocultarGlobo();
-      marcarRegion(document.querySelector('.acercar button[data-region="mundo"]'));
-      region = 'global';
-      Mapa.enfocar('mundo');
+      irARegion('mundo');
       cambiarGrano('mes');
       irAPeriodo(0);
-      const TOTAL = 3;
+      const TOTAL = HITOS.length + 3;
       const inicio = cuentaGlobal('global');
       relato(`${textoPeriodo('mes', 0)}: ${inicio.n} de ${inicio.total} países escuchan el #1 global, «${cancion(numero1('global').idx).titulo}».`, 1, TOTAL);
       await esperar(5000);
 
-      relato('Mes a mes. Escucha el tono grave: juntos, el mundo escucha lo mismo; separados, cada uno lo suyo.', 2, TOTAL);
-      Armonia.continuo(true);
+      relato('Mes a mes. Los aplausos: en cuántos países está esa canción en su top 50.', 2, TOTAL);
+      Aplausos.continuo(true);
+      const porMes = new Map(HITOS.map(h => [periodoDeFecha('mes', new Date(h.fecha + 'T00:00:00Z')), h]));
+      let paso = 2;
       for (let p = 1; p < window.PERIODOS.mes.n; p++) {
         irAPeriodo(p);
+        const hito = porMes.get(p);
+        if (hito) {
+          irARegion(hito.region);
+          relato(hito.largo, ++paso, TOTAL);
+          await esperar(MS_POR_HITO);
+          irARegion('mundo');
+        }
         await esperar(MS_POR_MES);
       }
-      Armonia.continuo(false);
+      Aplausos.continuo(false);
 
       const hoy = cuentaGlobal('global');
-      relato(`${textoPeriodo('mes', Estado.periodo)}: ${hoy.n} de ${hoy.total}.`, 3, TOTAL);
+      const china = numero1('cn');                      // fuera de la muestra (QQ Music, sin Spotify): se nombra al final
+      const deChina = china && !sigueAlGlobal('cn') ? ` En China, sin Spotify, el #1 es otro: «${cancion(china.idx).titulo}».` : '';
+      if (china) irARegion('asia');
+      relato(`${textoPeriodo('mes', Estado.periodo)}: ${hoy.n} de ${hoy.total} países escuchan el #1 global.${deChina}`, TOTAL, TOTAL);
       await esperar(5000);
     } catch (e) {
       // Terminado con Esc o "Saltar": se vuelve al estado de inicio igual que al final.
@@ -374,9 +435,10 @@
       recorrido = null;
       $('relato').hidden = true;
       document.body.classList.remove('en-recorrido');
-      Armonia.continuo(false);
-      cambiarGrano('dia');
-      irAPeriodo(window.PERIODOS.dia.n - 1);
+      Aplausos.continuo(false);
+      irARegion('mundo');
+      cambiarGrano('mes');
+      irAPeriodo(window.PERIODOS.mes.n - 1);
     }
   }
 
@@ -394,7 +456,8 @@
     sonidoDecidido = true;
     if (Reproductor.habilitado) {
       Reproductor.deshabilitar();
-      Armonia.silenciar();
+      Aplausos.silenciar();
+      Estatica.silenciar();
       Panel.audio('silenciado');
     } else {
       encenderSonido();
@@ -433,14 +496,23 @@
 
   Mapa.on({ alPasar: pasarPorPais, alPasarSinChart: pasarSinChart, alSalir: salir, alElegir: clickEnPais });
   $('mapa').addEventListener('mousemove', e => { if (globo) { globo.raton = e; moverGlobo(e); } });
-  $('mapa').addEventListener('mouseleave', ocultarGlobo);
+  $('mapa').addEventListener('mouseleave', () => { entrada = null; salir('fuera'); });
   Panel.iniciar({ alVolverAlResumen: () => (Estado.fijado ? soltar() : volverAlResumen()) });
+  Linea.alElegirHito(h => {
+    irARegion(h.region);
+    if (!Estado.fijado) { Estado.vistaPais = null; territorio = null; }
+    irAPeriodo(periodoDeFecha(Estado.grano, new Date(h.fecha + 'T00:00:00Z')));
+  });
 
   slider.max = window.PERIODOS[Estado.grano].n - 1;
   slider.title = `${textoPeriodoCorto('dia', 0)} – ${textoPeriodoCorto('dia', window.PERIODOS.dia.n - 1)}`;
   Linea.dibujar();
-  irAPeriodo(window.PERIODOS[Estado.grano].n - 1);                                    // parte en el día más reciente
   Mapa.iniciar();
   actualizarBotonSonido();
   Panel.audio(null);
+  // Al abrir la página la historia corre sola, mes a mes desde mayo de 2015 hasta hoy (el sonido se suma con el
+  // primer click o tecla: los navegadores no dejan sonar nada antes). Con "reducir movimiento" no arranca sola:
+  // queda en el mes más reciente.
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) irAPeriodo(window.PERIODOS[Estado.grano].n - 1);
+  else { irAPeriodo(0); reproducir(); }
 })();
