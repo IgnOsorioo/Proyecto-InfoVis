@@ -91,35 +91,48 @@ const Panel = (() => {
     const estreno = [c.estreno, primeraSemana].filter(Boolean).sort()[0];
     $('p-estreno').textContent = estreno ? estreno.split('-').reverse().join('/') : '—';   // DD/MM/AAAA
     const hasta = semanaDe(finDelPeriodo());
-    const valores = popularidad ? popularidad.valores.slice(0, Math.max(0, hasta - popularidad.inicio + 1)) : [];
-    const total = valores.reduce((a, b) => a + b, 0) * 1000;
+    const corte = popularidad ? hasta - popularidad.inicio : 0;     // índice de la semana de la fecha en la serie
+    const total = popularidad ? popularidad.valores.slice(0, Math.max(0, corte + 1)).reduce((a, b) => a + b, 0) * 1000 : 0;
     const vistas = c.fuente === 'YouTube Music';
     $('p-reproducciones-titulo').textContent = vistas ? 'Vistas' : 'Reproducciones';
     $('p-reproducciones').textContent = total ? textoCantidad(total) : '—';
     $('p-popularidad-titulo').textContent = vistas ? 'Vistas por semana en YouTube' : 'Reproducciones por semana';
-    dibujarGrafico(popularidad, valores, vistas ? 'vistas' : 'reproducciones');
+    dibujarGrafico(popularidad, hasta, vistas ? 'vistas' : 'reproducciones');
   }
 
-  function dibujarGrafico(popularidad, valores, unidad) {
+  /** Popularidad de toda la vida de la canción (hasta hoy), partida en la fecha de la visualización: lo anterior
+      en verde y lo posterior (su futuro respecto de esa fecha) en gris, con una franja en la fecha. Al reproducir
+      el tiempo, la franja avanza y el verde va cubriendo el gráfico. Las dos partes son líneas rectas entre
+      semanas: con curvas suavizadas no calzarían en la franja. */
+  function dibujarGrafico(popularidad, semanaActual, unidad) {
     const nodo = $('p-grafico');
     const aviso = $('p-grafico-aviso');
-    if (!valores.length) {
-      aviso.textContent = popularidad ? 'Aún no entra a los charts' : 'Sin datos';
+    if (!popularidad?.valores.length) {
+      aviso.textContent = 'Sin datos';
       aviso.hidden = false;
       Plotly.purge(nodo);
       return;
     }
     aviso.hidden = true;
-    const x = valores.map((_, i) => fechaSemana(popularidad.inicio + i));
-    const formatoEje = valores.length <= 20 ? '%d %b' : valores.length <= 110 ? '%b %Y' : '%Y';
+    const { inicio, valores } = popularidad;
+    const x = valores.map((_, i) => fechaSemana(inicio + i));
     const y = valores.map(v => v * 1000);
-    const verde = token('global');
+    const k = semanaActual - inicio;                     // < 0: aún no entra a los charts; ≥ largo: ya salió
+    const pasado = k < 0 ? 0 : Math.min(k + 1, x.length);
+    const futuro = Math.max(0, Math.min(k, x.length));   // la semana de la fecha es el borde de las dos partes
+    const actual = fechaSemana(semanaActual);
+    const desde = actual < x[0] ? actual : x[0], hasta = actual > x.at(-1) ? actual : x.at(-1);
+    const semanas = (new Date(hasta) - new Date(desde)) / (7 * DIA_MS);
+    const formatoEje = semanas <= 20 ? '%d %b' : semanas <= 110 ? '%b %Y' : '%Y';
+    const verde = token('global'), gris = token('otra');
+    const parte = (ini, fin, color, relleno) => ({
+      type: 'scatter', mode: 'lines', x: x.slice(ini, fin), y: y.slice(ini, fin),
+      line: { color, width: 2 }, fill: 'tozeroy', fillcolor: relleno,
+      hovertemplate: `Semana del %{x|%d %b %Y}<br><b>%{y:.3s}</b> ${unidad}<extra></extra>`,
+    });
     Plotly.react(nodo, [
-      { type: 'scatter', mode: 'lines', x, y, line: { color: verde, width: 2, shape: 'spline', smoothing: 0.6 },
-        fill: 'tozeroy', fillcolor: 'rgba(30, 215, 96, 0.16)',
-        hovertemplate: `Semana del %{x|%d %b %Y}<br><b>%{y:.3s}</b> ${unidad}<extra></extra>` },
-      { type: 'scatter', mode: 'markers', x: [x.at(-1)], y: [y.at(-1)], hoverinfo: 'skip',
-        marker: { color: verde, size: 9, line: { color: token('panel'), width: 2 } } },
+      parte(futuro, x.length, gris, 'rgba(89, 89, 89, 0.22)'),
+      parte(0, pasado, verde, 'rgba(30, 215, 96, 0.18)'),
     ], {
       height: Math.max(96, nodo.parentElement.clientHeight),
       margin: { l: 34, r: 8, t: 4, b: 20 },
@@ -127,8 +140,9 @@ const Panel = (() => {
       showlegend: false,
       font: { family: token('fuente'), size: 10, color: token('tinta-3') },
       hoverlabel: { bgcolor: token('superficie'), bordercolor: token('eje'), font: { family: token('fuente'), size: 12, color: token('tinta') } },
-      xaxis: { showgrid: false, zeroline: false, linecolor: token('eje'), fixedrange: true, nticks: 4, tickformat: formatoEje },
-      yaxis: { gridcolor: token('grilla'), zeroline: false, tickformat: '~s', fixedrange: true, nticks: 4, rangemode: 'tozero' },
+      xaxis: { showgrid: false, zeroline: false, linecolor: token('eje'), fixedrange: true, nticks: 4, tickformat: formatoEje, range: [desde, hasta] },
+      yaxis: { gridcolor: token('grilla'), zeroline: false, tickformat: '~s', fixedrange: true, nticks: 4, range: [0, Math.max(...y) * 1.08] },
+      shapes: [{ type: 'line', xref: 'x', yref: 'paper', x0: actual, x1: actual, y0: 0, y1: 1, line: { color: token('tinta'), width: 2 } }],
     }, CONFIG_PLOTLY);
   }
 
@@ -147,25 +161,25 @@ const Panel = (() => {
     if (c) dibujarCancion(c);
     $('p-contexto').textContent = '#1 global';
     $('p-insignia').hidden = true;
-    const { n, total } = cuentaGlobal(ambito);
+    const { n } = cuentaGlobal(ambito);
     const donde = ambito === 'global' ? '' : ` de ${nombreAmbito(ambito)}`;
-    $('r-titular').textContent = total ? `La escuchan ${n} de ${paises(total)}${donde}` : 'Sin datos';
+    $('r-titular').textContent = `La escuchan ${n} de ${paises(totalPaises(ambito))}${donde}`;
     dibujarContinentes();
   }
 
-  /** Una barra por continente: % de sus países (con datos) que escuchan el #1 global. Con menos de MIN_PAISES
-      países el % salta entre 0 y 100 y no dice nada: la fila se atenúa (el mismo criterio del eje de tiempo). */
+  /** Una barra por continente: cuántos de sus países escuchan el #1 global, sobre el total real de países del
+      continente (fijo en el tiempo). El título dice cuántos tienen datos en la fecha. */
   function dibujarContinentes() {
     $('r-continentes').replaceChildren(...Object.entries(CONTINENTES).map(([k, nombre]) => {
-      const { n, total } = cuentaGlobal(k);
-      const pocos = total > 0 && total < MIN_PAISES;
+      const { n, total: conDatos } = cuentaGlobal(k);
+      const total = totalPaises(k);
       const fila = document.createElement('li');
-      fila.className = [Estado.ambito === k ? 'actual' : '', pocos ? 'pocos' : ''].join(' ').trim();
-      fila.title = total ? `${n} de ${paises(total)} con datos` : 'Sin datos';
+      fila.className = Estado.ambito === k ? 'actual' : '';
+      fila.title = `${conDatos} de ${paises(total)} con datos en esta fecha`;
       fila.innerHTML = '<span class="r-cont-nombre"></span><span class="r-cont-barra"><span></span></span><span class="r-cont-valor"></span>';
       fila.querySelector('.r-cont-nombre').textContent = nombre;
-      fila.querySelector('.r-cont-barra span').style.width = total ? `${100 * n / total}%` : '0';
-      fila.querySelector('.r-cont-valor').textContent = total ? `${n}/${total}` : '—';
+      fila.querySelector('.r-cont-barra span').style.width = `${100 * n / total}%`;
+      fila.querySelector('.r-cont-valor').textContent = `${n}/${total}`;
       return fila;
     }));
   }

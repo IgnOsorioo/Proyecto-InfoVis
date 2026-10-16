@@ -184,7 +184,17 @@ function sigueAlGlobal(cc, grano = Estado.grano, p = Estado.periodo) {
   return r.idx === numero1('global', grano, p)?.idx;
 }
 
-/** En el ámbito: {n: países que siguen al #1 global, total: países con datos}. */
+/** Total real de países del ámbito ('global' = el mundo), el mismo en todas las fechas: los independientes más
+    los territorios con chart propio (datos/v3/continentes.js, de scripts/11_base_fija_v3.py). Es la base de los
+    conteos del panel; los países sin datos en la fecha cuentan como que no escuchan el #1 global. */
+function totalPaises(ambito) {
+  const listas = window.PAISES_POR_CONTINENTE;
+  return ambito === 'global' ? Object.values(listas).reduce((s, l) => s + l.length, 0) : listas[ambito]?.length ?? 0;
+}
+
+/** En el ámbito: {n: países que siguen al #1 global, total: países con datos}. El total con datos es la base de
+    las proporciones del eje de tiempo y del sonido (comparan fechas con distinta cobertura); el panel cuenta
+    sobre totalPaises(). */
 function cuentaGlobal(ambito, grano = Estado.grano, p = Estado.periodo) {
   let n = 0, total = 0;
   for (const cc of paisesDelAmbito(ambito)) {

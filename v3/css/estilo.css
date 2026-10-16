@@ -349,7 +349,6 @@ body.en-recorrido .fijado { display: none; }
 .r-continentes { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .r-continentes li { display: grid; grid-template-columns: 150px minmax(0, 1fr) 44px; gap: 10px; align-items: center; font-size: 13px; color: var(--tinta-2); }
 .r-continentes li.actual { color: var(--tinta); font-weight: 800; }
-.r-continentes li.pocos .r-cont-barra, .r-continentes li.pocos .r-cont-valor { opacity: 0.45; }
 .r-cont-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .r-cont-barra { height: 8px; background: var(--superficie); border-radius: 4px; overflow: hidden; }
 .r-cont-barra span { display: block; height: 100%; background: var(--global); border-radius: 4px; transition: width 0.25s; }
