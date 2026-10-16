@@ -21,6 +21,7 @@
   let sonidoDecidido = false;         // el usuario ya hizo un gesto (o usó el botón de sonido)
   let region = 'global';              // región elegida con los botones ('global' o un continente)
   let territorio = null;              // territorio sin chart bajo el cursor (el panel muestra un mensaje)
+  const PULSO_ARMONIA_MS = 2500;
 
   // ---------- Tiempo ----------
 
@@ -32,6 +33,16 @@
     $('fecha').textContent = textoPeriodoCorto(Estado.grano, p);
     actualizarSaltos();
     refrescar();
+    actualizarArmonia();
+    if (!Estado.reproduciendo && !recorrido) Armonia.pulso(PULSO_ARMONIA_MS);   // mover la fecha a mano: se escucha un momento
+  }
+
+  /** Voces de la armonía: qué fracción de cada continente escucha el #1 global en la fecha. */
+  function actualizarArmonia() {
+    Armonia.actualizar(Object.fromEntries(Object.keys(CONTINENTES).map(k => {
+      const { n, total } = cuentaGlobal(k);
+      return [k, total >= 2 ? n / total : null];
+    })));
   }
 
   /** Vuelve a dibujar el panel, el mapa y lo que suena para la fecha actual. */
@@ -93,6 +104,7 @@
     Estado.reproduciendo = true;
     botonPlay.classList.add('reproduciendo');
     botonPlay.setAttribute('aria-label', 'Pausar');
+    Armonia.continuo(true);
     ultimoPaso = performance.now();
     raf = requestAnimationFrame(paso);
   }
@@ -102,6 +114,7 @@
     cancelAnimationFrame(raf);
     botonPlay.classList.remove('reproduciendo');
     botonPlay.setAttribute('aria-label', 'Reproducir el paso del tiempo');
+    Armonia.continuo(false);
   }
 
   // ---------- Lo que muestra el panel (y suena) ----------
@@ -303,6 +316,8 @@
 
   function encenderSonido() {
     Reproductor.habilitar();
+    Armonia.iniciar();
+    actualizarArmonia();
     if (Estado.cancion !== null && !Estado.mensaje) Reproductor.tocar(cancion(Estado.cancion));
   }
 
@@ -357,11 +372,13 @@
       relato(`En ${textoPeriodo('mes', 0)}, ${n} de ${total} países tenían como #1 el mismo #1 global (coral): «${cancion(numero1('global').idx).titulo}». Escucha: suena el #1 global de cada mes.`, 1, TOTAL);
       await esperar(6500);
 
-      relato('Mes a mes: ¿se mantiene el coral en todos los continentes, o África, Asia y Europa del Este escuchan otra cosa?', 2, TOTAL);
+      relato('Mes a mes: ¿se mantiene el coral en todos los continentes? Escucha el tono grave: cada continente es una voz. Si suenan juntas, todos escuchan lo mismo; si se separan y raspan, cada uno escucha otra cosa.', 2, TOTAL);
+      Armonia.continuo(true);
       for (let p = 1; p < window.PERIODOS.mes.n; p++) {
         irAPeriodo(p);
         await esperar(MS_POR_MES);
       }
+      Armonia.continuo(false);
 
       const hoy = cuentaGlobal('global');
       relato(`En ${textoPeriodo('mes', Estado.periodo)}, ${hoy.n} de ${hoy.total} países escuchan el #1 global. Por continente: ${porContinente()}.`, 3, TOTAL);
@@ -376,6 +393,7 @@
       recorrido = null;
       $('relato').hidden = true;
       document.body.classList.remove('en-recorrido');
+      Armonia.continuo(false);
       cambiarGrano('dia');
       irAPeriodo(window.PERIODOS.dia.n - 1);
     }
@@ -395,6 +413,7 @@
     sonidoDecidido = true;
     if (Reproductor.habilitado) {
       Reproductor.deshabilitar();
+      Armonia.silenciar();
       Panel.audio('silenciado');
     } else {
       encenderSonido();
