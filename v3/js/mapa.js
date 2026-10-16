@@ -1,5 +1,5 @@
 /* Mapa mundial en 2D (proyección Natural Earth). Responde a una pregunta: ¿el país escucha lo mismo que el mundo?
-   - coral: su #1 nacional es el #1 global en ese momento;
+   - verde: su #1 nacional es el #1 global en ese momento;
    - gris: su #1 es otra canción;
    - vacío (solo contorno): sin datos (ninguna fuente tiene su chart en esa fecha).
    Con el cursor sobre un país, se atenúan los que no comparten su #1 (dónde más suena esa canción).
@@ -108,11 +108,24 @@ const Mapa = (() => {
     };
   }
 
-  /** Redibuja (al cambiar de fecha, de canción seleccionada o de país bajo el cursor). */
+  // Un solo dibujo a la vez. Plotly.react es asíncrono: dos dibujos superpuestos (cursor, fecha y encuadre al
+  // mismo tiempo) dejaban la proyección del dibujo distinta de la que usa el cursor, y el encuadre medía una
+  // proyección vieja y achicaba la escala una y otra vez (el mapa quedaba diminuto y el cursor marcaba otro país).
+  let cola = Promise.resolve();
+  let enEspera = null;
+
+  /** Redibuja (al cambiar de fecha, de canción seleccionada o de país bajo el cursor). Los pedidos que llegan
+      mientras se dibuja se juntan en uno solo, que usa el estado más reciente. */
   function dibujar() {
-    const listo = Plotly.react(EL, trazas(), layout(), { ...CONFIG_PLOTLY, scrollZoom: true });
-    if (!eventosConectados) conectarEventos();
-    return listo;                      // Plotly.react es asíncrono: la promesa se cumple al terminar de dibujar
+    if (enEspera) return enEspera;
+    enEspera = cola.then(() => {
+      enEspera = null;
+      const listo = Plotly.react(EL, trazas(), layout(), { ...CONFIG_PLOTLY, scrollZoom: true });
+      if (!eventosConectados) conectarEventos();
+      return listo;
+    });
+    cola = enEspera.catch(() => {});
+    return enEspera;
   }
 
   /** País bajo el cursor (contorno claro); se ve en el próximo dibujar(). */
@@ -156,6 +169,9 @@ const Mapa = (() => {
     const gd = document.getElementById(EL);
     const sub = gd._fullLayout?.geo?._subplot;
     if (typeof sub?.projection !== 'function') return;
+    // Si lo dibujado no tiene la escala vigente, otro encuadre ya la cambió y medirá él: medir aquí la
+    // multiplicaría dos veces.
+    if (Math.abs(gd._fullLayout.geo.projection.scale - escala) > 1e-9) return;
     const { lon: [lon0, lon1], lat: [lat0, lat1] } = REGIONES[region];
     const { w, h } = gd._fullLayout._size;
     const cx = w / 2, cy = h / 2;

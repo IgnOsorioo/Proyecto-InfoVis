@@ -31,13 +31,6 @@ const CONTINENTES = {
   america: 'América', europa: 'Europa', africa: 'África y Medio Oriente', asia: 'Asia', oceania: 'Oceanía',
 };
 
-// Fuente de cada tramo del #1 (scripts/09_datos_v3.py)
-const FUENTES = {
-  s: 'Spotify',
-  y: 'YouTube Music',
-  a: 'Apple Music (solo el chart del 14/10/2026)',
-};
-
 /** Apple Music no tiene historia: su foto del día se muestra, pero no entra en los conteos ni en la evolución
     (sumarla inflaría la última fecha de 77 a 172 países y sesgaría la comparación entre continentes). */
 const esFoto = r => r?.fuente === 'a';
@@ -66,8 +59,8 @@ function cancion(idx) {
     return { idx, id, titulo, artistas, estreno, portada: urlPortada(portada), deezer: 0 };
   }
   if (idx >= BASE_EXTRA) {
-    const [titulo, artistas, portada] = window.EXTRA.canciones[idx - BASE_EXTRA];
-    return { idx, id: '', titulo, artistas, estreno: '', portada, deezer: 0 };
+    const [titulo, artistas, portada, fuente] = window.EXTRA.canciones[idx - BASE_EXTRA];   // fuente: 'YouTube Music' | 'Apple Music'
+    return { idx, id: '', titulo, artistas, estreno: '', portada, deezer: 0, fuente };
   }
   const [id, titulo, artistas, portada, estreno] = window.CANCIONES[idx];
   return { idx, id, titulo, artistas, estreno, portada: urlPortada(portada), deezer: window.DEEZER[idx] || 0 };
@@ -155,30 +148,6 @@ function numero1(cc, grano = Estado.grano, p = Estado.periodo) {
   if (idx === null) return null;
   const fin = lo + 1 < tramos.length ? tramos[lo + 1][0] - 1 : window.PERIODOS[grano].n - 1;
   return { idx, ini, fin, fuente };
-}
-
-const RACHA = {
-  dia:    { primero: 'llegó al #1 este día',            varios: 'días seguidos' },
-  semana: { primero: 'la más escuchada de esta semana', varios: 'semanas seguidas' },
-  mes:    { primero: 'la más escuchada de este mes',    varios: 'meses seguidos' },
-  anio:   { primero: 'la más escuchada de este año',    varios: 'años seguidos' },
-};
-
-const INICIO_DIARIO = Date.UTC(2017, 0, 1);              // antes de 2017 (y en YouTube) los charts son semanales
-
-/** "lleva 12 días seguidos" (cuenta hasta el período actual). Con datos semanales cuenta semanas, aunque la
-    línea de tiempo esté en días: decir "26 días" sería inventar una precisión que el dato no tiene. */
-function textoRacha(r, grano = Estado.grano, p = Estado.periodo) {
-  if (r.fuente === 'a') return 'foto del 14 de octubre de 2026 (sin historia)';
-  const semanal = grano === 'dia' && (r.fuente === 'y' || fechaDePeriodo('dia', r.ini) < INICIO_DIARIO);
-  const desdeInicio = r.ini === 0 ? 'al menos ' : '';   // los datos empiezan en 2013: la racha pudo empezar antes
-  if (semanal) {
-    const semanas = Math.max(1, Math.round((p - r.ini + 1) / 7));
-    return semanas === 1 ? 'la más escuchada de esta semana' : `lleva ${desdeInicio}${semanas} semanas seguidas`;
-  }
-  const n = p - r.ini + 1;
-  if (n === 1) return RACHA[grano].primero;
-  return `lleva ${desdeInicio}${n} ${RACHA[grano].varios}`;
 }
 
 function nombrePais(cc) {
@@ -307,6 +276,32 @@ async function pedirPopularidad(idx) {
   if (!desde2017) return previa;
   const hueco = Array(Math.max(0, desde2017.inicio - (previa.inicio + previa.valores.length))).fill(0);
   return { inicio: previa.inicio, valores: [...previa.valores, ...hueco, ...desde2017.valores] };
+}
+
+// ---------- Top 3 de cada país (recuadro junto al cursor; scripts/10_top3_v3.py) ----------
+
+const _top3 = new Map();
+const _pedirTop3 = cargadorScript('cargarTop3', cc => `${BASE_DATOS}v3/top3/${cc}.js?v=${VERSION_DATOS}`);
+
+/** Pide (una vez) el top 3 del país; la promesa se cumple cuando ya se puede leer con top3(). */
+function pedirTop3(cc) {
+  if (_top3.has(cc)) return Promise.resolve();
+  return _pedirTop3(cc).then(d => { _top3.set(cc, d); });
+}
+
+/** [[título, artistas] × hasta 3] del país en el período; null sin datos; undefined si aún no se cargó. */
+function top3(cc, grano = Estado.grano, p = Estado.periodo) {
+  const d = _top3.get(cc);
+  if (!d) return undefined;
+  const tramos = d[grano];
+  if (!tramos?.length || p < tramos[0][0]) return null;
+  let lo = 0, hi = tramos.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (tramos[mid][0] <= p) lo = mid; else hi = mid - 1;
+  }
+  const [, ...indices] = tramos[lo];
+  return indices.length ? indices.map(i => d.c[i]) : null;
 }
 
 const CONFIG_PLOTLY = { displayModeBar: false, responsive: true, locale: 'es' };

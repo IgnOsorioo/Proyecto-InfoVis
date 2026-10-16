@@ -1,13 +1,13 @@
 /* Punto de entrada de la V3: conecta el mapa, el panel, el audio y la línea de tiempo.
 
    Interacción (mantra de Shneiderman: primero el panorama, luego acercar y filtrar, y el detalle a pedido):
-   - Al entrar, el mapa muestra qué países escuchan el #1 global y el panel resume el mundo por continente.
+   - Al entrar, el mapa muestra qué países escuchan el #1 global y el panel, cuántos lo escuchan por continente.
      El sonido se activa con el primer click o tecla (lo exigen los navegadores), sin bloquear nada.
-   - Pasar el cursor por un país (y detenerse un instante) muestra su #1 y lo hace sonar.
+   - Pasar el cursor por un país muestra al tiro un recuadro con su top 3 y, si se detiene un instante, el
+     panel pasa a ese país y suena su #1.
    - Click en un país lo fija: se queda escuchando ese país; al avanzar el tiempo, si cambia su #1, suena el
      nuevo. Se suelta con ✕, Esc o con otro click en el mismo país.
-   - No se fija una canción: lo que suena es siempre el #1 de lo que muestra el panel (país fijado, país bajo
-     el cursor o, en el resumen, el #1 global). */
+   - Lo que suena es siempre el #1 de lo que muestra el panel (país fijado, país bajo el cursor o el mundo). */
 
 (() => {
   const $ = id => document.getElementById(id);
@@ -16,22 +16,21 @@
   const ESPERA_AUDIO_MS = 120;        // al barrer el mapa o al reproducir rápido no se piden previews de cada cambio
   const ESPERA_INTENCION_MS = 140;    // hay que detenerse sobre un país para elegirlo
   const ESPERA_SALIDA_MS = 350;
+  const PULSO_ARMONIA_MS = 2500;
   let raf = null, ultimoPaso = 0;
   let timerAudio = null, timerSalida = null, timerIntencion = null;
   let sonidoDecidido = false;         // el usuario ya hizo un gesto (o usó el botón de sonido)
   let region = 'global';              // región elegida con los botones ('global' o un continente)
   let territorio = null;              // territorio sin chart bajo el cursor (el panel muestra un mensaje)
-  const PULSO_ARMONIA_MS = 2500;
+  let globo = null;                   // {cc | territorio, raton}: lo que muestra el recuadro junto al cursor
+  let recorrido = null;
 
   // ---------- Tiempo ----------
 
   function irAPeriodo(p) {
     Estado.periodo = p;
     slider.value = p;
-    const n = window.PERIODOS[Estado.grano].n;
-    slider.style.setProperty('--avance', `${(n > 1 ? p / (n - 1) : 1) * 100}%`);   // relleno de la línea
-    $('fecha').textContent = textoPeriodoCorto(Estado.grano, p);
-    actualizarSaltos();
+    Linea.mover(p);
     refrescar();
     actualizarArmonia();
     if (!Estado.reproduciendo && !recorrido) Armonia.pulso(PULSO_ARMONIA_MS);   // mover la fecha a mano: se escucha un momento
@@ -45,7 +44,7 @@
     })));
   }
 
-  /** Vuelve a dibujar el panel, el mapa y lo que suena para la fecha actual. */
+  /** Vuelve a dibujar el panel, el mapa, el recuadro y lo que suena para la fecha actual. */
   function refrescar() {
     if (Estado.fijado) mostrarPais(Estado.fijado);
     else if (!territorio) {
@@ -53,6 +52,7 @@
       else mostrarMundo();
     }
     actualizarFijado();
+    if (globo?.cc) llenarGlobo(globo.cc);
     Mapa.dibujar();
   }
 
@@ -60,33 +60,9 @@
     const fecha = fechaDePeriodo(Estado.grano, Estado.periodo);
     Estado.grano = grano;
     slider.max = window.PERIODOS[grano].n - 1;
+    Linea.dibujar();
     document.querySelectorAll('.granos button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.grano === grano)));
     irAPeriodo(periodoDeFecha(grano, fecha));
-  }
-
-  /** Período al que lleva saltar `delta` años desde el actual (misma fecha, acotado al rango de datos). */
-  function periodoTrasSalto(delta) {
-    const f = fechaDePeriodo(Estado.grano, Estado.periodo);
-    f.setUTCFullYear(f.getUTCFullYear() + delta);
-    return periodoDeFecha(Estado.grano, f);
-  }
-
-  function saltarAnio(delta) {
-    const p = periodoTrasSalto(delta);
-    if (p !== Estado.periodo) irAPeriodo(p);
-  }
-
-  /** Botones de año anterior/siguiente: muestran el año de destino y se desactivan en los extremos. */
-  function actualizarSaltos() {
-    for (const [id, delta] of [['anio-anterior', -1], ['anio-siguiente', 1]]) {
-      const p = periodoTrasSalto(delta);
-      const posible = p !== Estado.periodo;
-      const etiqueta = posible ? `Ir a ${textoPeriodo(Estado.grano, p)}` : (delta < 0 ? 'No hay datos anteriores' : 'No hay datos posteriores');
-      $(id).disabled = !posible;
-      $(id).setAttribute('aria-label', etiqueta);
-      $(id).title = etiqueta;
-      $(`${id}-txt`).textContent = posible ? String(fechaDePeriodo(Estado.grano, p).getUTCFullYear()) : '';
-    }
   }
 
   function paso(ts) {
@@ -113,7 +89,7 @@
     Estado.reproduciendo = false;
     cancelAnimationFrame(raf);
     botonPlay.classList.remove('reproduciendo');
-    botonPlay.setAttribute('aria-label', 'Reproducir el paso del tiempo');
+    botonPlay.setAttribute('aria-label', 'Avanzar en el tiempo');
     Armonia.continuo(false);
   }
 
@@ -130,15 +106,18 @@
     Panel.audio('pausa');
   }
 
+  /** "Desde 2019" si el chart del país empieza después de la fecha; si no, nada. */
+  function desde(cc) {
+    const inicio = window.PAISES[cc]?.inicio;
+    return inicio && new Date(inicio + 'T00:00:00Z') > fechaDePeriodo(Estado.grano, Estado.periodo) ? `Datos desde ${inicio.slice(0, 4)}` : '';
+  }
+
   /** El panel muestra lo que se escucha en el país en la fecha, y suena su #1. Sin datos: un mensaje. */
   function mostrarPais(cc) {
     const r = numero1(cc);
     if (!r) {
       Estado.mensaje = true;
-      const inicio = window.PAISES[cc]?.inicio;
-      Panel.mensaje(nombrePais(cc), inicio && new Date(inicio + 'T00:00:00Z') > fechaDePeriodo(Estado.grano, Estado.periodo)
-        ? `Sin datos en esta fecha: el primer chart disponible de este país es del ${textoFecha(new Date(inicio + 'T00:00:00Z'))}.`
-        : 'Sin datos en esta fecha: ninguna de las fuentes tiene el chart de este país (por ejemplo, Spotify dejó Rusia en abril de 2022).');
+      Panel.mensaje(nombrePais(cc), desde(cc) || 'Sin datos');
       detenerAudio();
       return;
     }
@@ -149,7 +128,7 @@
     Panel.mostrar();
   }
 
-  /** Resumen del mundo (o de la región): suena el #1 global. */
+  /** El mundo (o la región): suena el #1 global. */
   function mostrarMundo() {
     Estado.vistaPais = null;
     Estado.mensaje = false;
@@ -173,7 +152,6 @@
     Estado.fijado = cc;
     Estado.vistaPais = cc;
     territorio = null;
-    ocultarGlobo();
     refrescar();
   }
 
@@ -184,18 +162,69 @@
     refrescar();
   }
 
-  /** Indicador sobre el mapa: qué país está fijado y qué está sonando ahí. */
   function actualizarFijado() {
-    const cc = Estado.fijado;
-    $('fijado').hidden = !cc;
-    if (!cc) return;
-    const r = numero1(cc);
-    const c = r ? cancion(r.idx) : null;
-    $('fijado-pais').textContent = nombrePais(cc);
-    $('fijado-cancion').textContent = c ? `${c.titulo} — ${c.artistas}` : 'Sin datos en esta fecha';
-    $('fijado-fuente').textContent = r ? `#1 según ${FUENTES[r.fuente]}${sigueAlGlobal(cc) ? ' · igual que el #1 global' : ''}` : '';
-    $('fijado-portada').src = c?.portada ?? '';
-    $('fijado-portada').hidden = !c;
+    $('fijado').hidden = !Estado.fijado;
+    if (Estado.fijado) $('fijado-pais').textContent = nombrePais(Estado.fijado);
+  }
+
+  // ---------- Recuadro junto al cursor: país y top 3 ----------
+
+  function llenarGlobo(cc) {
+    const g = $('globo');
+    const titulo = Object.assign(document.createElement('strong'), { textContent: nombrePais(cc) });
+    const lista = top3(cc);
+    if (lista === undefined) {                           // aún no se carga: se muestra el nombre y se completa al llegar
+      g.replaceChildren(titulo);
+      pedirTop3(cc).then(() => { if (globo?.cc === cc) llenarGlobo(cc); }).catch(() => {});
+      return;
+    }
+    if (!lista) {
+      g.replaceChildren(titulo, Object.assign(document.createElement('span'), { className: 'globo-vacio', textContent: desde(cc) || 'Sin datos' }));
+      return;
+    }
+    const global = numero1('global')?.idx;
+    const primeroEsGlobal = numero1(cc)?.idx === global;
+    const ol = document.createElement('ol');
+    lista.forEach(([t, a], i) => {
+      const li = document.createElement('li');
+      if (i === 0 && primeroEsGlobal) li.className = 'global';
+      const texto = document.createElement('span');
+      texto.append(Object.assign(document.createElement('b'), { textContent: t }), ` · ${a}`);
+      li.append(texto);
+      ol.append(li);
+    });
+    g.replaceChildren(titulo, ol);
+  }
+
+  function mostrarGlobo(cc, raton) {
+    globo = { cc, raton };
+    llenarGlobo(cc);
+    $('globo').hidden = false;
+    moverGlobo(raton);
+  }
+
+  function mostrarGloboTerritorio(nombre, raton) {
+    globo = { territorio: nombre, raton };
+    const g = $('globo');
+    g.replaceChildren(Object.assign(document.createElement('strong'), { textContent: nombre }),
+                      Object.assign(document.createElement('span'), { className: 'globo-vacio', textContent: 'Sin datos' }));
+    g.hidden = false;
+    moverGlobo(raton);
+  }
+
+  function moverGlobo(raton) {
+    const g = $('globo');
+    if (g.hidden || !raton) return;
+    const caja = g.parentElement.getBoundingClientRect();
+    const x = raton.clientX - caja.left, y = raton.clientY - caja.top;
+    const izquierda = x + 16 + g.offsetWidth > caja.width;      // cerca del borde derecho, va a la izquierda del cursor
+    const arriba = y + 16 + g.offsetHeight > caja.height;       // cerca del borde inferior, va arriba
+    g.style.transform = `translate(${izquierda ? x - 16 - g.offsetWidth : x + 16}px, ${arriba ? y - 12 - g.offsetHeight : y + 16}px)`;
+  }
+
+  function ocultarGlobo() {
+    globo = null;
+    $('globo').hidden = true;
   }
 
   // ---------- Cursor sobre el mapa ----------
@@ -203,7 +232,7 @@
   function pasarPorPais(cc, raton) {
     clearTimeout(timerSalida);
     clearTimeout(timerIntencion);
-    if (Estado.fijado && cc !== Estado.fijado) mostrarGlobo(cc, raton);
+    mostrarGlobo(cc, raton);
     timerIntencion = setTimeout(() => {
       Estado.paisActivo = cc;
       territorio = null;
@@ -216,21 +245,17 @@
     }, ESPERA_INTENCION_MS);
   }
 
-  const NOTAS_SIN_CHART = {
-    CHN: 'Spotify, YouTube y Deezer no están disponibles en China; Apple Music no publica su chart.',
-  };
-
-  /** País o territorio que ninguna fuente cubre: {iso3, nombre, nota?} (la nota viene de datos/mundo.js). */
+  /** País o territorio que ninguna fuente cubre: {iso3, nombre, nota?} (de datos/mundo.js). */
   function pasarSinChart(t, raton) {
     clearTimeout(timerSalida);
     clearTimeout(timerIntencion);
-    if (Estado.fijado) mostrarGloboTexto(t.nombre, 'sin datos', raton);
+    mostrarGloboTerritorio(t.nombre, raton);
     timerIntencion = setTimeout(() => {
       Estado.paisActivo = null;
       Mapa.marcar(null);
       if (!Estado.fijado) {
         territorio = t;
-        Panel.mensaje(t.nombre, t.nota ?? NOTAS_SIN_CHART[t.iso3] ?? 'Sin datos: ninguna de las fuentes (Spotify, YouTube Music, Apple Music) publica un chart de este país.');
+        Panel.mensaje(t.nombre, 'Sin datos');
         detenerAudio();
       }
       Mapa.dibujar();
@@ -260,34 +285,6 @@
     else fijar(cc);
   }
 
-  // ---------- Globo (con un país fijado, el cursor sobre otros países solo informa) ----------
-
-  function mostrarGlobo(cc, raton) {
-    const r = numero1(cc);
-    mostrarGloboTexto(nombrePais(cc), r ? `#1: ${cancion(r.idx).titulo}${sigueAlGlobal(cc) ? ' · el #1 global' : ''}` : 'sin datos en esta fecha', raton);
-  }
-
-  function mostrarGloboTexto(titulo, texto, raton) {
-    const g = $('globo');
-    g.replaceChildren(Object.assign(document.createElement('strong'), { textContent: titulo }),
-                      Object.assign(document.createElement('span'), { textContent: texto }));
-    g.hidden = false;
-    moverGlobo(raton);
-  }
-
-  function moverGlobo(raton) {
-    const g = $('globo');
-    if (g.hidden || !raton) return;
-    const caja = g.parentElement.getBoundingClientRect();
-    const x = raton.clientX - caja.left, y = raton.clientY - caja.top;
-    const izquierda = x + 14 + g.offsetWidth > caja.width;      // cerca del borde derecho, va a la izquierda del cursor
-    g.style.transform = `translate(${izquierda ? x - 14 - g.offsetWidth : x + 14}px, ${Math.max(0, y - g.offsetHeight - 10)}px)`;
-  }
-
-  function ocultarGlobo() {
-    $('globo').hidden = true;
-  }
-
   // ---------- Región ----------
 
   function marcarRegion(boton) {
@@ -295,14 +292,8 @@
   }
 
   Reproductor.alCambiar((estado, c) => {
-    if (c.idx !== Estado.cancion) return;
-    Panel.audio(estado === 'silencio' && sonidoDecidido ? 'silenciado' : estado);
+    if (c.idx === Estado.cancion) Panel.audio(estado);
   });
-
-  function animarProgreso() {
-    Panel.progreso(Reproductor.progreso());
-    requestAnimationFrame(animarProgreso);
-  }
 
   // ---------- Sonido ----------
 
@@ -311,7 +302,7 @@
     $('sonido').setAttribute('aria-pressed', String(on));
     $('sonido').setAttribute('aria-label', on ? 'Silenciar' : 'Activar sonido');
     $('sonido').title = on ? 'Silenciar' : 'Activar sonido';
-    $('aviso-sonido').hidden = sonidoDecidido;
+    $('sonido').classList.toggle('por-activar', !sonidoDecidido);
   }
 
   function encenderSonido() {
@@ -330,23 +321,14 @@
   }
 
   // ---------- Recorrido guiado (1 min) ----------
-  // De octubre de 2013 a hoy, mes a mes, mientras suena el #1 global: ¿siguen todos los continentes la misma
-  // tendencia? Esc o "Saltar" lo terminan.
+  // De octubre de 2013 a hoy, mes a mes, mientras suena el #1 global. Esc o "Saltar" lo terminan.
 
-  let recorrido = null;
   const MS_POR_MES = 170;
 
   function relato(texto, paso, total) {
-    $('relato-texto').textContent = texto;
+    $('relato-texto').textContent = texto.charAt(0).toUpperCase() + texto.slice(1);
     $('relato-paso').textContent = `${paso} / ${total}`;
     $('relato').hidden = false;
-  }
-
-  function porContinente() {
-    return Object.entries(CONTINENTES).map(([k, nombre]) => {
-      const { n, total } = cuentaGlobal(k);
-      return total ? `${nombre.split(' ')[0]} ${Math.round(100 * n / total)} %` : null;
-    }).filter(Boolean).join(' · ');
   }
 
   async function verRecorrido() {
@@ -362,17 +344,18 @@
       Estado.fijado = null;
       Estado.vistaPais = null;
       territorio = null;
+      ocultarGlobo();
       marcarRegion(document.querySelector('.acercar button[data-region="mundo"]'));
       region = 'global';
       Mapa.enfocar('mundo');
       cambiarGrano('mes');
       irAPeriodo(0);
-      const TOTAL = 4;
-      const { n, total } = cuentaGlobal('global');
-      relato(`En ${textoPeriodo('mes', 0)}, ${n} de ${total} países tenían como #1 el mismo #1 global (coral): «${cancion(numero1('global').idx).titulo}». Escucha: suena el #1 global de cada mes.`, 1, TOTAL);
-      await esperar(6500);
+      const TOTAL = 3;
+      const inicio = cuentaGlobal('global');
+      relato(`${textoPeriodo('mes', 0)}: ${inicio.n} de ${inicio.total} países escuchan el #1 global, «${cancion(numero1('global').idx).titulo}».`, 1, TOTAL);
+      await esperar(5000);
 
-      relato('Mes a mes: ¿se mantiene el coral en todos los continentes? Escucha el tono grave: cada continente es una voz. Si suenan juntas, todos escuchan lo mismo; si se separan y raspan, cada uno escucha otra cosa.', 2, TOTAL);
+      relato('Mes a mes. Escucha el tono grave: juntos, el mundo escucha lo mismo; separados, cada uno lo suyo.', 2, TOTAL);
       Armonia.continuo(true);
       for (let p = 1; p < window.PERIODOS.mes.n; p++) {
         irAPeriodo(p);
@@ -381,10 +364,7 @@
       Armonia.continuo(false);
 
       const hoy = cuentaGlobal('global');
-      relato(`En ${textoPeriodo('mes', Estado.periodo)}, ${hoy.n} de ${hoy.total} países escuchan el #1 global. Por continente: ${porContinente()}.`, 3, TOTAL);
-      await esperar(7000);
-
-      relato('Ahora tú: haz click en un país para quedarte escuchando lo que suena ahí mientras avanza el tiempo.', 4, TOTAL);
+      relato(`${textoPeriodo('mes', Estado.periodo)}: ${hoy.n} de ${hoy.total}.`, 3, TOTAL);
       await esperar(5000);
     } catch (e) {
       // Terminado con Esc o "Saltar": se vuelve al estado de inicio igual que al final.
@@ -423,14 +403,12 @@
 
   botonPlay.addEventListener('click', () => (Estado.reproduciendo ? pausar() : reproducir()));
   slider.addEventListener('input', () => irAPeriodo(Number(slider.value)));
-  $('anio-anterior').addEventListener('click', () => saltarAnio(-1));
-  $('anio-siguiente').addEventListener('click', () => saltarAnio(1));
   document.querySelectorAll('.granos button').forEach(b => b.addEventListener('click', () => cambiarGrano(b.dataset.grano)));
   document.querySelectorAll('.acercar button').forEach(b => b.addEventListener('click', () => {
     marcarRegion(b);
     region = b.dataset.region === 'mundo' ? 'global' : b.dataset.region;
     Mapa.enfocar(b.dataset.region);
-    if (!Estado.fijado) volverAlResumen();               // el resumen pasa a la región
+    if (!Estado.fijado) volverAlResumen();               // el panel pasa a la región
     else Estado.ambito = region;
   }));
   $('fijado-cerrar').addEventListener('click', soltar);
@@ -438,14 +416,13 @@
   $('relato-saltar').addEventListener('click', terminarRecorrido);
 
   document.addEventListener('keydown', e => {
-    if (e.target.closest('input')) return;
     if (e.key === 'Escape') {
       if (recorrido) terminarRecorrido();
       else if (Estado.fijado) soltar();
       else if (Estado.vistaPais) volverAlResumen();
       return;
     }
-    if (e.target.closest('button, select, textarea, [tabindex]')) return;
+    if (e.target.closest('button, select, textarea, [tabindex], input')) return;
     const n = window.PERIODOS[Estado.grano].n;
     if (e.code === 'Space') { e.preventDefault(); Estado.reproduciendo ? pausar() : reproducir(); }
     if (e.code === 'ArrowLeft') irAPeriodo(Math.max(0, Estado.periodo - 1));
@@ -453,14 +430,15 @@
   });
 
   Mapa.on({ alPasar: pasarPorPais, alPasarSinChart: pasarSinChart, alSalir: salir, alElegir: clickEnPais });
-  $('mapa').addEventListener('mousemove', moverGlobo);
+  $('mapa').addEventListener('mousemove', e => { if (globo) { globo.raton = e; moverGlobo(e); } });
+  $('mapa').addEventListener('mouseleave', ocultarGlobo);
   Panel.iniciar({ alVolverAlResumen: () => (Estado.fijado ? soltar() : volverAlResumen()) });
 
   slider.max = window.PERIODOS[Estado.grano].n - 1;
-  $('fecha-fin').textContent = textoPeriodoCorto('dia', window.PERIODOS.dia.n - 1);   // fin de los datos
+  slider.title = `${textoPeriodoCorto('dia', 0)} – ${textoPeriodoCorto('dia', window.PERIODOS.dia.n - 1)}`;
+  Linea.dibujar();
   irAPeriodo(window.PERIODOS[Estado.grano].n - 1);                                    // parte en el día más reciente
   Mapa.iniciar();
   actualizarBotonSonido();
   Panel.audio(null);
-  animarProgreso();
 })();
