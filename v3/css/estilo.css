@@ -1,0 +1,544 @@
+/* Tema oscuro fijo: fondo negro, grises neutros y coral como acento.
+   Explorar: azul = #1 mundial, gris cálido = compartido, coral = propio (escala divergente de global a local).
+   Seguir una canción: rampa de coral según su puesto en cada país.
+   El mapa y el gráfico (Plotly) también leen estos tokens vía getComputedStyle. */
+:root {
+  color-scheme: dark;
+  --plano: #000000;          /* fondo */
+  --superficie: #1c1c1c;     /* tarjetas y estadísticas */
+  --panel: #121212;          /* panel lateral */
+  --tinta: #ffffff;
+  --tinta-2: #b3b3b3;
+  --tinta-3: #8a8a8a;
+  --grilla: #282828;
+  --eje: #3e3e3e;
+  --borde: rgba(255, 255, 255, 0.08);
+  --c1: #e4564b;             /* coral: países donde la canción seguida es #1 */
+  --global: #e4564b;         /* V3: el #1 del país es el #1 global */
+  --otra: #595959;           /* V3: el #1 del país es otra canción */
+  --cont-america: #f2a541;   /* líneas por continente (paleta categórica apta para daltonismo sobre negro) */
+  --cont-europa: #5b9bd5;
+  --cont-africa: #7bc96f;
+  --cont-asia: #c58bf2;
+  --cont-oceania: #f28dbb;
+  --mundial: #5b9bd5;        /* explorar: el #1 del país es el #1 del chart global */
+  --compartido: #8c8079;     /* explorar: el #1 del país también es #1 en otro país */
+  --propio: #e4564b;         /* explorar: el #1 del país es #1 solo ahí */
+  --top10: #b0463d;          /* seguir: puesto de la canción en cada país */
+  --top50: #7a352f;
+  --top200: #4a2825;
+  --fuera: #262626;          /* seguir: el país tiene chart, pero la canción no está en su top 200 */
+  --vacio: #000000;          /* país sin datos de Spotify: sin relleno, solo contorno */
+  --contorno-vacio: #333333;
+  --resalte: #ffffff;        /* contorno del país bajo el cursor */
+  --fuente: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;   /* principal | panel lateral de alto completo */
+  height: 100vh;
+  overflow: hidden;
+  color: var(--tinta);
+  background: var(--plano);
+  font-family: var(--fuente);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+a { color: var(--tinta); text-decoration-color: var(--tinta-3); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--tinta); }
+
+button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+button:hover { border-color: var(--tinta-3); }
+button:focus-visible, input:focus-visible, li:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+button.activo { background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+
+.muestra { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; }
+.muestra-sel { background: var(--c1); }
+.muestra-global { background: var(--global); }
+.muestra-otra { background: var(--otra); }
+.muestra-foto { background: linear-gradient(90deg, #4f1e1a 50%, #1f1f1f 50%); }
+.leyenda span:has(.muestra-foto) { align-items: flex-start; line-height: 1.3; }
+.cont-america { background: var(--cont-america); }
+.cont-europa { background: var(--cont-europa); }
+.cont-africa { background: var(--cont-africa); }
+.cont-asia { background: var(--cont-asia); }
+.cont-oceania { background: var(--cont-oceania); }
+.muestra-mundial { background: var(--mundial); }
+.muestra-compartido { background: var(--compartido); }
+.muestra-propio { background: var(--propio); }
+.muestra-top10 { background: var(--top10); }
+.muestra-top50 { background: var(--top50); }
+.muestra-top200 { background: var(--top200); }
+.muestra-fuera { background: var(--fuera); }
+.muestra-vacio { background: transparent; box-shadow: inset 0 0 0 1px var(--tinta-3); }
+
+/* ---------- Columna principal ---------- */
+.principal { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+
+.barra { display: flex; align-items: flex-start; gap: 12px; padding: 18px 24px 4px; }
+.barra-titulo { min-width: 0; }
+h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
+.barra p { margin: 4px 0 0; color: var(--tinta-2); }
+
+/* Recorrido guiado */
+.boton-recorrido { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-top: 2px; margin-left: auto; padding: 9px 16px 9px 12px; font-size: 13px; font-weight: 800; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+.boton-recorrido:hover { border-color: var(--tinta); opacity: 0.9; }
+.boton-recorrido svg { width: 12px; height: 12px; fill: currentColor; }
+.relato {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  z-index: 7;
+  width: min(520px, 100%);
+  transform: translateX(-50%);
+  padding: 12px 14px 10px;
+  background: rgba(18, 18, 18, 0.96);
+  border: 1px solid var(--eje);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+.relato[hidden] { display: none; }
+.relato p { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.35; }
+.relato-pie { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--tinta-3); }
+.relato-pie button { font-size: 12px; padding: 4px 10px; }
+/* Durante el recorrido el mapa y los controles no responden (para que nada lo interrumpa salvo "Saltar") */
+body.en-recorrido .mapa, body.en-recorrido .reproductor, body.en-recorrido .acercar,
+body.en-recorrido .buscador, body.en-recorrido .boton-recorrido, body.en-recorrido .panel { pointer-events: none; }
+body.en-recorrido .seguir, body.en-recorrido .aviso-sonido { display: none; }
+
+/* Buscador de canciones */
+.buscador { position: relative; flex: none; width: 280px; margin-top: 2px; }
+.buscador > svg { position: absolute; left: 13px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%); fill: none; stroke: var(--tinta-3); stroke-width: 1.6; stroke-linecap: round; pointer-events: none; }
+.buscador input {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+}
+.buscador input::placeholder { color: var(--tinta-3); }
+.buscador input:hover { border-color: var(--tinta-3); }
+.buscador-resultados {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #1a1a1a;
+  border: 1px solid var(--eje);
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+.buscador-resultados[hidden] { display: none; }
+.buscador-resultados li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: center; padding: 6px; border-radius: 6px; cursor: pointer; }
+.buscador-resultados li.activo, .buscador-resultados li:hover { background: #2a2a2a; }
+.buscador-resultados img { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.buscador-resultados li > span { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.buscador-resultados strong { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.buscador-resultados li > span > span { font-size: 12px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.buscador-resultados .sin-resultados { display: block; padding: 8px; color: var(--tinta-3); font-size: 13px; cursor: default; }
+.buscador-resultados .sin-resultados:hover { background: none; }
+
+.escenario { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 24px 10px; }
+.zona-mapa { position: relative; flex: 1; min-height: 240px; }
+.mapa { position: absolute; inset: 0; cursor: grab; }
+.mapa:active { cursor: grabbing; }
+
+.acercar { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; font-size: 12px; color: var(--tinta-3); }
+.acercar button { font-size: 12px; padding: 4px 10px; }
+
+/* ---------- Capas sobre el mapa ---------- */
+/* Leyenda abajo a la izquierda (sobre el Pacífico sur), una por modo */
+.leyenda {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--tinta-2);
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.leyenda strong { font-size: 11px; font-weight: 800; color: var(--tinta); }
+.leyenda span { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.leyenda-sonido { margin-top: 4px; }
+
+
+/* Aviso de sonido (no bloquea: cualquier click o tecla lo activa) */
+.aviso-sonido {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--tinta-2);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+  pointer-events: none;
+}
+.aviso-sonido[hidden] { display: none; }
+.aviso-sonido svg { width: 14px; height: 14px; fill: currentColor; }
+.aviso-sonido .ondas { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+
+/* Canción seguida: cuál es, qué está sonando y cómo salir */
+.seguir {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(420px, 100%);
+  padding: 5px;
+  background: rgba(18, 18, 18, 0.94);
+  border: 1px solid var(--eje);
+  border-left: 3px solid var(--c1);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.seguir[hidden] { display: none; }
+.seguir img { flex: none; width: 46px; height: 46px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.seguir-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.seguir-texto > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seguir-etiqueta { font-size: 10px; font-weight: 800; color: var(--c1); text-transform: uppercase; letter-spacing: 0.08em; }
+.seguir-texto strong { font-size: 14px; font-weight: 900; }
+#seguir-artistas { font-size: 12px; color: var(--tinta-2); }
+.seguir-dato { font-size: 11px; color: var(--tinta-3); }
+.seguir-cerrar { flex: none; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; align-self: flex-start; }
+.seguir-cerrar svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+/* Globo con el puesto de la canción seguida en el país bajo el cursor */
+.globo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--tinta-2);
+  white-space: nowrap;
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.globo[hidden] { display: none; }
+.globo strong { font-size: 13px; font-weight: 900; color: var(--tinta); }
+
+/* ---------- Reproductor inferior (formato tipo Spotify) ----------
+   izquierda: granularidad · centro: año anterior / play / año siguiente y, debajo, la línea de tiempo · derecha: sonido */
+.reproductor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px 8px;
+  border-top: 1px solid var(--grilla);
+  background: var(--plano);
+}
+.rp-centro { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; max-width: 640px; justify-self: center; }
+.rp-botones { display: flex; align-items: center; justify-content: center; gap: 18px; }
+
+.play { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: var(--tinta); color: var(--plano); border-color: var(--tinta); transition: transform 0.1s; }
+.play:hover { transform: scale(1.06); border-color: var(--tinta); }
+.play svg { width: 16px; height: 16px; fill: currentColor; }
+.play .icono-pausa, .play.reproduciendo .icono-play { display: none; }
+.play.reproduciendo .icono-pausa { display: block; }
+
+.rp-saltar { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 4px; border: 0; background: none; color: var(--tinta-2); }
+.rp-saltar:hover { color: var(--tinta); }
+.rp-saltar:disabled { opacity: 0.3; cursor: default; }
+.rp-saltar svg { width: 16px; height: 16px; fill: currentColor; }
+.rp-anio { min-width: 32px; font-size: 11px; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+#anio-anterior .rp-anio { text-align: right; }
+#anio-siguiente .rp-anio { text-align: left; }
+
+.rp-linea { display: flex; align-items: center; gap: 10px; width: 100%; }
+.rp-tiempo { flex: none; min-width: 96px; font-size: 12px; color: var(--tinta-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rp-actual { text-align: right; color: var(--tinta-2); font-weight: 800; }
+.rp-final { text-align: left; }
+
+/* Línea de tiempo: barra fina con el avance relleno (--avance lo actualiza main.js); la perilla aparece al pasar el cursor */
+#slider {
+  flex: 1;
+  min-width: 80px;
+  height: 4px;
+  margin: 8px 0;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--tinta-2) var(--avance, 0%), var(--eje) var(--avance, 0%));
+  cursor: pointer;
+}
+.rp-linea:hover #slider, #slider:focus-visible { background: linear-gradient(to right, var(--tinta) var(--avance, 0%), var(--eje) var(--avance, 0%)); }
+#slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--tinta); border: 0; opacity: 0; transition: opacity 0.15s; }
+#slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--tinta); border: 0; opacity: 0; transition: opacity 0.15s; }
+.rp-linea:hover #slider::-webkit-slider-thumb, #slider:focus-visible::-webkit-slider-thumb { opacity: 1; }
+.rp-linea:hover #slider::-moz-range-thumb, #slider:focus-visible::-moz-range-thumb { opacity: 1; }
+#slider::-moz-range-track { background: transparent; }
+
+.rp-izquierda { grid-column: 1; grid-row: 1; display: flex; align-items: center; justify-content: flex-start; min-width: 0; }
+.rp-derecha { grid-column: 3; grid-row: 1; display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.granos { display: inline-flex; border: 1px solid var(--eje); border-radius: 999px; overflow: hidden; }
+.granos button { border: 0; border-radius: 0; background: transparent; }
+.granos button + button { border-left: 1px solid var(--eje); }
+.granos button[aria-checked="true"] { background: var(--tinta); color: var(--plano); }
+.sonido { display: grid; place-items: center; width: 38px; height: 34px; padding: 0; }
+.sonido svg { width: 18px; height: 18px; fill: currentColor; }
+.sonido .ondas, .sonido .cruz { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.sonido[aria-pressed="true"] .cruz, .sonido[aria-pressed="false"] .ondas { display: none; }
+
+/* Fuentes de datos en una sola línea */
+.creditos {
+  margin: 0;
+  padding: 2px 20px 8px;
+  color: var(--tinta-3);
+  font-size: 11px;
+  background: var(--plano);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Panel lateral: canción seleccionada + top 5 (alto completo, sin scroll) ----------
+   La portada ocupa el ancho completo y el alto que sobra; el resto de los bloques tiene alto fijo, así todo
+   (portada, estadísticas, popularidad y top 5) se ve en la misma pantalla y nada salta al cambiar de país. */
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden auto;      /* solo hace scroll en pantallas muy bajas (< ~700 px) */
+  background: var(--panel);
+  border-left: 1px solid var(--grilla);
+}
+.p-contenido { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.panel.modo-resumen .p-contenido,
+.panel.modo-mensaje .p-contenido, .panel.modo-mensaje .p-resumen { display: none; }
+
+/* Resumen (overview): qué tan local es el #1 hoy y desde 2017 */
+.p-resumen { display: none; flex: 1 1 auto; min-height: 0; flex-direction: column; gap: 10px; padding: 18px 18px 0; }
+.panel.modo-resumen .p-resumen { display: flex; }
+.r-titular { margin: 0; font-size: 26px; font-weight: 900; line-height: 1.08; letter-spacing: -0.01em; }
+.r-bajada { margin: 0; font-size: 13px; color: var(--tinta-2); line-height: 1.4; }
+.r-cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.r-cats div { padding: 7px 9px; background: var(--superficie); border-radius: 8px; }
+.r-cats dt { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--tinta-3); white-space: nowrap; }
+.r-cats dd { margin: 1px 0 0; font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.r-cats span { font-size: 11px; color: var(--tinta-3); white-space: nowrap; }
+.r-evolucion { flex: 1 1 auto; min-height: 110px; display: flex; flex-direction: column; margin: 0; }
+.r-evolucion figcaption { font-size: 11px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#r-grafico { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+
+/* Por continente: % de países que escuchan el #1 global */
+.r-continentes { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.r-continentes li { display: grid; grid-template-columns: 150px minmax(0, 1fr) 84px; gap: 10px; align-items: center; font-size: 12px; color: var(--tinta-2); }
+.r-continentes li.actual { color: var(--tinta); font-weight: 800; }
+.r-cont-nombre { display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-cont-barra { height: 8px; background: var(--superficie); border-radius: 4px; overflow: hidden; }
+.r-cont-barra span { display: block; height: 100%; background: var(--global); border-radius: 4px; transition: width 0.25s; }
+.r-cont-valor { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .r-cont-barra span { transition: none; } }
+
+/* El #1 del mundo en la fecha: un click lo sigue en el mapa */
+.r-global {
+  flex: none;
+  cursor: default;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 8px 12px 8px 8px;
+  text-align: left;
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-left: 3px solid var(--global);
+  border-radius: 10px;
+}
+#r-global-audio i { background: var(--tinta-3); }
+#r-global-audio.sonando i { background: var(--tinta); animation: rebote 0.9s ease-in-out infinite; }
+#r-global-audio.sonando i:nth-child(2) { animation-delay: -0.3s; }
+#r-global-audio.sonando i:nth-child(3) { animation-delay: -0.6s; }
+.r-global[hidden] { display: none; }
+.r-global img { width: 52px; height: 52px; border-radius: 4px; object-fit: cover; background: var(--grilla); }
+.r-global-texto { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.r-global-texto > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-global-etiqueta { font-size: 11px; font-weight: 700; color: var(--tinta-3); }
+.r-global-texto strong { font-size: 15px; font-weight: 900; }
+#r-global-artistas { font-size: 12px; color: var(--tinta-2); }
+.r-global-accion { font-size: 12px; font-weight: 800; color: var(--tinta-2); }
+
+/* País sin datos: solo el mensaje, centrado */
+.p-mensaje { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 8px; padding: 32px; text-align: center; }
+.panel.modo-mensaje .p-mensaje { display: flex; }
+.p-mensaje strong { font-size: 24px; font-weight: 900; line-height: 1.1; }
+.p-mensaje span { max-width: 300px; color: var(--tinta-2); }
+
+/* Pantalla de carga: aparece solo si los datos tardan */
+.p-cargando { position: absolute; inset: 0; z-index: 2; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 12px; background: var(--panel); color: var(--tinta-2); font-size: 13px; }
+.panel.cargando .p-cargando { display: flex; }
+.giro { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--eje); border-top-color: var(--tinta); animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .giro { animation-duration: 2.4s; } }
+
+/* Portada: cuadrada, de ancho completo si hay alto; si no, se achica centrada sobre la misma imagen desenfocada */
+.p-hero { position: relative; flex: none; height: min(399px, 42vh); min-height: 120px; overflow: hidden; background: var(--grilla); }   /* 399 = 400 px del panel − 1 px de borde: cuadrada */
+.p-fondo { position: absolute; inset: -24px; width: calc(100% + 48px); height: calc(100% + 48px); object-fit: cover; filter: blur(22px) brightness(0.45); }
+.p-portada {
+  position: relative;
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  object-fit: cover;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.p-cuerpo { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 18px 16px; }
+
+/* Volver al resumen (o dejar de seguir), sobre la portada */
+.p-volver {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px 5px 8px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+}
+.p-volver svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.p-contexto { margin: 0; height: 15px; color: var(--tinta-3); font-size: 11px; font-weight: 800; line-height: 15px; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Título (máx. 2 líneas) + artistas en un bloque de alto fijo: el panel no salta y los artistas quedan pegados al título */
+.p-nombre { height: 66px; margin-top: 2px; overflow: hidden; }
+.p-info h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.p-artistas { margin: 2px 0 0; color: var(--tinta-2); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ¿Es la misma canción que escucha el mundo? */
+.p-global { margin: 2px 0 0; height: 16px; font-size: 12px; font-weight: 700; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-global.sigue { color: var(--global); }
+.p-audio { display: flex; align-items: center; gap: 8px; height: 18px; margin-top: 4px; font-size: 12px; color: var(--tinta-3); white-space: nowrap; }
+.p-audio #p-audio-texto { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.enlace-spotify { flex: none; font-size: 12px; }
+.progreso { height: 3px; margin-top: 6px; background: var(--grilla); border-radius: 2px; overflow: hidden; }
+.progreso div { height: 100%; width: 0; background: var(--tinta-2); }
+
+.ecualizador { flex: none; display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.ecualizador i { width: 3px; height: 3px; background: var(--tinta-3); border-radius: 1px; }
+.sonando .ecualizador i { background: var(--tinta); animation: rebote 0.9s ease-in-out infinite; }
+.sonando .ecualizador i:nth-child(2) { animation-delay: -0.3s; }
+.sonando .ecualizador i:nth-child(3) { animation-delay: -0.6s; }
+@keyframes rebote { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+@media (prefers-reduced-motion: reduce) { .sonando .ecualizador i { animation: none; height: 8px; } }
+
+/* Estadísticas: etiquetas en minúscula (más angostas) y ancho repartido según lo que necesita cada tarjeta
+   (la fecha y "Reproducciones" son las más largas), con holgura aunque el sistema muestre barras de scroll */
+.p-stats { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.84fr) minmax(0, 1.04fr); gap: 8px; margin: 0; }
+.p-stats div { padding: 7px 9px; background: var(--superficie); border-radius: 8px; }
+.p-stats dt { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--tinta-3); white-space: nowrap; }
+.p-stats dd { margin: 1px 0 0; font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.p-popularidad { flex: 1 1 auto; min-height: 120px; display: flex; flex-direction: column; margin: 0; }
+.p-popularidad figcaption { font-size: 11px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-grafico-caja { position: relative; flex: 1 1 auto; min-height: 96px; margin-top: 2px; overflow: hidden; }
+.p-grafico-aviso { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font-size: 13px; color: var(--tinta-3); }
+.p-grafico-aviso[hidden] { display: none; }
+
+
+@media (max-width: 1300px) {
+  .granos button { padding: 5px 8px; font-size: 12px; }
+}
+
+/* ---------- Pantallas medianas y angostas: el panel pasa debajo ---------- */
+@media (max-width: 1100px) {
+  body { display: block; height: auto; overflow: auto; }
+  .principal { height: auto; }
+  .zona-mapa { flex: none; height: 55vh; }
+  .panel { height: auto; min-height: 640px; overflow: visible; border-left: 0; border-top: 1px solid var(--grilla); }
+  .p-contenido { flex: none; }
+  .p-resumen { flex: none; }
+  .r-evolucion { flex: none; height: 170px; }
+  .p-hero { height: min(100vw, 420px); }
+  .p-cuerpo, .p-popularidad { flex: none; }
+  .p-grafico-caja { flex: none; height: 140px; }
+}
+@media (max-width: 760px) {
+  .barra { flex-direction: column; gap: 10px; padding: 14px 16px 4px; }
+  .buscador { width: 100%; }
+  .boton-recorrido { margin-left: 0; }
+  .leyenda { font-size: 10px; padding: 6px 8px; }
+  h1 { font-size: 24px; }
+  .escenario { padding: 4px 16px 10px; }
+  /* El mapa es bajo: el indicador "Siguiendo" y el aviso van arriba y la leyenda debajo, sin taparlo */
+  .zona-mapa { height: auto; display: flex; flex-direction: column; gap: 8px; }
+  .mapa { position: relative; inset: auto; height: 260px; }
+  .seguir, .aviso-sonido, .leyenda { position: static; }
+  .seguir, .aviso-sonido { order: -1; align-self: flex-start; }
+  .leyenda { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; padding: 0; background: none; }
+  body.modo-seguir .leyenda-seguir { display: flex; }
+  .reproductor { grid-template-columns: 1fr; padding: 10px 16px 8px; gap: 10px; }
+  .rp-centro, .rp-derecha, .rp-izquierda { grid-column: 1; grid-row: auto; }
+  .rp-tiempo { min-width: 0; }
+  .rp-izquierda, .rp-derecha { justify-content: center; }
+  .rp-izquierda { order: 2; }
+  .rp-derecha { order: 3; }
+  .granos button { padding: 6px 9px; }
+  .creditos { padding: 2px 16px 10px; white-space: normal; }
+}

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿Qué suena en el mundo?</title>
+  <meta name="description" content="Mapa interactivo con la canción más escuchada en Spotify en cada país, día a día desde 2017: qué tan local es el #1 de cada país, y el éxito de cualquier canción en el mundo, con aplausos que siguen su popularidad.">
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23000000'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23e4564b' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f4eefc'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-10-15b">
+  <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
+</head>
+<body>
+  <div class="principal">
+    <header class="barra">
+      <div class="barra-titulo">
+        <h1>¿Qué suena en el mundo?</h1>
+        <p>¿El mundo escucha lo mismo? En coral, los países cuyo #1 nacional es el #1 global. Pasa el cursor por un país para escuchar su #1; haz click para quedarte escuchándolo mientras avanza el tiempo.</p>
+      </div>
+      <button type="button" class="boton-recorrido" id="ver-recorrido" title="Un minuto: de 2013 a hoy, mientras suena el #1 global">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>Recorrido de 1 min
+      </button>
+    </header>
+
+    <main class="escenario">
+      <div class="zona-mapa">
+        <div id="mapa" class="mapa" aria-label="Mapa mundial: en coral, los países cuyo #1 es el #1 global"></div>
+
+        <!-- País fijado: qué se está escuchando ahí y cómo soltarlo -->
+        <div class="seguir" id="fijado" hidden>
+          <img id="fijado-portada" alt="">
+          <div class="seguir-texto">
+            <span class="seguir-etiqueta">Escuchando en</span>
+            <strong id="fijado-pais"></strong>
+            <span id="fijado-cancion"></span>
+            <span id="fijado-fuente" class="seguir-dato"></span>
+          </div>
+          <button type="button" id="fijado-cerrar" class="seguir-cerrar" aria-label="Soltar el país (Esc)" title="Soltar el país (Esc)">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+          </button>
+        </div>
+
+        <!-- Los navegadores exigen un click o una tecla antes de reproducir audio: no se bloquea nada, solo se avisa -->
+        <p class="aviso-sonido" id="aviso-sonido">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3.5v11L5 10H2z"/><path class="ondas" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4"/></svg>
+          Haz click en cualquier parte para activar el sonido
+        </p>
+
+        <!-- Leyenda -->
+        <div class="leyenda" aria-hidden="true">
+          <strong>El #1 del país…</strong>
+          <span><i class="muestra muestra-global"></i>es el #1 global</span>
+          <span><i class="muestra muestra-otra"></i>es otra canción</span>
+          <span><i class="muestra muestra-foto"></i>atenuado: solo foto de Apple Music<br>del 14/10/2026 (no entra en los conteos)</span>
+          <span><i class="muestra muestra-vacio"></i>sin datos</span>
+        </div>
+
+        <div class="globo" id="globo" hidden></div>
+
+        <!-- Recorrido guiado: el texto de cada paso -->
+        <div class="relato" id="relato" role="status" aria-live="polite" hidden>
+          <p id="relato-texto"></p>
+          <div class="relato-pie">
+            <span id="relato-paso"></span>
+            <button type="button" id="relato-saltar">Saltar (Esc)</button>
+          </div>
+        </div>
+      </div>
+      <div class="acercar" role="group" aria-label="Elegir una región: acerca el mapa y muestra su top 5">
+        <button type="button" data-region="mundo" class="activo">Mundo</button>
+        <button type="button" data-region="america">América</button>
+        <button type="button" data-region="europa">Europa</button>
+        <button type="button" data-region="africa">África y M. Oriente</button>
+        <button type="button" data-region="asia">Asia</button>
+        <button type="button" data-region="oceania">Oceanía</button>
+      </div>
+    </main>
+
+    <footer class="reproductor" aria-label="Reproductor y línea de tiempo">
+      <div class="rp-izquierda">
+        <div class="granos" role="radiogroup" aria-label="Granularidad del tiempo">
+          <button type="button" role="radio" data-grano="dia" aria-checked="true">Día</button>
+          <button type="button" role="radio" data-grano="semana" aria-checked="false">Semana</button>
+          <button type="button" role="radio" data-grano="mes" aria-checked="false">Mes</button>
+          <button type="button" role="radio" data-grano="anio" aria-checked="false">Año</button>
+        </div>
+      </div>
+
+      <div class="rp-centro">
+        <div class="rp-botones">
+          <button type="button" id="anio-anterior" class="rp-saltar" aria-label="Año anterior">
+            <span class="rp-anio" id="anio-anterior-txt" aria-hidden="true"></span>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h2v11H3zM13.5 2.5v11L5.5 8z"/></svg>
+          </button>
+          <button type="button" id="play" class="play" aria-label="Reproducir el paso del tiempo">
+            <svg class="icono-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>
+            <svg class="icono-pausa" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>
+          </button>
+          <button type="button" id="anio-siguiente" class="rp-saltar" aria-label="Año siguiente">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 2.5h2v11h-2zM2.5 2.5v11l8-5.5z"/></svg>
+            <span class="rp-anio" id="anio-siguiente-txt" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="rp-linea">
+          <output id="fecha" class="rp-tiempo rp-actual" for="slider"></output>
+          <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Momento en la línea de tiempo">
+          <span id="fecha-fin" class="rp-tiempo rp-final"></span>
+        </div>
+      </div>
+
+      <div class="rp-derecha">
+        <button type="button" id="sonido" class="sonido" aria-pressed="false" aria-label="Activar sonido" title="Activar sonido">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M2 6h3l4-3.5v11L5 10H2z"/>
+            <path class="ondas" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4"/>
+            <path class="cruz" d="M11 6l4 4M15 6l-4 4"/>
+          </svg>
+        </button>
+      </div>
+    </footer>
+
+    <p class="creditos">
+      Datos: <a href="https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated">Spotify Charts vía Kaggle</a> (CC BY-SA 4.0), <a href="https://charts.youtube.com/">YouTube Music Charts</a>, Apple Music ·
+      Mapa: <a href="https://www.naturalearthdata.com/">Natural Earth</a> · Audio: <a href="https://developers.deezer.com/api">Deezer</a> · Portadas: Spotify
+    </p>
+  </div>
+
+  <aside class="panel modo-resumen" id="panel" aria-label="Resumen del mundo o canción seleccionada" aria-live="polite">
+    <div class="p-cargando" aria-hidden="true"><span class="giro"></span>Cargando…</div>
+    <div class="p-mensaje" id="p-mensaje"><strong id="p-mensaje-titulo"></strong><span id="p-mensaje-texto"></span></div>
+
+    <div class="p-contenido">
+      <!-- Portada de ancho completo; si falta alto, se achica cuadrada y centrada sobre la misma imagen desenfocada -->
+      <div class="p-hero">
+        <img class="p-fondo" id="p-fondo" alt="" aria-hidden="true">
+        <img class="p-portada" id="p-portada" alt="" width="300" height="300">
+        <button type="button" class="p-volver" id="p-volver" title="Volver al resumen (Esc)">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>Resumen
+        </button>
+      </div>
+
+      <div class="p-cuerpo">
+        <section class="p-info">
+          <p class="p-contexto" id="p-contexto"></p>
+          <div class="p-nombre">
+            <h2 id="p-titulo"></h2>
+            <p class="p-artistas" id="p-artistas"></p>
+          </div>
+          <p class="p-global" id="p-global"></p>
+          <div class="p-audio" id="p-audio">
+            <span class="ecualizador" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span id="p-audio-texto"></span>
+            <a id="p-spotify" class="enlace-spotify" target="_blank" rel="noopener">Abrir en Spotify</a>
+          </div>
+          <div class="progreso" aria-hidden="true"><div id="p-progreso"></div></div>
+        </section>
+
+        <dl class="p-stats">
+          <div><dt>Estreno</dt><dd id="p-estreno"></dd></div>
+          <div><dt>Es #1 en</dt><dd id="p-numero1"></dd></div>
+          <div title="Acumuladas en los charts hasta la fecha"><dt id="p-reproducciones-titulo">Reproducciones</dt><dd id="p-reproducciones"></dd></div>
+        </dl>
+
+        <figure class="p-popularidad">
+          <figcaption id="p-popularidad-titulo">Popularidad · reproducciones semanales en los charts</figcaption>
+          <div class="p-grafico-caja">
+            <div id="p-grafico"></div>
+            <p class="p-grafico-aviso" id="p-grafico-aviso" hidden></p>
+          </div>
+        </figure>
+
+      </div>
+    </div>
+
+    <!-- Resumen: ¿cuánto del mundo escucha lo mismo? Hoy, por continente y desde 2013 -->
+    <div class="p-resumen">
+      <p class="p-contexto" id="r-contexto"></p>
+      <h2 class="r-titular" id="r-titular"></h2>
+      <p class="r-bajada" id="r-bajada"></p>
+      <ul class="r-continentes" id="r-continentes" aria-label="Países que escuchan el #1 global, por continente"></ul>
+      <figure class="r-evolucion">
+        <figcaption>Desde 2013 · % de países con el #1 global (6 meses; punteado: el mundo)</figcaption>
+        <div id="r-grafico"></div>
+      </figure>
+      <div class="r-global" id="r-global">
+        <img id="r-global-portada" alt="">
+        <span class="r-global-texto">
+          <span class="r-global-etiqueta">#1 global · <span id="r-global-n"></span></span>
+          <strong id="r-global-titulo"></strong>
+          <span id="r-global-artistas"></span>
+        </span>
+        <span class="ecualizador" id="r-global-audio" aria-hidden="true"><i></i><i></i><i></i></span>
+      </div>
+    </div>
+
+  </aside>
+
+  <script src="../datos/mundo.js?v=2026-10-15b"></script>
+  <script src="../datos/v3/paises.js?v=2026-10-15b"></script>
+  <script src="../datos/canciones.js?v=2026-10-15b"></script>
+  <script src="../datos/v3/numero1.js?v=2026-10-15b"></script>
+  <script src="../datos/deezer.js?v=2026-10-15b" onerror="window.DEEZER = []"></script>
+  <script src="../datos/extra.js?v=2026-10-15b"></script>
+  <script src="../datos/v3/canciones.js?v=2026-10-15b"></script>
+  <script src="js/estado.js?v=2026-10-15b"></script>
+  <script src="js/reproductor.js?v=2026-10-15b"></script>
+  <script src="js/mapa.js?v=2026-10-15b"></script>
+  <script src="js/panel.js?v=2026-10-15b"></script>
+  <script src="js/main.js?v=2026-10-15b"></script>
+</body>
+</html>
