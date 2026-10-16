@@ -111,14 +111,14 @@ con.execute(f"""CREATE TABLE j AS SELECT DISTINCT d, country, position, streams,
                   replace(replace(replace(artists, '[', ''), ']', ''), '''', '') AS artistas
                 FROM '{JFREYBERG}' WHERE d >= DATE '2013-09-24'""")
 semanal = {}                                     # cc → {fecha del chart: [(título, artistas)] × 3}
-for d, cc, nm, ar in con.execute("SELECT d, country, name, artistas FROM j WHERE position <= 3 ORDER BY d, position").fetchall():
+for d, cc, nm, ar in con.execute("SELECT d, country, name, artistas FROM j WHERE position <= 3 ORDER BY d, position, track_id").fetchall():
     semanal.setdefault(cc, {}).setdefault(d, []).append((nm, ar))
 semanal_agregado = {"mes": {}, "anio": {}}       # cc → {periodo: top 3 por streams sumados}
 for grano, unidad in (("mes", "month"), ("anio", "year")):
     for cc, ini, nm, ar in con.execute(f"""
         SELECT country, ini, nm, ar FROM (
             SELECT country, date_trunc('{unidad}', d) AS ini, any_value(name) AS nm, any_value(artistas) AS ar,
-                   row_number() OVER (PARTITION BY country, date_trunc('{unidad}', d) ORDER BY sum(streams) DESC) AS r
+                   row_number() OVER (PARTITION BY country, date_trunc('{unidad}', d) ORDER BY sum(streams) DESC, track_id) AS r
             FROM j GROUP BY country, date_trunc('{unidad}', d), track_id)
         WHERE r <= 3 ORDER BY country, ini, r""").fetchall():
         semanal_agregado[grano].setdefault(cc, {}).setdefault(periodo_de(grano, ini), []).append((nm, ar))

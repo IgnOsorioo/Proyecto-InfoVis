@@ -133,15 +133,23 @@ con.execute(f"""CREATE TABLE j AS SELECT DISTINCT d, country, position, streams,
                   replace(replace(replace(artists, '[', ''), ']', ''), '''', '') AS artistas
                 FROM '{JFREYBERG}' WHERE d >= DATE '2013-09-24'""")
 semanal = {}                                   # cc → {fecha_chart: idx del #1}
-for d, cc, tid, name, arts in con.execute("SELECT d, country, track_id, name, artistas FROM j WHERE position = 1 ORDER BY d").fetchall():
+# El dataset trae a veces la misma canción con dos IDs como #1 de la misma semana (544 semanas-país, p. ej.
+# "Take Me To Church"): se elige siempre el ID menor, en el global y en cada país, para que el resultado no
+# dependa del orden de las filas y un mismo hit calce con el #1 global.
+for d, cc, tid, name, arts in con.execute("""
+        SELECT d, country, min(track_id), arg_min(name, track_id), arg_min(artistas, track_id)
+        FROM j WHERE position = 1 GROUP BY 1, 2 ORDER BY 1, 2""").fetchall():
     semanal.setdefault(cc, {})[d] = indice_spotify(tid, name, arts)
-# mes y año: la canción con más streams sumados en el período
+# mes y año: la canción con más streams sumados en el período (empates: el ID menor)
 agregado = {"mes": {}, "anio": {}}
 for grano, unidad in (("mes", "month"), ("anio", "year")):
     for cc, inicio, tid, name, arts in con.execute(f"""
-        SELECT country, date_trunc('{unidad}', d) AS ini, arg_max(track_id, st), arg_max(nm, st), arg_max(ar, st) FROM (
-            SELECT country, d, track_id, any_value(name) AS nm, any_value(artistas) AS ar, sum(streams) AS st
-            FROM j GROUP BY ALL) GROUP BY 1, 2""").fetchall():
+        SELECT country, ini, track_id, nm, ar FROM (
+            SELECT country, date_trunc('{unidad}', d) AS ini, track_id, min(name) AS nm, min(artistas) AS ar,
+                   row_number() OVER (PARTITION BY country, date_trunc('{unidad}', d)
+                                      ORDER BY sum(streams) DESC, track_id) AS r
+            FROM j GROUP BY country, date_trunc('{unidad}', d), track_id)
+        WHERE r = 1 ORDER BY country, ini""").fetchall():
         agregado[grano].setdefault(cc, {})[periodo_de(grano, inicio)] = indice_spotify(tid, name, arts)
 
 
@@ -245,14 +253,41 @@ def serie(por_semana, hasta=None):
     return [ini, [max(1, round(por_semana.get(s, 0) / 1000)) if por_semana.get(s) else 0 for s in range(ini, fin + 1)]]
 
 
+_fragmentos_pop = {}
+
+
+def popularidad_catalogo(idx_catalogo):
+    """Serie 2017–2026 de una canción del catálogo completo (datos/popularidad_todas, de 06_catalogo_completo.py)."""
+    n = idx_catalogo % 256
+    if n not in _fragmentos_pop:
+        texto = (DATOS / "popularidad_todas" / f"{n:03d}.js").read_text(encoding="utf-8")
+        _fragmentos_pop[n] = json.loads(texto[texto.index(",") + 1:].rstrip().removesuffix(");"))
+    return _fragmentos_pop[n].get(str(idx_catalogo))
+
+
+def unir(antes, despues):
+    """Lo anterior a 2017 (jfreyberg) seguido de la serie desde 2017, con ceros en el hueco (como pedirPopularidad)."""
+    if not antes or not despues:
+        return antes or despues
+    hueco = [0] * max(0, despues[0] - (antes[0] + len(antes[1])))
+    return [antes[0], antes[1] + hueco + despues[1]]
+
+
+# Canciones de la V3: antes de 2017 vienen de jfreyberg; desde 2017, de la serie completa del catálogo cuando la
+# canción está en él (jfreyberg termina en abril de 2023: usarlo solo cortaba la curva ahí, aunque la canción
+# siguiera sonando, y dejaba sin popularidad a las que llegan desde YouTube Music).
 popularidad, previa = {}, {}
-for idx, por_semana in semanas_pop.items():
-    if idx >= BASE_V3:
-        popularidad[idx] = serie(por_semana)
-    else:                                       # catálogo base: solo lo anterior a 2017 (lo demás ya está)
-        s = serie(por_semana, hasta=0)
-        if s:
-            previa[idx] = s
+for idx, c in canciones_v3.items():
+    por_semana = semanas_pop.get(idx)
+    if c[0] in meta_extra:
+        s = unir(serie(por_semana, hasta=0) if por_semana else None, popularidad_catalogo(meta_extra[c[0]][0]))
+    else:
+        s = serie(por_semana) if por_semana else None
+    if s:
+        popularidad[idx] = s
+for idx, por_semana in sorted(semanas_pop.items()):     # catálogo base: solo lo anterior a 2017 (lo demás ya está)
+    if idx < BASE_V3 and (s := serie(por_semana, hasta=0)):
+        previa[idx] = s
 
 SALIDA.mkdir(exist_ok=True)
 js = lambda nombre, obj: f"window.{nombre} = {json.dumps(obj, ensure_ascii=False, separators=(',', ':'))};\n"
