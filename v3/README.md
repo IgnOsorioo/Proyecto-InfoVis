@@ -28,3 +28,7 @@ Para empezar esta versión, copiar la anterior (`cp -R v2/index.html v2/css v2/j
 ## Qué se descartó (máx. 5 líneas)
 
 [COMPLETAR]
+
+## Notas de método
+
+- **Diversidad de líderes** (PR #1, jtomaslarrain): «N canciones distintas son #1 en estos M países», bajo las barras por continente. Usa la misma base que el titular «La escuchan N de M países»: los países del ámbito con #1 en la fecha, sin las fotos de Apple Music (no tienen historia). Las canciones se comparan por su índice en el catálogo, como hace el mapa con el #1 global. Las de YouTube Music se cruzan con Spotify por título y artista, y dos ediciones con distinto ID de Spotify cuentan como canciones distintas. Mide cuántas canciones lideran, no la diversidad total de lo que se escucha.

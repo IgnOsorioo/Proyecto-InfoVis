@@ -1,16 +1,4 @@
-/* Estilos limitados al componente; conserva el scroll y los tamaños del panel. */
-.diversidad {
-  flex: none;
-  min-width: 0;
-  padding: 12px 0 16px;
-  border-top: 1px solid var(--eje);
-}
-.diversidad h3 { margin: 0 0 6px; font-size: 15px; line-height: 1.3; }
-.diversidad p { margin: 5px 0; font-size: 11px; color: var(--tinta-2); overflow-wrap: anywhere; }
-.diversidad #diversidad-total { color: var(--tinta); font-size: 13px; font-weight: 800; }
-.diversidad ol { display: grid; gap: 8px; margin: 10px 0; padding: 0; list-style: none; }
-.diversidad li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 8px; font-size: 12px; }
-.diversidad-cancion { min-width: 0; overflow-wrap: anywhere; }
-.diversidad-cantidad { color: var(--tinta-2); font-variant-numeric: tabular-nums; }
-.diversidad-barra { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--superficie); overflow: hidden; }
-.diversidad-barra > span { display: block; height: 100%; background: var(--global); }
+/* Diversidad de líderes: una línea bajo las barras por continente. */
+.diversidad { margin: 0; padding-top: 12px; border-top: 1px solid var(--grilla); font-size: 14px; color: var(--tinta-2); }
+.diversidad strong { font-weight: 900; color: var(--tinta); }
+.diversidad:empty { display: none; }
