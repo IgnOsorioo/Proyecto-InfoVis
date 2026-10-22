@@ -22,7 +22,6 @@
   let raf = null, ultimoPaso = 0;
   let timerAudio = null, timerSalida = null, timerIntencion = null;
   let sonidoDecidido = false;         // el usuario ya hizo un gesto (o usó el botón de sonido)
-  let region = 'global';              // región elegida con los botones ('global' o un continente)
   let territorio = null;              // territorio sin chart bajo el cursor (el panel muestra un mensaje)
   let globo = null;                   // {cc | territorio, raton}: lo que muestra el recuadro junto al cursor
   let entrada = null;                 // dónde estaba el cursor al entrar al país (para reconocer salidas falsas)
@@ -63,7 +62,7 @@
     actualizarFijado();
     if (globo?.cc) llenarGlobo(globo.cc);
     Mapa.dibujar();
-    Diversidad.actualizar(region);
+    Diversidad.actualizar('global');
   }
 
   function cambiarGrano(grano) {
@@ -159,7 +158,7 @@
     Estado.vistaPais = null;
     Estado.mensaje = false;
     Estado.origen = 'global';
-    Estado.ambito = region;
+    Estado.ambito = 'global';            // R3: los botones de región solo acercan; el panel cuenta siempre el mundo
     const g = numero1('global');
     Estado.cancion = g?.idx ?? null;
     if (g) tocarConEspera(g.idx);
@@ -377,7 +376,6 @@
 
   function irARegion(nombre) {
     marcarRegion(document.querySelector(`.acercar button[data-region="${nombre}"]`));
-    region = nombre === 'mundo' ? 'global' : nombre;
     Mapa.enfocar(nombre);
   }
 
@@ -405,7 +403,7 @@
       relato(`${textoPeriodo('mes', 0)}: ${inicio.n} de ${inicio.total} países escuchan el #1 global, «${cancion(numero1('global').idx).titulo}».`, 1, TOTAL);
       await esperar(5000);
 
-      relato('Mes a mes. Los aplausos: en cuántos países está esa canción en su top 50.', 2, TOTAL);
+      relato('Mes a mes. Los aplausos: en cuántos países es #1 esa canción.', 2, TOTAL);
       Aplausos.continuo(true);
       const porMes = new Map(HITOS.map(h => [periodoDeFecha('mes', new Date(h.fecha + 'T00:00:00Z')), h]));
       let paso = 2;
@@ -468,13 +466,11 @@
   botonPlay.addEventListener('click', () => (Estado.reproduciendo ? pausar() : reproducir()));
   slider.addEventListener('input', () => irAPeriodo(Number(slider.value)));
   document.querySelectorAll('.granos button').forEach(b => b.addEventListener('click', () => cambiarGrano(b.dataset.grano)));
+  // R3: los botones de región se leían como filtros. Solo acercan el mapa (un atajo para no arrastrar ni hacer
+  // zoom a mano): el panel, el eje y la diversidad siguen contando los 52 países del mundo.
   document.querySelectorAll('.acercar button').forEach(b => b.addEventListener('click', () => {
     marcarRegion(b);
-    region = b.dataset.region === 'mundo' ? 'global' : b.dataset.region;
     Mapa.enfocar(b.dataset.region);
-    if (!Estado.fijado) volverAlResumen();               // el panel pasa a la región
-    else Estado.ambito = region;
-    Diversidad.actualizar(region);
   }));
   $('fijado-cerrar').addEventListener('click', soltar);
   $('ver-recorrido').addEventListener('click', verRecorrido);

@@ -22,7 +22,7 @@
         <h1>¿Qué escucha el mundo?</h1>
         <p class="subtitulo">El alcance mundial de la música en streaming, de 2015 a hoy.</p>
       </div>
-      <button type="button" class="boton-recorrido" id="ver-recorrido" title="De 2013 a hoy en un minuto">
+      <button type="button" class="boton-recorrido" id="ver-recorrido" title="De 2015 a hoy, con los momentos clave">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg>Recorrido
       </button>
     </header>
@@ -30,6 +30,17 @@
     <main class="escenario">
       <div class="zona-mapa">
         <div id="mapa" class="mapa" aria-label="Mapa mundial: en verde, los países cuyo #1 es el #1 global"></div>
+        <!-- Acercar (R3: se leían como filtros): un control de vista sobre el mapa, como el zoom de un mapa web,
+             separado de la leyenda de los datos. No cambia lo que se cuenta, solo el encuadre. -->
+        <div class="acercar" role="group" aria-label="Acercar el mapa a una región">
+          <svg class="acercar-icono" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4L14 14M7 5v4M5 7h4"/></svg>
+          <button type="button" data-region="mundo" class="activo">Mundo</button>
+          <button type="button" data-region="america">América</button>
+          <button type="button" data-region="europa">Europa</button>
+          <button type="button" data-region="africa">África y M. Oriente</button>
+          <button type="button" data-region="asia">Asia</button>
+          <button type="button" data-region="oceania">Oceanía</button>
+        </div>
 
         <!-- País fijado con un click: cuál es y cómo soltarlo -->
         <div class="fijado" id="fijado" hidden>
@@ -60,14 +71,6 @@
           <li><i class="muestra muestra-vacio"></i>sin datos</li>
           <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5v8.2a2.3 2.3 0 1 0 1.5 2.1V5.5l5-1.3v4.5a2.3 2.3 0 1 0 1.5 2.1V1z"/></svg>aplausos: en cuántos países es #1</li>
         </ul>
-        <div class="acercar" role="group" aria-label="Acercar el mapa a una región">
-          <button type="button" data-region="mundo" class="activo">Mundo</button>
-          <button type="button" data-region="america">América</button>
-          <button type="button" data-region="europa">Europa</button>
-          <button type="button" data-region="africa">África y M. Oriente</button>
-          <button type="button" data-region="asia">Asia</button>
-          <button type="button" data-region="oceania">Oceanía</button>
-        </div>
       </div>
     </main>
 

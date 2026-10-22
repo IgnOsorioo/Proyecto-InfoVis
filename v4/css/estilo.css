@@ -102,7 +102,7 @@ body.en-recorrido .fijado { display: none; }
 .mapa { position: absolute; inset: 0; cursor: grab; }
 .mapa:active { cursor: grabbing; }
 
-/* Debajo del mapa: leyenda abajo a la izquierda, regiones a la derecha */
+/* Debajo del mapa: la leyenda de los datos, abajo a la izquierda */
 .pie-mapa { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
 /* Leyenda vertical, abajo a la izquierda: un elemento por línea */
 .leyenda { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--tinta-2); }
@@ -110,6 +110,22 @@ body.en-recorrido .fijado { display: none; }
 .leyenda svg { width: 11px; height: 11px; fill: currentColor; }
 .acercar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .acercar button { font-size: 12px; padding: 4px 10px; }
+/* R3: los botones de región se leían como filtros. Son un atajo de zoom: van sobre el mapa, arriba a la derecha
+   (donde un mapa web pone sus controles de vista), con una lupa y un fondo translúcido, lejos de la leyenda. */
+.zona-mapa .acercar {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  z-index: 4;
+  max-width: calc(100% - 220px);
+  padding: 4px 4px 4px 10px;
+  background: rgba(18, 18, 18, 0.88);
+  border: 1px solid var(--grilla);
+  border-radius: 999px;
+}
+.acercar-icono { flex: none; width: 14px; height: 14px; fill: none; stroke: var(--tinta-2); stroke-width: 1.6; stroke-linecap: round; }
+.zona-mapa .acercar button { border-color: transparent; }
+.zona-mapa .acercar button.activo { border-color: var(--tinta); }
 
 /* País fijado: arriba a la izquierda del mapa */
 .fijado {
@@ -373,7 +389,6 @@ body.en-recorrido .fijado { display: none; }
 .r-titular { margin: 0; font-size: 20px; font-weight: 900; line-height: 1.15; }
 .r-continentes { display: grid; grid-template-columns: minmax(0, max-content) minmax(40px, 1fr) 44px; gap: 8px 10px; margin: 0; padding: 0; list-style: none; }
 .r-continentes li { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; font-size: 13px; color: var(--tinta-2); }
-.r-continentes li.actual { color: var(--tinta); font-weight: 800; }
 .r-cont-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .r-cont-barra { height: 8px; background: var(--superficie); border-radius: 4px; overflow: hidden; }
 .r-cont-barra span { display: block; height: 100%; background: var(--global); border-radius: 4px; transition: width 0.25s; }
@@ -431,7 +446,7 @@ body.en-recorrido .fijado { display: none; }
   .mapa { position: relative; inset: auto; height: 260px; }
   .fijado { position: static; order: -1; align-self: flex-start; }
   .leyenda { font-size: 11px; }
-  .acercar { justify-content: flex-start; }
+  .zona-mapa .acercar { position: static; max-width: none; justify-content: flex-start; align-self: flex-start; border-radius: 16px; }
   .tiempo { grid-template-columns: auto minmax(0, 1fr) auto; padding: 8px 16px; }
   .granos { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
   .granos button { padding: 6px 9px; }

@@ -102,7 +102,6 @@ const Panel = (() => {
         const muestra = muestraDe(k);
         const n = muestra.filter(cc => numero1(cc)?.idx === idx).length;
         const fila = document.createElement('li');
-        fila.className = Estado.ambito === k ? 'actual' : '';
         fila.innerHTML = '<span class="r-cont-nombre"></span><span class="r-cont-barra"><span></span></span><span class="r-cont-valor"></span>';
         fila.querySelector('.r-cont-nombre').textContent = nombre;
         fila.querySelector('.r-cont-barra span').style.width = `${100 * n / muestra.length}%`;
