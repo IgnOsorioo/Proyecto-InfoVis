@@ -63,6 +63,7 @@
     if (globo?.cc) llenarGlobo(globo.cc);
     Mapa.dibujar();
     Diversidad.actualizar('global');
+    Contexto.actualizar();
   }
 
   function cambiarGrano(grano) {
@@ -377,6 +378,7 @@
   function irARegion(nombre) {
     marcarRegion(document.querySelector(`.acercar button[data-region="${nombre}"]`));
     Mapa.enfocar(nombre);
+    Contexto.actualizar();
   }
 
   async function verRecorrido() {
@@ -471,6 +473,7 @@
   document.querySelectorAll('.acercar button').forEach(b => b.addEventListener('click', () => {
     marcarRegion(b);
     Mapa.enfocar(b.dataset.region);
+    Contexto.actualizar();
   }));
   $('fijado-cerrar').addEventListener('click', soltar);
   $('ver-recorrido').addEventListener('click', verRecorrido);
@@ -483,7 +486,7 @@
       else if (Estado.vistaPais) volverAlResumen();
       return;
     }
-    if (e.target.closest('button, select, textarea, [tabindex], input')) return;
+    if (e.target.closest('button, select, textarea, [tabindex], input, #contexto, #contexto-ficha')) return;
     const n = window.PERIODOS[Estado.grano].n;
     if (e.code === 'Space') { e.preventDefault(); Estado.reproduciendo ? pausar() : reproducir(); }
     if (e.code === 'ArrowLeft') irAPeriodo(Math.max(0, Estado.periodo - 1));

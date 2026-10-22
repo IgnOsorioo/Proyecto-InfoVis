@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
   <link rel="stylesheet" href="css/estilo.css?v=2026-10-17s">
   <link rel="stylesheet" href="css/diversidad.css?v=2026-10-17s">
+  <link rel="stylesheet" href="css/contexto.css?v=2026-10-21b">
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js"></script>
   <script src="https://cdn.plot.ly/plotly-locale-es-2.34.0.js"></script>
 </head>
@@ -117,10 +118,16 @@
       </button>
     </footer>
 
-    <p class="creditos">
+    <div class="contexto-pie" id="contexto">
+      <p class="creditos">
       Datos: <a href="https://www.kaggle.com/datasets/gonzalopezgil/spotify-charts-daily-updated">Spotify Charts vía Kaggle</a> (CC BY-SA 4.0), <a href="https://charts.youtube.com/">YouTube Music Charts</a> ·
       Mapa: <a href="https://www.naturalearthdata.com/">Natural Earth</a> · Audio: <a href="https://developers.deezer.com/api">Deezer</a> · Portadas: Spotify
-    </p>
+      </p>
+      <div class="contexto-acceso">
+        <button type="button" id="contexto-abrir" aria-expanded="false" aria-controls="contexto-ficha" aria-describedby="contexto-aviso">ⓘ Cobertura y metodología</button>
+        <span id="contexto-aviso" hidden></span>
+      </div>
+    </div>
   </div>
 
   <!-- Panel: lo que está sonando (el #1 global o el de un país) y, debajo, su contexto -->
@@ -177,6 +184,25 @@
     </div>
   </aside>
 
+  <section class="contexto-ficha" id="contexto-ficha" aria-labelledby="contexto-titulo" hidden>
+    <div class="contexto-cabecera">
+      <h2 id="contexto-titulo" tabindex="-1">Cobertura y metodología</h2>
+      <button type="button" id="contexto-cerrar">Volver a la visualización</button>
+    </div>
+    <div class="contexto-ambitos" aria-label="Ámbitos de la selección actual">
+      <p id="contexto-mapa"></p>
+      <p id="contexto-indicadores"></p>
+      <p id="contexto-alcance"></p>
+      <p id="contexto-nota" hidden></p>
+    </div>
+          <p><strong>Muestra fija de Spotify.</strong> La serie temporal de coincidencia, el titular, las barras continentales y diversidad usan una muestra fija con continuidad de datos. <span id="contexto-muestra"></span> Permite comparar períodos con los mismos países; no es una muestra estadísticamente representativa del mundo. <span id="contexto-concentracion"></span></p>
+          <p><strong>Mapa y ámbito.</strong> El mapa también muestra países fuera de la muestra, con rankings de Spotify, YouTube Music o QQ Music. Acercar una región no limita todos los indicadores a esa región: el eje temporal y el alcance top 50 siguen siendo mundiales dentro de la muestra. Las barras muestran continentes con al menos tres países; el titular y diversidad vuelven a la muestra mundial si la región tiene menos de tres.</p>
+          <p><strong>Qué se compara.</strong> En los conteos de coincidencia, cada país pesa lo mismo, sin ponderar población ni reproducciones. Compartir el #1 no significa tener gustos idénticos ni escuchar toda la misma música. Si la canción procede de un país fuera del ámbito del titular, ese país puede nombrarse aparte.</p>
+          <p><strong>Canciones y alcance.</strong> Diversidad cuenta índices distintos del catálogo: ediciones con distinto identificador pueden contar por separado. El alcance top 50 agrupa por título y primer artista normalizados y cuenta países de la muestra por semana; no usa exactamente la misma regla de identidad ni la misma resolución temporal que el #1. Su porcentaje siempre se refiere a toda la muestra, incluso al enfocar una región.</p>
+          <p><strong>Fuentes y unidades.</strong> La curva de reproducciones suma registros disponibles en los charts; puede incluir reproducciones de Spotify o vistas de YouTube según la serie de la canción, y no está restringida a los 52 países. QQ Music aporta posiciones, no reproducciones. Esas fuentes no miden consumos equivalentes; la muestra de coincidencia es de Spotify.</p>
+          <p><strong>Fecha de los datos.</strong> Último día disponible: <span id="contexto-fin"></span>. El último mes o año puede estar incompleto; no equivale necesariamente a la fecha actual.</p>
+  </section>
+
   <script src="../datos/mundo.js?v=2026-10-17s"></script>
   <script src="../datos/v3/paises.js?v=2026-10-17s"></script>
   <script src="../datos/canciones.js?v=2026-10-17s"></script>
@@ -190,9 +216,10 @@
   <script src="js/aplausos.js?v=2026-10-17s"></script>
   <script src="js/estatica.js?v=2026-10-17s"></script>
   <script src="js/mapa.js?v=2026-10-17s"></script>
-  <script src="js/panel.js?v=2026-10-17s"></script>
+  <script src="js/contexto.js?v=2026-10-21b"></script>
+  <script src="js/panel.js?v=2026-10-21b"></script>
   <script src="js/linea.js?v=2026-10-17s"></script>
   <script src="js/diversidad.js?v=2026-10-17s"></script>
-  <script src="js/main.js?v=2026-10-17s"></script>
+  <script src="js/main.js?v=2026-10-21b"></script>
 </body>
 </html>

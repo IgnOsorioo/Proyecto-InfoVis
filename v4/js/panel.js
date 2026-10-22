@@ -76,6 +76,7 @@ const Panel = (() => {
     $('p-contexto').textContent = origen === 'global' ? '#1 global' : `Escuchando en ${nombrePais(origen)}`;
     $('p-insignia').hidden = origen === 'global' || idx !== numero1('global')?.idx;
     dibujarTitular(idx, origen, ambitoMedible(Estado.ambito));
+    Contexto.titularDibujado(ambitoMedible(Estado.ambito));
     dibujarContinentes(idx);
     const semana = semanaDe(finDelPeriodo());
     dibujarAnillo(alcanceEn(alcance, semana), muestraDe('global').length);
@@ -198,6 +199,7 @@ const Panel = (() => {
     panel.scrollTop = 0;
     $('p-mensaje-titulo').textContent = titulo;
     $('p-mensaje-texto').textContent = texto;
+    Contexto.actualizar();
   }
 
   /** El ecualizador se mueve solo mientras suena la preview. */
