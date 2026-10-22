@@ -425,7 +425,10 @@
       const china = numero1('cn');                      // fuera de la muestra (QQ Music, sin Spotify): se nombra al final
       const deChina = china && !sigueAlGlobal('cn') ? ` En China, sin Spotify, el #1 es otro: «${cancion(china.idx).titulo}».` : '';
       if (china) irARegion('asia');
-      relato(`${textoPeriodo('mes', Estado.periodo)}: ${hoy.n} de ${hoy.total} países escuchan el #1 global.${deChina}`, TOTAL, TOTAL);
+      // El cierre dice la tendencia con las mismas cifras del título del eje (promedios anuales): el último mes
+      // solo puede ser atípico (sept. 2026: 31 %, frente a un 12 % en el año) y contradecirlo.
+      const { a0, p0, a1, p1 } = Linea.resumen();
+      relato(`En ${a0}, el ${p0} % de los países escuchaba el #1 global; en ${a1}, el ${p1} %. Este mes, ${hoy.n} de ${hoy.total}.${deChina}`, TOTAL, TOTAL);
       await esperar(5000);
     } catch (e) {
       // Terminado con Esc o "Saltar": se vuelve al estado de inicio igual que al final.

@@ -59,15 +59,22 @@ const Linea = (() => {
       («51 % en 2015 → 12 % en 2026»). Auditoría (vista general): el título pregunta y la vista no afirmaba la
       respuesta hasta ver correr 11 años. Va en el título y no sobre el área para no chocar con el cursor, que al
       entrar está en el primer mes; son promedios anuales, no el valor de un mes como el del cursor. */
-  function dibujarResumen() {
+  let _resumen = null;
+  function resumen() {
+    if (_resumen) return _resumen;
     const dia = serieMuestra('dia');
     const promedio = anio => {
       const xs = dia.filter((_, i) => fechaDePeriodo('dia', i).getUTCFullYear() === anio);
       return Math.round(xs.reduce((a, b) => a + b, 0) / Math.max(1, xs.length));
     };
     const a0 = fechaDePeriodo('dia', 0).getUTCFullYear(), a1 = fechaDePeriodo('dia', dia.length - 1).getUTCFullYear();
-    $('linea-resumen').replaceChildren(': ', Object.assign(document.createElement('b'), { textContent: `${promedio(a0)} %` }),
-      ` en ${a0} → `, Object.assign(document.createElement('b'), { textContent: `${promedio(a1)} %` }), ` en ${a1}`);
+    return (_resumen = { a0, p0: promedio(a0), a1, p1: promedio(a1) });
+  }
+
+  function dibujarResumen() {
+    const { a0, p0, a1, p1 } = resumen();
+    $('linea-resumen').replaceChildren(': ', Object.assign(document.createElement('b'), { textContent: `${p0} %` }),
+      ` en ${a0} → `, Object.assign(document.createElement('b'), { textContent: `${p1} %` }), ` en ${a1}`);
     $('linea-titulo').title = `Promedio de los días de cada año (${a1}: hasta el ${textoFecha(new Date(window.FECHA_MAX + 'T00:00:00Z'))})`;
   }
 
@@ -129,5 +136,7 @@ const Linea = (() => {
       $('fecha-valor').textContent = `${Math.round(valor)} %`;
     },
     alElegirHito(fn) { alElegirHito = fn; },
+    /** Promedio anual del primer y del último año (el mensaje): { a0, p0, a1, p1 }. */
+    resumen,
   };
 })();
