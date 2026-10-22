@@ -32,6 +32,7 @@ const Mapa = (() => {
   const MARGEN_PX = 8;
   let region = 'mundo';
   let escala = 1;                      // zoom que asegura que el recuadro de la región quepa entero
+  let escalaMundo = 1;                 // el encuadre del mundo completo: el zoom manual no puede alejarse más
   let enfoques = 0;                    // cambia uirevision para que un botón de región se imponga al zoom manual
   let marcado = null;                  // país bajo el cursor (contorno claro); el fijado está en Estado.fijado
   let eventos = { alPasar: () => {}, alPasarSinChart: () => {}, alSalir: () => {}, alElegir: () => {} };
@@ -179,6 +180,12 @@ const Mapa = (() => {
       else if (territorio) eventos.alPasarSinChart(territorio, raton);
     });
     el.on('plotly_unhover', ev => eventos.alSalir(ev?.event));   // el evento del mouse (no hay si vino de un redibujo)
+    // Thinking aloud (V4 preliminar): alejado más allá del mundo, el mapa quedaba como un óvalo diminuto y daba
+    // «saltos abruptos». Se puede alejar hasta el mundo completo, no más (Plotly 2.34 no tiene projection.minscale).
+    el.on('plotly_relayout', cambio => {
+      const s = cambio?.['geo.projection.scale'];
+      if (typeof s === 'number' && s < escalaMundo - 1e-6) Plotly.relayout(el, { 'geo.projection.scale': escalaMundo, 'geo.center': centro('mundo') });
+    });
     el.on('plotly_click', ev => {          // click (o toque en pantallas táctiles): seguir la canción del país
       const { cc } = leer(ev);
       if (cc) eventos.alElegir(cc);
@@ -224,6 +231,7 @@ const Mapa = (() => {
     const factor = Math.min((cx - MARGEN_PX) / dx, (cy - MARGEN_PX) / dy);
     if (factor < 0.999 || (region !== 'mundo' && factor > 1.001)) {
       escala *= factor;
+      if (region === 'mundo') escalaMundo = escala;
       dibujar();
     }
   }
