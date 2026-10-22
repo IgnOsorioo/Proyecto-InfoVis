@@ -18,9 +18,9 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 | | |
 |---|---|
 | ![Vista general](evidencia/01-vista-general.png) | ![Cursor sobre Chile](evidencia/02-hover-chile.png) |
-| La fecha lleva su cifra («sept 2026 · 31 %»), con un punto sobre el área. El control para acercar va sobre el mapa. | Cursor sobre Chile: el recuadro con su top 3 y el panel con su #1. |
+| La fecha lleva su cifra, con un punto sobre la línea, y el título del eje dice el mensaje. El control para acercar va sobre el mapa. | Cursor sobre Chile: el recuadro con su top 3 y el panel con su #1. |
 | ![País fijado](evidencia/03-pais-fijado.png) | ![Europa](evidencia/04-acercar-europa.png) |
-| Click en Brasil: se fija el país. | «Europa» solo acerca el mapa: el panel sigue contando los 52 países. |
+| Click en Brasil: se fija el país. Las reproducciones se encuadran en su paso por los charts (jul.–sept. 2026). | «Europa» solo acerca el mapa: el panel sigue contando los 52 países. |
 | ![Sin datos](evidencia/05-sin-datos-2015.png) | ![1366×768](evidencia/06-pantalla-1366.png) |
 | Kenia en 2015: sin datos. | A 1366×768, el título va en una línea y los artistas se ven. |
 
@@ -34,35 +34,28 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 
 ## Qué cambió respecto a V3 (máx. 8 líneas)
 
-1. **Los botones de región solo acercan el mapa.** El panel, el eje y la diversidad cuentan siempre los 52 países. Van sobre el mapa, arriba a la derecha y con una lupa.
-2. **La línea de tiempo dice qué muestra:** la cifra junto a la fecha («jun 2015 · 65 %»), un punto verde sobre el valor y un título con la muestra verde de la leyenda.
-3. **El mensaje se afirma en la vista:** el título del eje dice «51 % en 2015 → 12 % en 2026», y el recorrido cierra con esas mismas cifras.
-4. **Panel a 1366×768:** el título va en una línea y ya no tapa a los artistas.
-5. **Textos coherentes con el sonido:** el recorrido decía «top 50» (los aplausos cuentan dónde es #1) y el botón decía «de 2013 en un minuto».
-6. **Ficha «Cobertura y metodología»** (PR #2, José Tomás Larraín): se abre a pedido debajo de la vista y explica qué países, fuentes y fechas usa cada cifra.
+1. **Los botones de región solo acercan el mapa:** van sobre él, con una lupa, y el zoom manual no se aleja más allá del mundo.
+2. **La línea de tiempo se lee:** la cifra va junto a la fecha, con un punto sobre la línea. Mide lo mismo con día, semana, mes o año (el promedio de los días).
+3. **El mensaje está en la vista:** el título del eje y el cierre del recorrido dicen «51 % en 2015 → 12 % en 2026».
+4. **Las reproducciones se encuadran** en el paso de cada canción por los charts.
+5. **El panel no se tapa a 1366×768**, y los textos del recorrido coinciden con lo que codifica el sonido.
+6. **Ficha «Cobertura y metodología»** (PR #2, José Tomás Larraín), a pedido, debajo de la vista.
 
 ## Por qué cambió — el rationale (máx. 12 líneas)
 
-- **R3, los continentes parecían filtros.** Revisándolo vimos que en parte sí filtraban: el panel pasaba a «N de 19 países de América» mientras el mapa y el eje seguían contando el mundo. Eran dos ámbitos a la vez.
-  - Ahora solo acercan, que es su propósito: un atajo para no arrastrar ni hacer zoom a mano.
-  - Van sobre el mapa por proximidad (un control de vista, junto a lo que mueve) y lejos de la leyenda que explica los datos.
-  - La lupa es la convención del zoom.
-- **R3 y dos personas externas, la línea de tiempo no se entendía.** No se sabía qué medía la altura.
-  - Rotulado directo: la cifra en la fecha evita leer contra un eje sin marcas, y es el mismo % del titular del panel.
-  - La muestra verde del título repite la de la leyenda del mapa (similitud): el área cuenta los países pintados de verde.
-  - El punto sobre el valor además indica que el eje se puede arrastrar.
-- **Auditoría, la vista general debe decir el mensaje.** El título pregunta «¿Qué escucha el mundo?» y la respuesta solo aparecía tras ver correr 11 años. Ahora la dice el título del eje, en rotulado directo y no como un texto aparte. El recorrido terminaba en un mes atípico (sept. 2026: 31 %) que contradecía el 12 % del año, así que ahora cierra con la misma medida.
-- **Auditoría, alineado y ordenado (§11).** Un panel que se tapa a sí mismo en una pantalla común rompe la jerarquía.
-- **Coherencia del sonido.** Si la leyenda y el recorrido explican los aplausos de forma distinta, el sonido no se entiende (heurística de Zuk-Carpendale).
-- **Contexto a pedido (PR #2).** Responde a la heurística «falta contexto» sin sumar texto a la vista: la muestra fija, sus límites y las fuentes quedan a un click (*details on demand*).
+- **R3, las regiones parecían filtros, y en parte lo eran:** el panel pasaba a «N de 19 países de América» mientras el mapa y el eje seguían contando el mundo. Ahora solo acercan, que es su propósito. Van sobre el mapa por proximidad (es un control de vista) y la lupa es la convención del zoom.
+- **R3 y thinking aloud, el eje no se entendía.** Raúl supuso que las líneas «deberían ser más o menos las mismas» en cada granularidad, y no lo eran: cada una comparaba el #1 del período (2025: 0 % en «Año», 25 % en diciembre). Ahora todas promedian los mismos días. La cifra junto a la fecha (rotulado directo) y el punto sobre la línea evitan leer contra un eje sin marcas. La muestra verde conecta el área con los países verdes del mapa (similitud).
+- **Auditoría, vista general:** el título pregunta y la respuesta tardaba 11 años en verse. Ahora la dicen el eje y el cierre del recorrido.
+- **Thinking aloud, reproducciones y zoom:** «una canción de hace un mes queda en el extremo derecho y no aporta nada». Además, alejado más allá del mundo, el mapa daba «saltos abruptos».
+- **§11 y heurísticas:** un panel que se tapa a sí mismo rompe el orden. Si la leyenda y el recorrido explican distinto los aplausos, el sonido no se entiende. El contexto (muestra, fuentes, fechas) queda a un click (*details on demand*).
 
 ## Qué se descartó (máx. 5 líneas)
 
-- **Convertir las regiones en un filtro real:** repetiría las barras por continente del panel y exigiría series por continente en el eje. El mensaje es mundial.
-- **Reducir la portada:** escuchar la canción y ver el disco es parte de la identidad del concepto desde la V1. Se arregló el desborde sin cambiar su tamaño.
-- **Quitar la media móvil del eje** (probado): con el valor exacto de cada mes el borde quedaba dentado, y la caída de 51 % a 12 % se leía peor.
-- **Agregar más datos o funciones:** la versión final ajusta, no suma piezas.
-- **El aviso «titular pendiente / ámbito mundial» del PR #2:** con regiones que solo acercan no hay ámbitos distintos que avisar, y durante la reproducción se encendía con cada carga del panel.
+- **Regiones como filtro real:** repetiría las barras por continente del panel. El mensaje es mundial.
+- **Reducir la portada:** ver el disco mientras suena es la identidad del concepto desde la V1.
+- **Mostrar los 5 continentes en el panel**, que Raúl echó de menos: con 1 o 2 países por fila, una barra exageraría (1 de 1 = 100 %). La ficha explica el mínimo de 3. [REVISAR: decisión del grupo]
+- **Cambiar la activación del sonido:** el navegador exige un click o una tecla, así que no hay forma de que suene al entrar. El botón de sonido ya pulsa mientras está apagado.
+- **Los avisos de ámbito del PR #2 y la media móvil del eje de la V3:** sin ámbitos distintos, los avisos sobran. La media móvil separaba el punto de la línea.
 
 ## Balance del recorrido
 
