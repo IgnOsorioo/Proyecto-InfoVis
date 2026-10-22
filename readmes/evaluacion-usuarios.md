@@ -52,7 +52,7 @@
 |---|---|
 | Pensador y fecha (máx. 2 líneas) | Raúl Paezo, amigo externo al curso que no había visto la visualización. 21 de octubre de 2026, ~22:30, por Discord, sobre la V4 preliminar publicada (commit `70b84c6`). |
 | Versión evaluada | V4 preliminar · https://ignosorioo.github.io/Proyecto-InfoVis/v4/ |
-| Observador(es) | Ignacio Osorio [CONFIRMAR si estuvo alguien más] |
+| Observador(es) | Ignacio Osorio (único observador) |
 
 > **Nota de método (honestidad).** La sesión no se grabó. La bitácora se reconstruyó apenas terminó:
 > - los tiempos son aproximados y siguen el orden de lo observado;
@@ -89,7 +89,7 @@ Columnas: tiempo · lo que dice · lo que hace.
 
 - **Al entrar no sonaba nada**, y le costó encontrar el botón de volumen. Los navegadores exigen un click o una tecla antes de reproducir audio, y mover el cursor no cuenta.
 - «La sonificación está bien, se puede pulir». No se le ocurría otra forma de sonificar cuando la canción es el dato en sí.
-- [CONFIRMAR: ¿se le preguntó qué cree que codifican los aplausos? Si fue así, anotar su respuesta textual.]
+- **Sobre qué codifican los aplausos:** lo planteó él mismo. Entendió que miden la **popularidad de la canción por país**, pero no sabía si contaban **el número de países** o **el número de reproducciones**. En realidad aplaude una persona por cada país de la muestra donde la canción es #1. La metáfora (aplausos = éxito) se entiende; la unidad, no.
 
 ### Heurísticas que fallaron (Zuk-Carpendale)
 
@@ -105,14 +105,14 @@ Columnas: tiempo · lo que dice · lo que hace.
   - cómo activar el sonido (~0:20);
   - que el país se fija con click y no al pasar el cursor (~1:30);
   - creyó que los gráficos del panel respondían al cursor (~2:30).
-- [ ] El sonido no se entiende sin explicación [CONFIRMAR según la pregunta sobre los aplausos]
+- [x] **El sonido no se entiende sin explicación (en parte):** captó que los aplausos son popularidad, pero no si cuentan países o reproducciones, aunque la leyenda dice «aplausos: en cuántos países es #1».
 
 ### Las tres preguntas de cierre
 
 1. **¿Dónde se atascó más tiempo?** En la línea de tiempo. No entendía por qué cambia de forma según la granularidad (2025: 0 % en «Año» y 25 % en diciembre en «Mes»), ni por qué el punto se sale de la línea.
 2. **¿Qué hipótesis dijo en voz alta y resultó equivocada?** Supuso que con día, semana, mes o año «las líneas deberían ser más o menos las mismas». No lo eran: cada granularidad calculaba otra cosa, porque comparaba el #1 *del período* de cada país con el #1 global del período, sin promediar. La visualización invitaba a esa lectura, así que el error es de diseño.
 
-   También supuso que, al pasar el cursor por un país y llevarlo al panel, el país se quedaba: hacía falta click.
+   También supuso que, al pasar el cursor por un país y llevarlo al panel, el país se quedaba: hacía falta click. Y dudó de si los aplausos medían reproducciones, cuando cuentan países.
 3. **¿Qué cambio concreto sale de esta sesión?** Que el eje mida lo mismo en todas las granularidades (la misma serie diaria) y que el punto vaya sobre la línea que se ve.
 
 ### Efecto en el proceso
