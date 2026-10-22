@@ -4,7 +4,6 @@
 .contexto-acceso { flex: none; display: flex; align-items: baseline; gap: 8px; margin: 4px 24px 12px 0; font-size: 11px; line-height: 1.4; }
 .contexto-acceso button { padding: 0; border: 0; border-radius: 0; background: none; font-size: inherit; line-height: inherit; color: var(--tinta-2); }
 .contexto-acceso button:hover { color: var(--tinta); text-decoration: underline; }
-#contexto-aviso { color: var(--tinta); }
 
 /* La ficha ocupa la segunda fila del documento, debajo de la vista de 100vh.
    Abrirla habilita scroll de página; no cambia el alto o ancho de la aplicación.
@@ -21,6 +20,5 @@ html:has(.contexto-ficha:not([hidden]))::-webkit-scrollbar { width: 0; height: 0
 .contexto-ambitos { border-block: 1px solid var(--eje); margin: 16px 0; color: var(--tinta); }
 @media (max-width: 760px) {
   .contexto-acceso { margin: 2px 16px 10px 0; gap: 5px; }
-  #contexto-aviso { max-width: 90px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .contexto-ficha { padding: 16px; }
 }

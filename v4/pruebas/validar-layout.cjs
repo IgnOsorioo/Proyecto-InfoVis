@@ -1,5 +1,8 @@
-// Sin dependencias: servidor local + Edge headless mediante Chrome DevTools Protocol.
+// Sin dependencias: servidor local + Edge o Chrome headless mediante Chrome DevTools Protocol (Node 22+).
 // Ejecutar desde la raíz: node v4/pruebas/validar-layout.cjs
+// Otro navegador: NAVEGADOR="/ruta/al/ejecutable" node v4/pruebas/validar-layout.cjs
+// Tras la R3, los botones de región van sobre el mapa: se compara la geometría de mapa, eje, panel y vista,
+// pero ya no la de .acercar (se movió a propósito).
 const fs = require('fs'), os = require('os'), path = require('path');
 const http = require('http'), { spawn } = require('child_process');
 const root = process.cwd();
@@ -17,7 +20,11 @@ const server = http.createServer((req, res) => {
 let browser, ws;
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  browser = spawn('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', [
+  const navegador = process.env.NAVEGADOR || ({
+    win32: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+    darwin: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  })[process.platform] || 'google-chrome';
+  browser = spawn(navegador, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     '--remote-debugging-port=0', '--user-data-dir=' + profile,
   ], { windowsHide: true, stdio: 'ignore' });
@@ -52,7 +59,7 @@ let browser, ws;
     for (let i = 0; i < 100; i++) { if (await evaluate(predicate)) return; await sleep(150); }
     throw Error('Tiempo agotado: ' + predicate);
   };
-  const geometry = () => evaluate(`Object.fromEntries(['.mapa','.tiempo','.panel','.principal','.acercar'].map(s=>{const r=document.querySelector(s).getBoundingClientRect();return [s,{x:r.x+scrollX,y:r.y+scrollY,w:r.width,h:r.height}]}))`);
+  const geometry = () => evaluate(`Object.fromEntries(['.mapa','.tiempo','.panel','.principal'].map(s=>{const r=document.querySelector(s).getBoundingClientRect();return [s,{x:r.x+scrollX,y:r.y+scrollY,w:r.width,h:r.height}]}))`);
   const compare = (a, b, label) => {
     for (const [selector, rect] of Object.entries(a)) for (const key of ['x', 'y', 'w', 'h']) {
       if (Math.abs(rect[key] - b[selector][key]) > 1.5) throw Error(`${label}: ${selector}.${key}: ${rect[key]} -> ${b[selector][key]}`);
@@ -80,7 +87,6 @@ let browser, ws;
       await evaluate(`document.querySelector('[data-region="africa"]').click()`); await sleep(600);
       await shot(`${width}x${height}-${version}-africa`);
       if (version === 'v4') {
-        await wait(`!document.getElementById('contexto-aviso').hidden`);
         await evaluate(`document.getElementById('contexto-abrir').click()`); await sleep(150);
         compare(initial, await geometry(), `${width} ficha abierta`);
         await shot(`${width}x${height}-v4-ficha`);

@@ -63,7 +63,6 @@
     if (globo?.cc) llenarGlobo(globo.cc);
     Mapa.dibujar();
     Diversidad.actualizar('global');
-    Contexto.actualizar();
   }
 
   function cambiarGrano(grano) {
