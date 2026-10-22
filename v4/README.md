@@ -53,7 +53,7 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 ## Qué se descartó (máx. 5 líneas)
 
 - **Regiones como filtro real:** repetiría las barras por continente del panel. El mensaje es mundial.
-- **Reducir la portada:** ver el disco mientras suena es la identidad del concepto desde la V1.
+- **Reducir la portada:** ver el disco mientras suena es la identidad del concepto desde la V1. La carátula se reconoce antes que el título, y el diseño imita a propósito un reproductor donde la carátula manda.
 - **Mostrar los 5 continentes en el panel**, que Raúl echó de menos: Oceanía tiene 2 países en la muestra y África y Medio Oriente 1. Casi siempre marcarían 0 y no ayudarían a ver de dónde viene un hit. La ficha explica el mínimo de 3.
 - **Cambiar la activación del sonido:** el navegador exige un click o una tecla, así que no hay forma de que suene al entrar. El botón de sonido ya pulsa mientras está apagado.
 - **Los avisos de ámbito del PR #2 y la media móvil del eje de la V3:** sin ámbitos distintos, los avisos sobran. La media móvil separaba el punto de la línea.
@@ -70,7 +70,7 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 - **La canción nunca se altera** (R1): es el dato. La codificación va en una capa aparte.
 - **Mapa 2D:** el globo ocultaba medio mundo y rompía la vista general.
 - **La muestra fija de 52 países**, aunque deja fuera a Rusia, India o China de la cifra: sin ella, la cifra mediría la llegada de Spotify y no el gusto.
-- **La portada grande:** es la identidad del proyecto.
+- **La portada grande:** es la identidad del proyecto, ayuda a reconocer la canción y es parte de la estética de reproductor.
 
 ## Aporte individual: contexto y cobertura de los indicadores (PR #2, José Tomás Larraín)
 

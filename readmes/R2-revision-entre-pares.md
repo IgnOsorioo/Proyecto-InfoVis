@@ -24,7 +24,8 @@ Las mismas dudas de fondo que en la R1, ahora planteadas al otro grupo:
 - **El play confundía.** Como la interfaz se parece a la de Spotify (a propósito), el play y su barra se leían como la reproducción de la canción: le daban play al tiempo esperando que cambiara la canción, y al revés.
 - **La ausencia de datos también es un dato.** Sugirieron mantener los países y continentes sin datos: que falten cuenta algo, por ejemplo limitaciones de acceso o de mercado.
 - **Detalle al pasar el cursor.** En su scatter plot, al acercarse a un punto se veía el detalle de cada bebida. Sugirieron hacer lo mismo en nuestro mapa.
-- **Aplausos para el alcance** y **colores de Spotify** [CONFIRMAR que también se dijeron en esta sesión].
+- **Aplausos para el alcance:** usar los aplausos para la popularidad de la canción en el mundo.
+- **Colores corporativos de Spotify**, ya que los datos vienen de ahí.
 - La sonificación les pareció bien encaminada.
 
 ### Decisiones (máx. 10 líneas)

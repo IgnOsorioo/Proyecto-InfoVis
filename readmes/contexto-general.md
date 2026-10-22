@@ -4,15 +4,17 @@
 
 ## Mensaje principal (máx. 10 líneas)
 
-**El mundo dejó de escuchar lo mismo.**
-- En 2015, en la mitad de los países (51 %) la canción más escuchada era la misma que la del mundo.
-- En 2026 eso pasa solo en 1 de cada 8 (12 %).
-- El hit global sigue existiendo, pero cada país tiene cada vez más su propio #1.
-- La visualización lo cuenta de tres formas:
-  - **se ve:** en el mapa, los países que escuchan el #1 global se pintan de verde;
-  - **se sigue en el tiempo:** el eje muestra cómo baja ese % desde 2015;
-  - **se oye:** suena el #1 de lo que se mira, y aplaude una persona por cada país donde esa canción es #1.
-- Donde no sabemos qué se escucha (por ejemplo, gran parte de África antes de que llegaran Spotify y YouTube Music), el mapa queda vacío y suena estática. Que no haya datos también se cuenta.
+**¿Qué escucha el mundo?**
+- La visualización muestra, día a día desde 2015, la canción más escuchada del mundo y la de cada país, y cuántos países coinciden con el mundo.
+- **Se ve:** en el mapa, verde si el país escucha el #1 global, gris si escucha otra canción, vacío si no hay datos.
+- **Se oye:**
+  - suena el #1 de lo que se mira;
+  - aplaude una persona por cada país donde esa canción es #1;
+  - donde no hay datos, suena estática de radio.
+- **Lo que aparece al explorar:**
+  - cada vez menos países coinciden con el #1 global (51 % en 2015 → 12 % en 2026);
+  - los hits se agrupan por regiones: un #1 global puede tener su núcleo en Latinoamérica, y los éxitos europeos se contagian a los vecinos.
+- El vacío también se cuenta: dónde no sabemos qué se escucha, y por qué.
 
 Cálculo: % de los 52 países de la muestra cuyo #1 es el #1 global, promedio de los días de cada año (2026 hasta el 27 de septiembre).
 
