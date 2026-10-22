@@ -11,3 +11,7 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Rúbrica y pendientes (uso interno)
+Rúbrica.md
+Pendientes.md
