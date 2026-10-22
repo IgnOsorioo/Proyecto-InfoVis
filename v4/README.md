@@ -7,8 +7,8 @@
 | Campo | Valor |
 |---|---|
 | Versión | V4 |
-| Fecha | 22 de octubre de 2026 |
-| Tag / commit | `v4` → [COMPLETAR al cerrar] |
+| Fecha | 22 de octubre de 2026 (cerrada) |
+| Tag / commit | `v4` (`git show v4`) |
 | Ver en línea | https://ignosorioo.github.io/Proyecto-InfoVis/v4/ |
 
 ## Evidencia visual y sonora
@@ -24,13 +24,18 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 | ![Sin datos](evidencia/05-sin-datos-2015.png) | ![1366×768](evidencia/06-pantalla-1366.png) |
 | Kenia en 2015: sin datos. | A 1366×768, el título va en una línea y los artistas se ven. |
 
+![China sin alcance](evidencia/07-china-sin-alcance.png)
+
+China, con su #1 de QQ Music: el anillo marca «—» porque no hay alcance top 50 (antes decía un 0 % falso).
+
 **Verificación técnica:** sin errores y con sonido en Chrome, WebKit (Safari) y Firefox, y recorrido completo (57 s) sin errores. La prueba encontró que Firefox rechazaba el audio de desbloqueo del primer click (un WAV sin muestras), y se corrigió.
 
 **Video con audio: [COMPLETAR].** 30–60 s en https://ignosorioo.github.io/Proyecto-InfoVis/v4/:
 1. dejar correr el tiempo con el sonido activado, para que se vea cambiar la cifra del eje y se oigan los aplausos;
 2. arrastrar el eje hasta 2026;
 3. hacer click en «Europa» y volver a «Mundo»;
-4. pasar el cursor por Chile y por Kenia.
+4. pasar el cursor por Chile y por Kenia;
+5. hacer click en China: su #1 es de QQ Music y el anillo muestra «—», porque no hay alcance top 50.
 
 ## Qué cambió respecto a V3 (máx. 8 líneas)
 
@@ -40,7 +45,7 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 4. **Las reproducciones se encuadran** en el paso de cada canción por los charts.
 5. **El panel no se tapa a 1366×768**, y los textos del recorrido coinciden con lo que codifica el sonido.
 6. **El titular del panel lleva el ícono de los aplausos**, porque «Es #1 en N de 52 países» es justo lo que cuentan.
-7. **Ficha «Cobertura y metodología»** (PR #2, José Tomás Larraín), a pedido, debajo de la vista.
+7. **Indicadores precisos y ficha «Cobertura y metodología»** (PR #2 y #3, José Tomás Larraín): el anillo marca «—» sin datos en vez de un 0 % falso, el subtítulo da las fechas reales, y la ficha explica a pedido qué cuenta cada cifra.
 
 ## Por qué cambió — el rationale (máx. 12 líneas)
 
@@ -48,7 +53,7 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 - **R3 y thinking aloud, el eje no se entendía.** Raúl supuso que las líneas «deberían ser más o menos las mismas» en cada granularidad, y no lo eran: cada una comparaba el #1 del período (2025: 0 % en «Año», 25 % en diciembre). Ahora todas promedian los mismos días. La cifra junto a la fecha (rotulado directo) y el punto sobre la línea evitan leer contra un eje sin marcas. La muestra verde conecta el área con los países verdes del mapa (similitud).
 - **Auditoría, vista general:** el título pregunta y la respuesta tardaba 11 años en verse. Ahora la dicen el eje y el cierre del recorrido.
 - **Thinking aloud, reproducciones, zoom y aplausos:** «una canción de hace un mes queda en el extremo derecho y no aporta nada». Alejado más allá del mundo, el mapa daba «saltos abruptos». Y Raúl entendió los aplausos como popularidad, pero no si contaban países o reproducciones: el mismo ícono en la leyenda y en el titular une el sonido con su cifra (similitud).
-- **§11 y heurísticas:** un panel que se tapa a sí mismo rompe el orden. Si la leyenda y el recorrido explican distinto los aplausos, el sonido no se entiende. El contexto (muestra, fuentes, fechas) queda a un click (*details on demand*).
+- **§11 y heurísticas:** un panel que se tapa a sí mismo rompe el orden. Si la leyenda y el recorrido explican distinto los aplausos, el sonido no se entiende. El contexto (muestra, fuentes, fechas) queda a un click (*details on demand*). Un «0 %» para una canción sin datos de alcance (como el #1 de QQ Music en China) se leía como un dato y engañaba: ahora es «—».
 
 ## Qué se descartó (máx. 5 líneas)
 
