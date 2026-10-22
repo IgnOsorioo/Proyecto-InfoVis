@@ -46,46 +46,75 @@
 
 - Escribir en «Efecto en el proceso»: «V4 preliminar (`83c5adb`) → V4 final (tag `v4`)», o por qué no se cambió nada.
 
-## Ronda 1
+## Ronda 1 — V4 preliminar
 
 | Campo | Valor |
 |---|---|
-| Pensador y fecha (máx. 2 líneas) | [COMPLETAR: quién (sin datos personales innecesarios), cuándo] |
-| Versión evaluada | [V2 / V3] · tag [COMPLETAR] |
-| Observador(es) | [COMPLETAR] |
+| Pensador y fecha (máx. 2 líneas) | Raúl Paezo, amigo externo al curso que no había visto la visualización. 21 de octubre de 2026, ~22:30, por Discord, sobre la V4 preliminar publicada (commit `70b84c6`). |
+| Versión evaluada | V4 preliminar · https://ignosorioo.github.io/Proyecto-InfoVis/v4/ |
+| Observador(es) | Ignacio Osorio [CONFIRMAR si estuvo alguien más] |
 
-### Bitácora (cada ~30 s o cuando cambie el comportamiento)
+> **Nota de método (honestidad).** La sesión no se grabó. La bitácora se reconstruyó apenas terminó:
+> - los tiempos son aproximados y siguen el orden de lo observado;
+> - las frases entre «» son las que se recuerdan casi textuales;
+> - el resto describe acciones.
+>
+> El grupo **intervino dos veces** para explicar (el gráfico de reproducciones y el eje de tiempo). Según la pauta, que haya hecho falta explicar es un hallazgo, y aparece en la bitácora.
 
-Regla de oro: **cita literal, no interpretación.** «esto no entiendo qué quiere decir» vale más que «se confundió».
+### Bitácora
 
-| Tiempo | Lo que dice (cita literal) | Lo que hace (acción concreta) |
+Columnas: tiempo · lo que dice · lo que hace.
+
+| Tiempo (aprox.) | Lo que dice | Lo que hace |
 |---|---|---|
-| 0:00 | | |
-| 0:30 | | |
-| 1:00 | | |
+| 0:00 | — | Abre la página. Aprieta play y recarga la página. Ve el mapa, pero no suena nada. |
+| ~0:20 | (busca de dónde sale el sonido) | Recorre la pantalla hasta encontrar el botón de volumen. Lo aprieta y recién ahí empieza el sonido. |
+| ~0:30–1:00 | — | No toca nada: deja que el tiempo avance solo hasta el primer hito (Sudáfrica, marzo de 2018). |
+| ~1:00 | — | Empieza a pasar el cursor por el mapa, sobre todo por América. Se queda en Estados Unidos escuchando cómo cambia su #1. |
+| ~1:30 | — | Lleva el cursor desde Estados Unidos al panel derecho sin hacer click: el panel vuelve al #1 global. |
+| ~1:45 | — | Vuelve a Estados Unidos y hace click. El país queda fijado y pasa al panel. |
+| ~2:00 | — | Hace click en «Spotify ↗». Se abre Spotify, que le pide iniciar sesión. Cierra la pestaña y vuelve. |
+| ~2:30 | — | Pasa el cursor sobre las barras por continente y los gráficos del panel para ver si responden. No hacen nada. |
+| ~3:00 | «¿Por qué hay partes planas y de pronto estos picos?» (sobre el gráfico de reproducciones) | Se detiene en el gráfico. **El grupo explica** que son las reproducciones por semana y que el pico coincide con cuando la canción es la más escuchada. |
+| ~4:00 | — | Usa los botones de región. Vuelve a algunos países. Aleja el mapa con zoom hasta que la Tierra queda como un óvalo. |
+| ~4:30 | Nota «saltos abruptos» en el mapa cuando cambia la canción | Sigue con el mapa alejado mientras corre el tiempo. |
+| ~5:00 | «¿Por qué el punto no va encarrilado con la línea?» (por ejemplo, a comienzos de 2022) | Arrastra la línea de tiempo y mira el punto verde. **El grupo explica** qué % muestra, sin una respuesta convincente sobre el desfase. |
+| ~6:00 | Interpreta el 0 %: «en ese año ningún país coincidió con lo que escuchaba el mundo» | Cambia a «Año»: la curva se aplana y 2025–2026 marcan 0 % (2024: 2 %), frente a 2017, alto con «Shape of You». |
+| ~6:30 | «Este gráfico está muy complicado, bastante difícil de interpretar» | Pasa a «Mes»: diciembre de 2025 marca 25 %, aunque el año 2025 da 0 %. Compara día, semana, mes y año. |
+| ~7:30 | Pregunta por qué el panel muestra solo 3 continentes y no 6 | Compara las barras del panel con los botones de región del mapa. **El grupo explica** que África y Oceanía tienen muy pocos países en la muestra. «Igual es notoria la diferencia.» |
+| ~8:00 | «Se entiende, pero en una canción que salió hace un mes todo el gráfico queda en el extremo derecho y no aporta nada» | Mira el gráfico de reproducciones con una canción reciente. |
+| ~8:30 | «Los puntos están bien ubicados, son detalles sutiles» | Pasa el cursor sobre los hitos (Sudáfrica, India, Rusia, salida de Rusia). |
 
 ### Qué dijo del sonido
 
-Hay que preguntarle explícitamente: ¿qué dato cree que codifica el sonido? ¿Le ayuda a entender o le estorba?
-
-[COMPLETAR con citas literales]
+- **Al entrar no sonaba nada**, y le costó encontrar el botón de volumen. Los navegadores exigen un click o una tecla antes de reproducir audio, y mover el cursor no cuenta.
+- «La sonificación está bien, se puede pulir». No se le ocurría otra forma de sonificar cuando la canción es el dato en sí.
+- [CONFIRMAR: ¿se le preguntó qué cree que codifican los aplausos? Si fue así, anotar su respuesta textual.]
 
 ### Heurísticas que fallaron (Zuk-Carpendale)
 
-- [ ] La importancia del dato no está clara
-- [ ] Las distancias visuales engañan
-- [ ] Falta contexto (fuente, pregunta)
+- [x] **La importancia del dato no está clara:** los planos y picos del gráfico de reproducciones necesitaron explicación (~3:00).
+- [x] **Las distancias visuales engañan:**
+  - en «Año», 2025 marca 0 % y diciembre de 2025 marca 25 % (~6:00–6:30);
+  - el punto no va sobre la línea (~5:00);
+  - la escala fija aplasta las canciones nuevas (~8:00).
+- [x] **Falta contexto (fuente, pregunta):** qué calcula cada granularidad; por qué solo 3 continentes (~7:30).
 - [ ] Saturación de elementos
 - [ ] El color confunde o no aporta
-- [ ] La interacción no es descubrible
-- [ ] El sonido no se entiende sin explicación
+- [x] **La interacción no es descubrible:**
+  - cómo activar el sonido (~0:20);
+  - que el país se fija con click y no al pasar el cursor (~1:30);
+  - creyó que los gráficos del panel respondían al cursor (~2:30).
+- [ ] El sonido no se entiende sin explicación [CONFIRMAR según la pregunta sobre los aplausos]
 
 ### Las tres preguntas de cierre
 
-1. **¿Dónde se atascó más tiempo?** [COMPLETAR]
-2. **¿Qué hipótesis dijo en voz alta y resultó equivocada?** [COMPLETAR] (Si la viz invitó a una lectura errada, el error es del diseño, no del lector.)
-3. **¿Qué cambio concreto sale de esta sesión?** [COMPLETAR]
+1. **¿Dónde se atascó más tiempo?** En la línea de tiempo. No entendía por qué cambia de forma según la granularidad (2025: 0 % en «Año» y 25 % en diciembre en «Mes»), ni por qué el punto se sale de la línea.
+2. **¿Qué hipótesis dijo en voz alta y resultó equivocada?** Supuso que con día, semana, mes o año «las líneas deberían ser más o menos las mismas». No lo eran: cada granularidad calculaba otra cosa, porque comparaba el #1 *del período* de cada país con el #1 global del período, sin promediar. La visualización invitaba a esa lectura, así que el error es de diseño.
+
+   También supuso que, al pasar el cursor por un país y llevarlo al panel, el país se quedaba: hacía falta click.
+3. **¿Qué cambio concreto sale de esta sesión?** Que el eje mida lo mismo en todas las granularidades (la misma serie diaria) y que el punto vaya sobre la línea que se ve.
 
 ### Efecto en el proceso
 
-[COMPLETAR: en qué transición de versión se incorporó (por ejemplo, V2 → V3), o por qué se decidió no incorporarlo]
+V4 preliminar (`70b84c6`) → V4 final (tag `v4`): [COMPLETAR cuando se apliquen los cambios].
