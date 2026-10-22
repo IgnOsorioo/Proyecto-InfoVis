@@ -423,6 +423,7 @@ body.en-recorrido .fijado { display: none; }
   .p-grafico-caja { aspect-ratio: 3 / 1; }
   .p-detalle { gap: 10px; }
   .p-nombre { height: 56px; }
+  .p-info h2 { -webkit-line-clamp: 1; }   /* V4: en 2 líneas tapaba a los artistas (1366×768); el título completo va en el tooltip */
   .p-detalle .diversidad { display: none; }
 }
 
