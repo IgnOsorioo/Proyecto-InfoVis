@@ -4,8 +4,8 @@
    años debajo y, sobre los años, las marcas de los hitos (cuándo llega o se va Spotify), que explican los
    vacíos del mapa. El control real es un <input type="range"> invisible encima (teclado y lectores de pantalla).
    V4 (R3: «el gráfico de la línea de tiempo no se entiende»): un punto verde sobre el valor de la fecha, la cifra
-   junto a la fecha («jun 2015 · 65 %») y el título con la muestra verde de la leyenda. Es el mismo % que el titular
-   del panel y el mismo verde que los países del mapa: el área cuenta los países pintados de verde. */
+   junto a la fecha («jun 2015 · 45 %») y el título con la muestra verde de la leyenda, que conecta el área con los
+   países verdes del mapa. Tras el thinking aloud, el eje mide lo mismo en todas las granularidades (ver serieEje). */
 
 const Linea = (() => {
   const $ = id => document.getElementById(id);
@@ -31,20 +31,30 @@ const Linea = (() => {
     return Math.min(1, Math.max(0, periodoContinuo(Estado.grano, fecha) / Math.max(1, n - 1)));
   }
 
-  // Ventana de la línea de tendencia (centrada), en períodos: unas 8 semanas en cada granularidad.
-  const VENTANA_TENDENCIA = { dia: 56, semana: 8, mes: 2, anio: 1 };
-
-  /** Área: el % exacto de la muestra con el #1 global en cada período (el mismo del titular y del punto). Línea: su
-      tendencia (promedio móvil centrado), para leer la evolución sin el ruido de cada período. La escala parte en 0
-      y llega al máximo más un margen, redondeado a la decena; la punteada marca el 50 %. */
-  function dibujarArea() {
-    const serie = serieMuestra();
-    const n = serie.length;
-    const medio = VENTANA_TENDENCIA[Estado.grano] >> 1;
-    const tendencia = serie.map((_, p) => {
-      const tramo = serie.slice(Math.max(0, p - medio), p + medio + 1);
-      return tramo.reduce((a, b) => a + b, 0) / tramo.length;
+  /** La serie del eje en la granularidad: el promedio, en cada período, del % diario de la muestra que escucha el
+      #1 global. Thinking aloud (V4 preliminar): con «Año» el eje comparaba el #1 *del año* de cada país con el #1
+      global del año, otra medida (2025: 0 %, aunque diciembre de 2025 marcaba 25 %), y la curva cambiaba de forma
+      con cada granularidad. Ahora todas promedian los mismos días: «Año» es la versión suavizada de «Día», y sus
+      valores son los del título (51 % en 2015 → 12 % en 2026). */
+  const _ejes = {};
+  function serieEje(grano = Estado.grano) {
+    if (_ejes[grano]) return _ejes[grano];
+    const dia = serieMuestra('dia');
+    if (grano === 'dia') return (_ejes.dia = dia);
+    const n = window.PERIODOS[grano].n, suma = new Array(n).fill(0), cuenta = new Array(n).fill(0);
+    dia.forEach((v, i) => {
+      const p = periodoDeFecha(grano, fechaDePeriodo('dia', i));
+      if (p >= 0 && p < n) { suma[p] += v; cuenta[p]++; }
     });
+    return (_ejes[grano] = suma.map((s, p) => (cuenta[p] ? s / cuenta[p] : 0)));
+  }
+
+  /** Área y borde: la misma serie (el punto del cursor cae siempre sobre la línea que se ve; antes la línea era un
+      promedio móvil y el punto, el valor exacto, y se separaban). La escala parte en 0 y llega al máximo más un
+      margen, redondeado a la decena; la punteada marca el 50 %. */
+  function dibujarArea() {
+    const serie = serieEje();
+    const n = serie.length;
     techo = Math.min(100, Math.ceil((Math.max(...serie) + 12) / 10) * 10);
     const y = v => 100 - (100 * v) / techo;
     $('linea-medio').setAttribute('y1', y(50));
@@ -52,7 +62,7 @@ const Linea = (() => {
     $('linea').style.setProperty('--medio', `${y(50)}%`);
     const puntos = valores => valores.map((v, p) => `${((n > 1 ? p / (n - 1) : 0) * ANCHO).toFixed(1)},${y(v).toFixed(1)}`).join(' L');
     $('linea-area').setAttribute('d', `M0,100 L${puntos(serie)} L${ANCHO},100 Z`);
-    $('linea-borde').setAttribute('d', `M${puntos(tendencia)}`);
+    $('linea-borde').setAttribute('d', `M${puntos(serie)}`);
   }
 
   /** El mensaje en una línea, en el título del eje: el promedio de los días del primer y del último año
@@ -75,7 +85,7 @@ const Linea = (() => {
     const { a0, p0, a1, p1 } = resumen();
     $('linea-resumen').replaceChildren(': ', Object.assign(document.createElement('b'), { textContent: `${p0} %` }),
       ` en ${a0} → `, Object.assign(document.createElement('b'), { textContent: `${p1} %` }), ` en ${a1}`);
-    $('linea-titulo').title = `Promedio de los días de cada año (${a1}: hasta el ${textoFecha(new Date(window.FECHA_MAX + 'T00:00:00Z'))})`;
+    $('linea-titulo').title = `En cada período, el promedio de sus días (${a1}: hasta el ${textoFecha(new Date(window.FECHA_MAX + 'T00:00:00Z'))})`;
   }
 
   /** Una marca por año (si no caben todos, se rotulan los pares). */
@@ -130,7 +140,7 @@ const Linea = (() => {
       linea.style.setProperty('--pos', `${f * 100}%`);
       // Cerca de los bordes la fecha se corre hacia adentro para no salirse del eje.
       linea.style.setProperty('--ajuste', f < 0.06 ? '0%' : f > 0.94 ? '-100%' : '-50%');
-      const valor = serieMuestra()[p] ?? 0;
+      const valor = serieEje()[p] ?? 0;
       linea.style.setProperty('--valor', `${100 - (100 * valor) / techo}%`);
       $('fecha-texto').textContent = textoPeriodoCorto(Estado.grano, p);
       $('fecha-valor').textContent = `${Math.round(valor)} %`;
