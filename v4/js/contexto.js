@@ -13,8 +13,10 @@ const Contexto = (() => {
     $('contexto-mapa').textContent = region === 'mundo'
       ? 'Mapa: el mundo completo.'
       : `Mapa: acercado a ${nombreAmbito(region)}. Acercar solo cambia el encuadre, no lo que se cuenta.`;
-    $('contexto-indicadores').textContent = `Titular, barras por continente, eje de tiempo, diversidad y aplausos: los ${total} países de la muestra.`;
+    $('contexto-indicadores').textContent = `Titular, eje de tiempo y diversidad: muestra mundial de ${total} países. Las barras cuentan la submuestra de cada continente; los aplausos cuentan dónde la canción es #1 y suman el país observado si está fuera de la muestra.`;
     $('contexto-alcance').textContent = `Alcance top 50: los mismos ${total} países, semana a semana.`;
+    const diversidad = Diversidad.calcular('global');
+    $('contexto-diversidad').textContent = `Diversidad · ${textoPeriodo(Estado.grano, Estado.periodo)}: ${diversidad.distintas} canciones distintas son #1 en ${diversidad.paises} países. También disponible aquí cuando el panel la oculta por falta de altura.`;
     $('contexto-fin').textContent = textoFecha(new Date(window.FECHA_MAX + 'T00:00:00Z'));
     $('contexto-muestra').textContent = `${total} países: ${Object.entries(CONTINENTES).map(([k, n]) => `${n}: ${muestraDe(k).length}`).join('; ')}.`;
     $('contexto-concentracion').textContent = `${muestraDe('europa').length + muestraDe('america').length} de esos ${total} países están en Europa y América.`;
