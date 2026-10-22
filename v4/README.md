@@ -44,7 +44,7 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 
 ## Por qué cambió — el rationale (máx. 12 líneas)
 
-- **R3, las regiones parecían filtros, y en parte lo eran:** el panel pasaba a «N de 19 países de América» mientras el mapa y el eje seguían contando el mundo. Ahora solo acercan, que es su propósito. Van sobre el mapa por proximidad (es un control de vista) y la lupa es la convención del zoom.
+- **R3, las regiones parecían filtros, y en parte lo eran:** el panel pasaba a «N de 19 países de América» mientras el mapa y el eje seguían contando el mundo. Los ayudantes sugirieron eliminarlas, pero acercarse con el trackpad es incómodo y un zoom extremo pierde el contenido o el panorama. Por eso solo acercan, van sobre el mapa por proximidad (es un control de vista), con la lupa como convención del zoom, y el zoom manual no se aleja más allá del mundo.
 - **R3 y thinking aloud, el eje no se entendía.** Raúl supuso que las líneas «deberían ser más o menos las mismas» en cada granularidad, y no lo eran: cada una comparaba el #1 del período (2025: 0 % en «Año», 25 % en diciembre). Ahora todas promedian los mismos días. La cifra junto a la fecha (rotulado directo) y el punto sobre la línea evitan leer contra un eje sin marcas. La muestra verde conecta el área con los países verdes del mapa (similitud).
 - **Auditoría, vista general:** el título pregunta y la respuesta tardaba 11 años en verse. Ahora la dicen el eje y el cierre del recorrido.
 - **Thinking aloud, reproducciones, zoom y aplausos:** «una canción de hace un mes queda en el extremo derecho y no aporta nada». Alejado más allá del mundo, el mapa daba «saltos abruptos». Y Raúl entendió los aplausos como popularidad, pero no si contaban países o reproducciones: el mismo ícono en la leyenda y en el titular une el sonido con su cifra (similitud).
@@ -54,7 +54,7 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 
 - **Regiones como filtro real:** repetiría las barras por continente del panel. El mensaje es mundial.
 - **Reducir la portada:** ver el disco mientras suena es la identidad del concepto desde la V1.
-- **Mostrar los 5 continentes en el panel**, que Raúl echó de menos: con 1 o 2 países por fila, una barra exageraría (1 de 1 = 100 %). La ficha explica el mínimo de 3. [REVISAR: decisión del grupo]
+- **Mostrar los 5 continentes en el panel**, que Raúl echó de menos: Oceanía tiene 2 países en la muestra y África y Medio Oriente 1. Casi siempre marcarían 0 y no ayudarían a ver de dónde viene un hit. La ficha explica el mínimo de 3.
 - **Cambiar la activación del sonido:** el navegador exige un click o una tecla, así que no hay forma de que suene al entrar. El botón de sonido ya pulsa mientras está apagado.
 - **Los avisos de ámbito del PR #2 y la media móvil del eje de la V3:** sin ámbitos distintos, los avisos sobran. La media móvil separaba el punto de la línea.
 

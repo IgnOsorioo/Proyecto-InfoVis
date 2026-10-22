@@ -29,7 +29,7 @@
 
 ## Qué cambió respecto a V2 (máx. 8 líneas)
 
-1. **Pregunta nueva, «¿qué escucha el mundo?».** Verde: el #1 del país es el #1 global. Gris: otra canción. Contorno: sin datos.
+1. **Título y pregunta nuevos, «¿Qué escucha el mundo?».** Verde: el #1 del país es el #1 global. Gris: otra canción. Contorno: sin datos.
 2. **Datos de mayo de 2015 a hoy**, sobre una **muestra fija de 52 países**. Fuentes: Spotify semanal 2015–2016, Spotify diario desde 2017, YouTube Music y, para China, QQ Music.
 3. **Eje de tiempo con datos:** el área es el % de los 52 países que escucha el #1 global. Tiene marcas de cuándo llega o se va Spotify.
 4. **Sonido:** aplaude una persona por cada país donde la canción que suena es #1. Sobre la mitad se suma el murmullo de un estadio. En los países sin datos suena estática de radio.
@@ -39,7 +39,8 @@
 ## Por qué cambió — el rationale (máx. 12 líneas)
 
 - **R2, el play se leía como la canción.** La barra fina tenía la forma de la barra de progreso de un reproductor. Un eje con datos dice qué es: el tiempo del dato, no el de la canción.
-- **R2, verde de Spotify; y el cambio de pregunta.** La V2 usaba tres categorías (mundial, compartido, propio) con escala divergente. El mensaje se volvió binario («¿igual al mundo o no?»). Dos categorías, con un solo acento sobre grises, se leen de forma preatentiva.
+- **El título y la pregunta.** «El #1 de cada país se volvió más local» era sobrio y no transmitía la intención del proyecto: mostrar qué escucha el mundo y, en detalle, cada país.
+- **R2, verde de Spotify.** La V2 usaba tres categorías con escala divergente. La pregunta pasó a ser binaria («¿igual al mundo o no?»): dos categorías, con un solo acento sobre grises, se leen de forma preatentiva.
 - **R2, aplausos para el alcance.** El número de personas que aplauden codifica en cuántos países es #1 la canción (ritmo y densidad, y timbre con el murmullo), no solo el volumen. La canción no se altera (R1).
 - **R2, sin datos también es un dato.** Se mantienen los países sin datos y se explica el vacío: estática de radio, hitos de Spotify y un destello cuando llegan datos (heurística «falta contexto»).
 - **Datos, muestra fija.** Con un total de países que crece, el % cambiaría porque se suman países y no porque cambien los gustos. Los 52 países tienen #1 todos los días desde el 1-may-2015 (antes falta el chart global).

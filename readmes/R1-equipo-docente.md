@@ -4,13 +4,16 @@
 
 | Campo | Valor |
 |---|---|
-| Fecha | [COMPLETAR] |
-| Quiénes revisaron | El profesor del curso |
+| Fecha | Viernes 2 de octubre de 2026 |
+| Quiénes revisaron | El profesor, con los ayudantes Luna Garcés, Tomás Romero y Christian Camilo |
 | Versión revisada | [V1](../v1/README.md) · tag `v1` |
 
 ## Preguntas que llevamos
 
-[COMPLETAR: las preguntas de diseño que llevó el grupo, si las hubo]
+1. **¿Cómo conseguir datos para la idea original?** Queríamos mostrar cómo cambió el formato en que se escucha música en cada país desde los 70–80 (vinilo, casete, CD, digital, streaming, piratería) y si esa evolución fue igual en todo el mundo. Casi todos los datos eran privados y solo EE. UU. tenía series completas.
+2. **¿Podemos usar varios datasets y cómo cruzarlos?**
+
+La respuesta fue **cruzar todos los datasets distintos que pudiéramos**: el proyecto busca trabajar con varios a la vez, no quedarse con uno. Por eso, más adelante, se sumaron YouTube Music y QQ Music (China) a los charts de Spotify.
 
 ## Síntesis de lo discutido (breve)
 

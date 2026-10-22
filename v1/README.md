@@ -39,20 +39,22 @@ Versión móvil: [evidencia/05-movil.png](evidencia/05-movil.png).
 5. Sonido: suena el preview de 30 s (Deezer) del #1 del país bajo el cursor.
 6. Estilo: fondo negro, un solo color de acento (coral) y tipografía Figtree.
 
-## Por qué — el rationale (máx. 12 líneas) — **[REVISAR Y AJUSTAR CON PALABRAS DEL GRUPO]**
+## Por qué — el rationale (máx. 12 líneas)
 
-- **Mantra de Shneiderman.**
-  - *Overview:* el mapa 2D muestra los 70 países a la vez.
-  - *Zoom & filter:* regiones, granularidad y línea de tiempo.
-  - *Details on demand:* el cursor sobre un país abre su detalle en el panel.
-- **Atributo preatentivo.** Un único color de acento (coral) sobre grises neutros hace que los países donde manda la canción seleccionada "salten" a la vista. El coral está validado para contraste y daltonismo.
-- **Relleno vs. contorno.** Separa "otra canción" de "sin datos". En una iteración intermedia ambos eran grises y, en una revisión interna del grupo, leímos que India no tenía datos, cuando sí los tenía.
-- **El dato se escucha sin explicación.** El sonido es la propia canción #1. Al pasar a un país con el mismo #1, el audio no se corta, y eso agrupa a los países que comparten canción.
-- **Panel estable.** El panel tiene bloques de alto fijo y se arma de una sola vez, para que la atención no se vaya a saltos de layout.
+- **Por qué un mapa.** La pregunta es dónde se escucha qué, y el mapa muestra cada país junto a sus vecinos. Así se ven los bloques regionales:
+  - un hit urbano que llega a #1 global pero cuyo núcleo está en Latinoamérica enciende un bloque contiguo;
+  - los hits europeos se contagian a los vecinos.
+
+  Una lista de nombres o banderas pierde esa vecindad. Además, cualquier persona sabe leer un mapa sin formación en visualización.
+- **Mantra de Shneiderman:** el mapa 2D muestra los 70 países a la vez (*overview*); regiones, granularidad y línea de tiempo acercan y filtran; el cursor abre el detalle en el panel.
+- **Atributo preatentivo:** un único acento (coral) sobre grises neutros hace que «salten» los países donde manda la canción seleccionada.
+- **Relleno frente a contorno:** separa «otra canción» de «sin datos». Cuando ambos eran grises, en una revisión interna leímos que India no tenía datos, y sí tenía.
+- **El dato se escucha:** al pasar a un país con el mismo #1, el audio no se corta, y eso agrupa a los países que comparten canción.
 
 ## Qué se descartó (máx. 5 líneas)
 
-- **Primer prototipo:** gráfico de dispersión "¿explotan o viajan?" con sonido sintético (Tone.js). Se descartó porque el grupo eligió centrar la experiencia en el mapa y en escuchar la canción real.
-- **Globo ortográfico** (commit `41c7dc5`): oculta medio mundo y rompe el *overview*, así que se volvió al 2D.
-- **Tres colores para "las más compartidas"** (commit `1aa00f8`): necesitaban una leyenda propia que competía con el panel.
+- **Scatter «¿explotan o viajan?» con sonido sintético (Tone.js):** con x, y, color y tamaño a la vez costaba leerlo y explorarlo. Buscamos un público sin formación técnica, de un niño a un adulto mayor.
+- **Globo 3D:** Felipe Cortés desarrolló en local una variante en globo (luego el commit `41c7dc5`). Oculta medio mundo y rompe la vista general, así que se volvió al 2D.
+- **Tres colores para «las más compartidas»** (commit `1aa00f8`): necesitaban una leyenda propia que competía con el panel.
+- **La evolución de formatos desde los 70–80** (vinilo, casete, CD, streaming): casi todos los datos eran privados y solo EE. UU. tenía series completas (pregunta llevada a la R1).
 - **Datos por ciudad:** no hay histórico público, y descargarlos con una cuenta de Spotify infringe sus condiciones de uso.

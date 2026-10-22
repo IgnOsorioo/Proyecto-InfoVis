@@ -10,7 +10,7 @@
 ## Guion para la ronda sobre la V4 (≈ 25 min en total)
 
 **Antes (2 min)**
-- **Quién:** una persona externa al curso que nunca haya visto la visualización. No pueden ser las dos personas de la validación informal.
+- **Quién:** una persona externa al curso que nunca haya visto la visualización. No puede ser la persona de la validación informal (16-oct).
 - **Material:** `https://ignosorioo.github.io/Proyecto-InfoVis/v4/` en una ventana privada, con audífonos o parlantes. Grabar el audio con el celular (con permiso).
 - **Roles:** un integrante observa y anota; otro solo mira el reloj. Nadie más habla.
 - **Consigna, leída tal cual:** «Esto es una visualización sobre música. Explórala como quieras y di en voz alta todo lo que piensas: lo que ves, lo que crees que significa, lo que te confunde. No hay respuestas correctas; estamos evaluando la visualización, no a ti.»
@@ -50,7 +50,7 @@
 
 | Campo | Valor |
 |---|---|
-| Pensador y fecha (máx. 2 líneas) | Raúl Paezo, amigo externo al curso que no había visto la visualización. 21 de octubre de 2026, ~22:30, por Discord, sobre la V4 preliminar publicada (commit `70b84c6`). |
+| Pensador y fecha (máx. 2 líneas) | Raúl Paezo, estudiante de Administración de Empresas (usa gráficos de Excel y dashboards), externo al curso y sin haber visto la visualización. 21 de octubre de 2026, ~22:30, por Discord: compartió su pantalla y usó la V4 preliminar publicada (commit `70b84c6`) de forma autónoma. |
 | Versión evaluada | V4 preliminar · https://ignosorioo.github.io/Proyecto-InfoVis/v4/ |
 | Observador(es) | Ignacio Osorio (único observador) |
 
@@ -58,6 +58,8 @@
 > - los tiempos son aproximados y siguen el orden de lo observado;
 > - las frases entre «» son las que se recuerdan casi textuales;
 > - el resto describe acciones.
+>
+> No se leyó la consigna de la sección 7: solo se le pasó el link y se le pidió interpretar el mensaje por su cuenta, sin guía.
 >
 > El grupo **intervino dos veces** para explicar (el gráfico de reproducciones y el eje de tiempo). Según la pauta, que haya hecho falta explicar es un hallazgo, y aparece en la bitácora.
 
