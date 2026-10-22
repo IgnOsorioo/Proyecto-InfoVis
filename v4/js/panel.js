@@ -64,7 +64,8 @@ const Panel = (() => {
     const idx = Estado.cancion;
     const c = cancion(idx);
     const totalAlcance = muestraDe('global').length;
-    dibujarAnillo(null, totalAlcance, 'cargando');
+    // Sin estado «cargando» previo: el panel se actualiza de una sola vez cuando están los datos (con la reproducción
+    // automática, el aviso parpadeaba con cada mes). Mientras tanto queda el valor anterior y la ruedita de carga.
     const [popularidad, alcance] = await conEspera(mio, Promise.all([
       pedirPopularidad(idx).catch(() => null),
       pedirAlcance(idx).then(datos => ({ datos, error: false }), () => ({ datos: null, error: true })),
@@ -115,12 +116,10 @@ const Panel = (() => {
 
   /** Anillo de cobertura: en cuántos países de la muestra está la canción en su top 50 esta semana. */
   function dibujarAnillo(paisesTop, total, estado = 'disponible') {
-    $('r-anillo-texto').closest('figure').setAttribute('aria-busy', String(estado === 'cargando'));
     if (paisesTop === null) {
       $('r-anillo-valor').style.strokeDasharray = '0 100';
       $('r-anillo-pct').textContent = '—';
-      $('r-anillo-texto').textContent = estado === 'cargando' ? 'Cargando alcance top 50…'
-        : estado === 'error' ? 'No se pudo cargar el alcance top 50.' : 'Alcance top 50 no disponible para esta canción.';
+      $('r-anillo-texto').textContent = estado === 'error' ? 'No se pudo cargar el alcance top 50.' : 'Alcance top 50 no disponible para esta canción.';
       return;
     }
     const fraccion = total ? paisesTop / total : 0;
