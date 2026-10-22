@@ -1,0 +1,26 @@
+/* El acceso comparte la fila de créditos de V3, sin una nueva fila bajo el eje. */
+.contexto-pie { display: flex; align-items: center; flex: none; min-width: 0; background: var(--plano); }
+.contexto-pie .creditos { flex: 1; min-width: 0; white-space: nowrap; }
+.contexto-acceso { flex: none; display: flex; align-items: baseline; gap: 8px; margin: 4px 24px 12px 0; font-size: 11px; line-height: 1.4; }
+.contexto-acceso button { padding: 0; border: 0; border-radius: 0; background: none; font-size: inherit; line-height: inherit; color: var(--tinta-2); }
+.contexto-acceso button:hover { color: var(--tinta); text-decoration: underline; }
+#contexto-aviso { color: var(--tinta); }
+
+/* La ficha ocupa la segunda fila del documento, debajo de la vista de 100vh.
+   Abrirla habilita scroll de página; no cambia el alto o ancho de la aplicación.
+   Se oculta la barra de scroll de página para conservar el ancho del mapa. */
+body:has(.contexto-ficha:not([hidden])) { height: auto; min-height: 100vh; overflow: auto; grid-template-rows: 100vh auto; scrollbar-width: none; }
+html:has(.contexto-ficha:not([hidden])) { scrollbar-width: none; }
+html:has(.contexto-ficha:not([hidden]))::-webkit-scrollbar { width: 0; height: 0; }
+.contexto-ficha { grid-column: 1 / -1; padding: 24px; border-top: 1px solid var(--eje); background: var(--panel); color: var(--tinta-2); font-size: 14px; line-height: 1.5; }
+.contexto-ficha[hidden] { display: none; }
+.contexto-cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.contexto-cabecera h2 { margin: 0; color: var(--tinta); font-size: 20px; }
+.contexto-cabecera h2:focus-visible { outline: 2px solid var(--tinta); outline-offset: 4px; }
+.contexto-ficha p { max-width: 100ch; margin: 10px 0; overflow-wrap: anywhere; }
+.contexto-ambitos { border-block: 1px solid var(--eje); margin: 16px 0; color: var(--tinta); }
+@media (max-width: 760px) {
+  .contexto-acceso { margin: 2px 16px 10px 0; gap: 5px; }
+  #contexto-aviso { max-width: 90px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .contexto-ficha { padding: 16px; }
+}

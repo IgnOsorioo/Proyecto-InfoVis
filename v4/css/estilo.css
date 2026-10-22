@@ -1,0 +1,439 @@
+/* Tema oscuro fijo: fondo negro, grises neutros y verde como acento (el #1 global; R2: los datos son sobre
+   todo de Spotify). El mapa y los gráficos (Plotly, SVG) también leen estos tokens vía getComputedStyle. */
+:root {
+  color-scheme: dark;
+  --plano: #000000;          /* fondo */
+  --superficie: #1c1c1c;     /* tarjetas y estadísticas */
+  --panel: #121212;          /* panel lateral */
+  --tinta: #ffffff;
+  --tinta-2: #b3b3b3;
+  --tinta-3: #8a8a8a;
+  --grilla: #282828;
+  --eje: #3e3e3e;
+  --global: #1ed760;         /* el #1 del país es el #1 global */
+  --global-tenue: #0b4b22;   /* el mismo verde atenuado (mapa.js usa el mismo factor, 0,35) */
+  --otra: #595959;           /* el #1 del país es otra canción */
+  --otra-tenue: #1f1f1f;
+  --vacio: #000000;          /* país sin datos: sin relleno, solo contorno */
+  --contorno-vacio: #333333;
+  --resalte: #ffffff;        /* contorno del país bajo el cursor y del fijado */
+  --fuente: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Ancho del panel = lado de la portada (cuadrada, sin bordes a los lados): el 42 % del alto de la ventana,
+     entre 300 y 460 px, para que debajo quepa el resto del panel. */
+  --ancho-panel: clamp(300px, 42vh, 460px);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--ancho-panel);   /* principal | panel lateral de alto completo */
+  height: 100vh;
+  overflow: hidden;
+  color: var(--tinta);
+  background: var(--plano);
+  font-family: var(--fuente);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+a { color: var(--tinta); text-decoration-color: var(--tinta-3); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--tinta); }
+
+button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+button:hover { border-color: var(--tinta-3); }
+button:focus-visible, li:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+button.activo { background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+
+.muestra { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; }
+.muestra-global { background: var(--global); }
+.muestra-otra { background: var(--otra); }
+.muestra-vacio { background: transparent; box-shadow: inset 0 0 0 1px var(--tinta-3); }
+
+/* ---------- Columna principal ---------- */
+.principal { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+
+.barra { display: flex; align-items: flex-start; gap: 12px; padding: 18px 24px 4px; }
+.barra-titulo { min-width: 0; }
+h1 { margin: 0; font-size: 30px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
+.subtitulo { margin: 6px 0 0; max-width: 62ch; font-size: 14px; line-height: 1.35; color: var(--tinta-2); }
+
+/* Recorrido guiado */
+.boton-recorrido { flex: none; display: inline-flex; align-items: center; gap: 8px; margin-left: auto; margin-top: 2px; padding: 8px 16px 8px 12px; font-weight: 800; background: var(--tinta); color: var(--plano); border-color: var(--tinta); }
+.boton-recorrido:hover { border-color: var(--tinta); opacity: 0.9; }
+.boton-recorrido svg { width: 12px; height: 12px; fill: currentColor; }
+.relato {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  z-index: 7;
+  width: min(460px, 100%);
+  transform: translateX(-50%);
+  padding: 12px 14px 10px;
+  background: rgba(18, 18, 18, 0.96);
+  border: 1px solid var(--eje);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+.relato[hidden] { display: none; }
+.relato p { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.35; }
+.relato-pie { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--tinta-3); }
+.relato-pie button { font-size: 12px; padding: 4px 10px; }
+/* Durante el recorrido el mapa y los controles no responden (para que nada lo interrumpa salvo "Saltar") */
+body.en-recorrido .mapa, body.en-recorrido .tiempo, body.en-recorrido .acercar,
+body.en-recorrido .boton-recorrido, body.en-recorrido .panel { pointer-events: none; }
+body.en-recorrido .fijado { display: none; }
+
+.escenario { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 24px 10px; }
+.zona-mapa { position: relative; flex: 1; min-height: 240px; }
+.mapa { position: absolute; inset: 0; cursor: grab; }
+.mapa:active { cursor: grabbing; }
+
+/* Debajo del mapa: leyenda abajo a la izquierda, regiones a la derecha */
+.pie-mapa { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
+/* Leyenda vertical, abajo a la izquierda: un elemento por línea */
+.leyenda { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--tinta-2); }
+.leyenda li { display: flex; align-items: center; gap: 7px; }
+.leyenda svg { width: 11px; height: 11px; fill: currentColor; }
+.acercar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+.acercar button { font-size: 12px; padding: 4px 10px; }
+
+/* País fijado: arriba a la izquierda del mapa */
+.fijado {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  font-size: 14px;
+  background: rgba(18, 18, 18, 0.94);
+  border: 1px solid var(--eje);
+  border-radius: 999px;
+}
+.fijado[hidden] { display: none; }
+.fijado > svg { width: 14px; height: 14px; fill: var(--tinta); }
+.fijado strong { font-weight: 900; }
+.fijado-cerrar { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; }
+.fijado-cerrar svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+/* Recuadro junto al cursor: país y top 3 */
+.globo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  width: max-content;
+  max-width: 280px;
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--tinta-2);
+  background: rgba(28, 28, 28, 0.97);
+  border: 1px solid var(--eje);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.globo[hidden] { display: none; }
+.globo strong { display: block; margin-bottom: 4px; font-size: 13px; font-weight: 900; color: var(--tinta); }
+.globo ol { margin: 0; padding: 0; list-style: none; counter-reset: puesto; }
+.globo li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 4px; counter-increment: puesto; }
+.globo li::before { content: counter(puesto); color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.globo li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.globo li b { font-weight: 800; color: var(--tinta); }
+.globo li.global b { color: var(--global); }
+.globo .globo-vacio { color: var(--tinta-3); }
+
+/* ---------- Línea de tiempo (abajo) ----------
+   play · el eje con el % de países que escucha el #1 global (área verde), la fecha sobre el cursor y los años
+   debajo · paso del tiempo · sonido */
+.tiempo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px 10px;
+  border-top: 1px solid var(--grilla);
+  background: var(--plano);
+}
+.play { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: var(--tinta); color: var(--plano); border-color: var(--tinta); transition: transform 0.1s; }
+.play:hover { transform: scale(1.06); border-color: var(--tinta); }
+.play svg { width: 16px; height: 16px; fill: currentColor; }
+.play .icono-pausa, .play.reproduciendo .icono-play { display: none; }
+.play.reproduciendo .icono-pausa { display: block; }
+
+.linea { position: relative; min-width: 0; padding-top: 22px; }
+/* La fecha va sobre el cursor (main.js la ubica con --pos) */
+.linea-fecha {
+  position: absolute;
+  top: 0;
+  left: var(--pos, 100%);
+  transform: translateX(var(--ajuste, -50%));
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+  color: var(--tinta);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.linea-caja { position: relative; height: 56px; }
+.linea-grafico { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.linea-area { fill: var(--global); fill-opacity: 0.3; }
+.linea-borde { fill: none; stroke: var(--global); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.linea-medio { stroke: var(--eje); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
+.linea-marca-50 { position: absolute; right: 2px; top: calc(var(--medio, 50%) - 14px); padding: 0 3px; font-size: 10px; line-height: 12px; color: var(--tinta-2); background: rgba(0, 0, 0, 0.75); border-radius: 3px; pointer-events: none; }
+.linea-titulo { margin: 4px 0 0; font-size: 11px; line-height: 14px; color: var(--tinta-3); }
+.linea-cursor { position: absolute; top: -2px; bottom: 0; left: var(--pos, 100%); width: 2px; margin-left: -1px; background: var(--tinta); border-radius: 1px; pointer-events: none; }
+/* El control real: invisible sobre el gráfico (se arrastra en cualquier punto del eje) */
+#slider {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+#slider::-webkit-slider-thumb { -webkit-appearance: none; width: 2px; height: 56px; background: transparent; border: 0; }
+#slider::-moz-range-thumb { width: 2px; height: 56px; background: transparent; border: 0; }
+#slider::-moz-range-track { background: transparent; }
+#slider:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; border-radius: 4px; }
+.linea-pie { position: relative; height: 22px; }
+.linea-anios { position: absolute; inset: 0; }
+/* Hitos: puntos sobre el borde inferior del eje; la frase corta aparece al pasar el cursor */
+.linea-hitos { position: absolute; left: 0; right: 0; top: -5px; height: 0; }
+.linea-hito {
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  padding: 0;
+  background: var(--plano);
+  border: 2px solid var(--tinta-2);
+  border-radius: 50%;
+  z-index: 2;
+}
+.linea-hito:hover, .linea-hito:focus-visible { border-color: var(--tinta); background: var(--tinta); }
+.linea-hito::after {
+  content: attr(data-texto);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--eje);
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+.linea-hito:hover::after, .linea-hito:focus-visible::after { opacity: 1; }
+.linea-anios span { position: absolute; top: 8px; transform: translateX(-50%); font-size: 10px; line-height: 12px; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.linea-anios span::before { content: ""; position: absolute; left: 50%; top: -8px; width: 1px; height: 3px; background: var(--eje); }
+.linea-anios span.sin-texto { width: 1px; height: 0; }
+
+.granos { display: inline-flex; border: 1px solid var(--eje); border-radius: 999px; overflow: hidden; }
+.granos button { border: 0; border-radius: 0; background: transparent; }
+.granos button + button { border-left: 1px solid var(--eje); }
+.granos button[aria-checked="true"] { background: var(--tinta); color: var(--plano); }
+.sonido { display: grid; place-items: center; width: 38px; height: 34px; padding: 0; }
+.sonido svg { width: 18px; height: 18px; fill: currentColor; }
+.sonido .ondas, .sonido .cruz { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+.sonido[aria-pressed="true"] .cruz, .sonido[aria-pressed="false"] .ondas { display: none; }
+/* Antes del primer gesto (los navegadores no dejan sonar nada): el botón invita, sin carteles */
+.sonido.por-activar { border-color: var(--tinta-2); animation: invitar 2s ease-in-out infinite; }
+@keyframes invitar { 50% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.12); } }
+@media (prefers-reduced-motion: reduce) { .sonido.por-activar { animation: none; } }
+
+/* Fuentes de datos en una sola línea */
+.creditos {
+  margin: 0;
+  padding: 4px 24px 12px;
+  color: var(--tinta-3);
+  font-size: 11px;
+  background: var(--plano);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Panel lateral (alto completo) ----------
+   Una sola vista para la canción que suena (el #1 global o el de un país): arriba portada, dónde, título y
+   artistas; abajo dónde es #1, en cuántos países suena en el top 50 y sus reproducciones.
+   modo-fijado: hay un país fijado (aparece el botón para soltarlo) · modo-mensaje: país sin datos. */
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden auto;      /* solo hace scroll en pantallas muy bajas */
+  background: var(--panel);
+  border-left: 1px solid var(--grilla);
+}
+.p-contenido { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.panel.modo-mensaje .p-contenido { display: none; }
+.panel:not(.modo-fijado) .p-volver { display: none; }   /* solo con un país fijado: soltarlo */
+
+/* País sin datos: solo el mensaje, centrado */
+.p-mensaje { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 6px; padding: 32px; text-align: center; }
+.panel.modo-mensaje .p-mensaje { display: flex; }
+.p-mensaje strong { font-size: 24px; font-weight: 900; line-height: 1.1; }
+.p-mensaje span { max-width: 300px; color: var(--tinta-3); }
+
+/* Pantalla de carga: aparece solo si los datos tardan */
+.p-cargando { position: absolute; inset: 0; z-index: 2; display: none; justify-content: center; align-items: center; background: var(--panel); }
+.panel.cargando .p-cargando { display: flex; }
+.giro { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--eje); border-top-color: var(--tinta); animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .giro { animation-duration: 2.4s; } }
+
+/* Portada: cuadrada y del ancho completo del panel (el panel mide lo mismo que ella) */
+.p-hero { position: relative; flex: none; width: 100%; aspect-ratio: 1; overflow: hidden; background: var(--grilla); }
+.p-portada { display: block; width: 100%; height: 100%; object-fit: cover; }
+.p-hero.sin-portada .p-portada { visibility: hidden; }
+.p-hero.sin-portada { background: var(--grilla) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%233e3e3e' d='M6 2.5v8.2a2.3 2.3 0 1 0 1.5 2.1V5.5l5-1.3v4.5a2.3 2.3 0 1 0 1.5 2.1V1z'/%3E%3C/svg%3E") center / 22% no-repeat; }
+
+.p-cuerpo { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 18px 16px; }
+
+/* Volver al mundo (o soltar el país), sobre la portada */
+.p-volver {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px 5px 8px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+}
+.p-volver svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* "▮▮▮ Escuchando en Chile  #1 global      Spotify ↗" */
+.p-contexto { display: flex; align-items: center; gap: 8px; height: 18px; margin: 0; color: var(--tinta-2); font-size: 13px; font-weight: 800; white-space: nowrap; }
+#p-contexto { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.p-insignia { flex: none; padding: 0 7px; font-size: 11px; line-height: 17px; color: var(--plano); background: var(--global); border-radius: 999px; }
+.p-insignia[hidden] { display: none; }
+.enlace-spotify { flex: none; margin-left: auto; font-size: 12px; font-weight: 700; color: var(--tinta-3); }
+.enlace-spotify[hidden] { display: none; }
+/* Título (máx. 2 líneas) + artistas en un bloque de alto fijo: el panel no salta al cambiar de canción */
+.p-nombre { height: 74px; margin-top: 4px; overflow: hidden; }   /* hasta 2 líneas de título + artistas */
+.p-info h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.p-artistas { margin: 2px 0 0; color: var(--tinta-2); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ecualizador { flex: none; display: none; align-items: flex-end; gap: 2px; height: 12px; }
+.sonando .ecualizador { display: inline-flex; }
+.ecualizador i { width: 3px; height: 3px; background: var(--tinta-3); border-radius: 1px; }
+.sonando .ecualizador i { background: var(--global); animation: rebote 0.9s ease-in-out infinite; }
+.sonando .ecualizador i:nth-child(2) { animation-delay: -0.3s; }
+.sonando .ecualizador i:nth-child(3) { animation-delay: -0.6s; }
+@keyframes rebote { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+@media (prefers-reduced-motion: reduce) { .sonando .ecualizador i { animation: none; height: 8px; } }
+
+/* Detalle de la canción: titular, barras por continente, anillo, reproducciones y diversidad */
+.p-detalle { display: flex; flex-direction: column; gap: 12px; }
+.r-titular { margin: 0; font-size: 20px; font-weight: 900; line-height: 1.15; }
+.r-continentes { display: grid; grid-template-columns: minmax(0, max-content) minmax(40px, 1fr) 44px; gap: 8px 10px; margin: 0; padding: 0; list-style: none; }
+.r-continentes li { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; font-size: 13px; color: var(--tinta-2); }
+.r-continentes li.actual { color: var(--tinta); font-weight: 800; }
+.r-cont-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r-cont-barra { height: 8px; background: var(--superficie); border-radius: 4px; overflow: hidden; }
+.r-cont-barra span { display: block; height: 100%; background: var(--global); border-radius: 4px; transition: width 0.25s; }
+.r-cont-valor { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .r-cont-barra span { transition: none; } }
+
+/* Anillo de cobertura: en cuántos países de la muestra está la canción en su top 50 */
+.r-anillo { display: grid; grid-template-columns: 56px minmax(0, 1fr); align-items: center; gap: 4px 14px; margin: 0; }
+.r-anillo svg { grid-area: 1 / 1; width: 56px; height: 56px; transform: rotate(-90deg); }
+.r-anillo circle { fill: none; stroke-width: 4; }
+.r-anillo-fondo { stroke: var(--superficie); }
+.r-anillo-valor { stroke: var(--global); stroke-dasharray: 0 100; transition: stroke-dasharray 0.3s; }
+.r-anillo strong { grid-area: 1 / 1; place-self: center; font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.r-anillo figcaption { font-size: 13px; color: var(--tinta-2); line-height: 1.3; }
+@media (prefers-reduced-motion: reduce) { .r-anillo-valor { transition: none; } }
+
+/* País: estadísticas y popularidad */
+.p-popularidad { display: flex; flex-direction: column; margin: 0; }
+.p-popularidad figcaption { font-size: 11px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-grafico-caja { position: relative; aspect-ratio: 5 / 2; margin-top: 2px; overflow: hidden; }   /* proporción del gráfico: 5 de ancho por 2 de alto */
+.p-grafico-aviso { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 0 12px; font-size: 13px; color: var(--tinta-3); text-align: center; }
+.p-grafico-aviso[hidden] { display: none; }
+
+
+/* Pantallas bajas (p. ej. 1280×720): el gráfico más bajo y sin la línea de diversidad, para que el panel quepa */
+@media (max-height: 800px) and (min-width: 1101px) {
+  .p-grafico-caja { aspect-ratio: 3 / 1; }
+  .p-detalle { gap: 10px; }
+  .p-nombre { height: 56px; }
+  .p-detalle .diversidad { display: none; }
+}
+
+@media (max-width: 1300px) {
+  .granos button { padding: 5px 8px; font-size: 12px; }
+  .tiempo { gap: 12px; }
+}
+
+/* ---------- Pantallas medianas y angostas: el panel pasa debajo ---------- */
+@media (max-width: 1100px) {
+  body { display: block; height: auto; overflow: auto; }
+  .principal { height: auto; }
+  .zona-mapa { flex: none; height: 55vh; }
+  .panel { height: auto; min-height: 640px; overflow: visible; border-left: 0; border-top: 1px solid var(--grilla); }
+  .p-contenido, .p-cuerpo, .p-popularidad { flex: none; }
+  .p-hero { width: min(100%, 420px); margin: 0 auto; }
+  .p-cuerpo { width: 100%; max-width: 720px; margin: 0 auto; }   /* las barras y el gráfico no se estiran a todo el ancho */
+  .p-grafico-caja { aspect-ratio: auto; height: 200px; }
+}
+@media (max-width: 760px) {
+  .barra { padding: 14px 16px 4px; }
+  h1 { font-size: 22px; }
+  .subtitulo { font-size: 13px; }
+  .escenario { padding: 4px 16px 10px; }
+  .zona-mapa { height: auto; display: flex; flex-direction: column; gap: 8px; }
+  .mapa { position: relative; inset: auto; height: 260px; }
+  .fijado { position: static; order: -1; align-self: flex-start; }
+  .leyenda { font-size: 11px; }
+  .acercar { justify-content: flex-start; }
+  .tiempo { grid-template-columns: auto minmax(0, 1fr) auto; padding: 8px 16px; }
+  .granos { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
+  .granos button { padding: 6px 9px; }
+  .creditos { padding: 2px 16px 10px; white-space: normal; }
+}
