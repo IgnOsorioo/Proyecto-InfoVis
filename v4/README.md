@@ -24,6 +24,8 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 | ![Sin datos](evidencia/05-sin-datos-2015.png) | ![1366×768](evidencia/06-pantalla-1366.png) |
 | Kenia en 2015: sin datos. | A 1366×768, el título va en una línea y los artistas se ven. |
 
+**Verificación técnica:** sin errores y con sonido en Chrome, WebKit (Safari) y Firefox, y recorrido completo (57 s) sin errores. La prueba encontró que Firefox rechazaba el audio de desbloqueo del primer click (un WAV sin muestras), y se corrigió.
+
 **Video con audio: [COMPLETAR].** 30–60 s en https://ignosorioo.github.io/Proyecto-InfoVis/v4/:
 1. dejar correr el tiempo con el sonido activado, para que se vea cambiar la cifra del eje y se oigan los aplausos;
 2. arrastrar el eje hasta 2026;
@@ -34,9 +36,10 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 
 1. **Los botones de región solo acercan el mapa.** El panel, el eje y la diversidad cuentan siempre los 52 países. Van sobre el mapa, arriba a la derecha y con una lupa.
 2. **La línea de tiempo dice qué muestra:** la cifra junto a la fecha («jun 2015 · 65 %»), un punto verde sobre el valor y un título con la muestra verde de la leyenda.
-3. **Panel a 1366×768:** el título va en una línea y ya no tapa a los artistas.
-4. **Textos coherentes con el sonido:** el recorrido decía «top 50» (los aplausos cuentan dónde es #1) y el botón decía «de 2013 en un minuto».
-5. **Ficha «Cobertura y metodología»** (PR #2, José Tomás Larraín): se abre a pedido debajo de la vista y explica qué países, fuentes y fechas usa cada cifra.
+3. **El mensaje se afirma en la vista:** el título del eje dice «51 % en 2015 → 12 % en 2026», y el recorrido cierra con esas mismas cifras.
+4. **Panel a 1366×768:** el título va en una línea y ya no tapa a los artistas.
+5. **Textos coherentes con el sonido:** el recorrido decía «top 50» (los aplausos cuentan dónde es #1) y el botón decía «de 2013 en un minuto».
+6. **Ficha «Cobertura y metodología»** (PR #2, José Tomás Larraín): se abre a pedido debajo de la vista y explica qué países, fuentes y fechas usa cada cifra.
 
 ## Por qué cambió — el rationale (máx. 12 líneas)
 
@@ -48,6 +51,7 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
   - Rotulado directo: la cifra en la fecha evita leer contra un eje sin marcas, y es el mismo % del titular del panel.
   - La muestra verde del título repite la de la leyenda del mapa (similitud): el área cuenta los países pintados de verde.
   - El punto sobre el valor además indica que el eje se puede arrastrar.
+- **Auditoría, la vista general debe decir el mensaje.** El título pregunta «¿Qué escucha el mundo?» y la respuesta solo aparecía tras ver correr 11 años. Ahora la dice el título del eje, en rotulado directo y no como un texto aparte. El recorrido terminaba en un mes atípico (sept. 2026: 31 %) que contradecía el 12 % del año, así que ahora cierra con la misma medida.
 - **Auditoría, alineado y ordenado (§11).** Un panel que se tapa a sí mismo en una pantalla común rompe la jerarquía.
 - **Coherencia del sonido.** Si la leyenda y el recorrido explican los aplausos de forma distinta, el sonido no se entiende (heurística de Zuk-Carpendale).
 - **Contexto a pedido (PR #2).** Responde a la heurística «falta contexto» sin sumar texto a la vista: la muestra fija, sus límites y las fuentes quedan a un click (*details on demand*).
