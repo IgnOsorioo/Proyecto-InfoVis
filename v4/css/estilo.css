@@ -216,8 +216,10 @@ body.en-recorrido .fijado { display: none; }
 .linea-medio { stroke: var(--eje); stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
 .linea-marca-50 { position: absolute; right: 2px; top: calc(var(--medio, 50%) - 14px); padding: 0 3px; font-size: 10px; line-height: 12px; color: var(--tinta-2); background: rgba(0, 0, 0, 0.75); border-radius: 3px; pointer-events: none; }
 /* Título del eje con la misma muestra verde de la leyenda del mapa: el área cuenta los países pintados de verde */
-.linea-titulo { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; font-size: 12px; line-height: 14px; font-weight: 700; color: var(--tinta-2); }
-.linea-titulo .muestra { flex: none; }
+.linea-titulo { display: flex; align-items: center; margin: 4px 0 0; font-size: 12px; line-height: 14px; font-weight: 700; color: var(--tinta-2); }
+.linea-titulo .muestra { flex: none; margin-right: 6px; }
+.linea-resumen { white-space: nowrap; }
+.linea-resumen b { color: var(--tinta); font-weight: 900; }
 .linea-fecha b { color: var(--global); font-weight: 900; }
 /* El valor de la fecha: un punto sobre el borde del área, en el cursor (también dice que el eje se puede arrastrar) */
 .linea-punto { position: absolute; left: var(--pos, 100%); top: var(--valor, 50%); width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--global); border: 2px solid var(--tinta); pointer-events: none; z-index: 1; }
