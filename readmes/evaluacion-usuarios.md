@@ -61,7 +61,7 @@
 >
 > No se leyó la consigna de la sección 7: solo se le pasó el link y se le pidió interpretar el mensaje por su cuenta, sin guía.
 >
-> El grupo **intervino dos veces** para explicar (el gráfico de reproducciones y el eje de tiempo). Según la pauta, que haya hecho falta explicar es un hallazgo, y aparece en la bitácora.
+> El grupo **intervino tres veces** para explicar (el gráfico de reproducciones, el eje de tiempo y por qué el panel muestra solo 3 continentes). Según la pauta, que haya hecho falta explicar es un hallazgo, y aparece en la bitácora.
 
 ### Bitácora
 
