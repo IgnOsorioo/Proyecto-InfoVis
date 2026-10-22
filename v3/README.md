@@ -1,33 +1,57 @@
 # V3 — Segunda iteración de diseño
 
-> **Estado: pendiente.** El diseño se afina (jerarquías, percepción, detalles de la interacción, rol exacto del sonido), a partir de la R2 (revisión entre pares) y/o la evaluación con usuarios.
-
-Para empezar esta versión, copiar la anterior (`cp -R v2/index.html v2/css v2/js v3/`) y actualizar `index.html` de la raíz. Al cerrarla: completar este registro, crear el tag `v3` y marcarla como cerrada en la página de inicio.
+> Registro de versión según la pauta E1 (sección 5). Responde a la [R2](../readmes/R2-revision-entre-pares.md) (revisión entre pares, 8 de octubre). **Versión cerrada.**
 
 ## Identificación
 
 | Campo | Valor |
 |---|---|
 | Versión | V3 |
-| Fecha | [COMPLETAR] |
-| Tag / commit | `v3` → [COMPLETAR] |
+| Fecha | 16 de octubre de 2026 |
+| Tag / commit | `v3` → commit `2b2223b` |
 | Ver en línea | https://ignosorioo.github.io/Proyecto-InfoVis/v3/ |
 
 ## Evidencia visual y sonora
 
-[COMPLETAR] Capturas en `v3/evidencia/` y video corto con audio de esta versión.
+| | |
+|---|---|
+| ![Vista general](evidencia/01-vista-general.png) | ![Cursor sobre Chile](evidencia/02-hover-chile.png) |
+| Vista general: en verde, los países cuyo #1 es el #1 global. Abajo, el eje con el % de los 52 países que lo escucha. | Cursor sobre Chile: el recuadro con su top 3 y el panel con su #1. |
+| ![País fijado](evidencia/03-pais-fijado.png) | ![Europa](evidencia/04-acercar-europa.png) |
+| Click en Brasil: se fija el país y suena su #1 mientras avanza el tiempo. | Botón «Europa»: acerca el mapa, y en la V3 también cambia el conteo del panel (ver la R3). |
+| ![Sin datos](evidencia/05-sin-datos-2015.png) | ![1366×768](evidencia/06-pantalla-1366.png) |
+| Kenia en 2015: sin datos, con estática de radio al pasar el cursor. | A 1366×768, el título de dos líneas tapa a los artistas (se corrige en la V4). |
+
+**Video con audio: [COMPLETAR].** 30–60 s en https://ignosorioo.github.io/Proyecto-InfoVis/v3/:
+1. dejar correr el tiempo unos segundos con el sonido activado (aplausos según en cuántos países es #1);
+2. pasar el cursor por Chile y luego por Kenia (estática);
+3. hacer click en Brasil.
 
 ## Qué cambió respecto a V2 (máx. 8 líneas)
 
-[COMPLETAR]
+1. **Pregunta nueva, «¿qué escucha el mundo?».** Verde: el #1 del país es el #1 global. Gris: otra canción. Contorno: sin datos.
+2. **Datos de mayo de 2015 a hoy**, sobre una **muestra fija de 52 países**. Fuentes: Spotify semanal 2015–2016, Spotify diario desde 2017, YouTube Music y, para China, QQ Music.
+3. **Eje de tiempo con datos:** el área es el % de los 52 países que escucha el #1 global. Tiene marcas de cuándo llega o se va Spotify.
+4. **Sonido:** aplaude una persona por cada país donde la canción que suena es #1. Sobre la mitad se suma el murmullo de un estadio. En los países sin datos suena estática de radio.
+5. **Panel único:** «Es #1 en N de 52», barras por continente, anillo del top 50 y reproducciones por semana. Al pasar el cursor aparece un recuadro con el top 3.
+6. **Click fija un país** y la historia corre sola al entrar. Salen el buscador y el modo «seguir una canción».
 
 ## Por qué cambió — el rationale (máx. 12 líneas)
 
-[COMPLETAR] Anclado en principios del curso, lo discutido en las revisiones, feedback de usuarios o evidencia de los datos.
+- **R2, el play se leía como la canción.** La barra fina tenía la forma de la barra de progreso de un reproductor. Un eje con datos dice qué es: el tiempo del dato, no el de la canción.
+- **R2, verde de Spotify; y el cambio de pregunta.** La V2 usaba tres categorías (mundial, compartido, propio) con escala divergente. El mensaje se volvió binario («¿igual al mundo o no?»). Dos categorías, con un solo acento sobre grises, se leen de forma preatentiva.
+- **R2, aplausos para el alcance.** El número de personas que aplauden codifica en cuántos países es #1 la canción (ritmo y densidad, y timbre con el murmullo), no solo el volumen. La canción no se altera (R1).
+- **R2, sin datos también es un dato.** Se mantienen los países sin datos y se explica el vacío: estática de radio, hitos de Spotify y un destello cuando llegan datos (heurística «falta contexto»).
+- **Datos, muestra fija.** Con un total de países que crece, el % cambiaría porque se suman países y no porque cambien los gustos. Los 52 países tienen #1 todos los días desde el 1-may-2015 (antes falta el chart global).
+- **Datos, un día no es una serie.** La foto de Apple Music era la única fuente de 92 países y no tenía historia: esos países se marcan como sin datos.
+- **Menos es más.** El buscador y «seguir una canción» desviaban del mensaje mundial.
 
 ## Qué se descartó (máx. 5 líneas)
 
-[COMPLETAR]
+- **Una voz por continente**, del unísono al acorde disperso (commit `c56e198`): había que explicarla. Los aplausos son una metáfora directa de éxito.
+- **Contar sobre los 196 países o empezar en 2018:** lo primero mezcla la llegada de países con el gusto. Lo segundo pierde 2015–2017, cuando el fenómeno era más fuerte.
+- **Formatos y ventas desde los 80** (la R1 pidió más datos): solo EE. UU. y Japón tienen series de unidades vendidas.
+- **El buscador de 250 mil canciones de la V2:** sirve para explorar, pero no para el mensaje.
 
 ## Notas de método
 

@@ -18,7 +18,7 @@ La Entrega 1 se evalúa por proceso: cuatro versiones navegables, cada una con s
 
 ### Trabajar por versiones
 
-- **Se trabaja solo en la carpeta de la versión vigente** (hoy, `v2/`), en `http://localhost:8000/v2/`.
+- **Se trabaja solo en la carpeta de la versión vigente** (hoy, `v4/`), en `http://localhost:8000/v4/`.
 - **Para cerrar una versión:**
   1. completar su `README.md`;
   2. guardar capturas en `vN/evidencia/` y grabar un video corto con audio;
