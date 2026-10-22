@@ -39,14 +39,15 @@ Son los mismos estados que en la [V3](../v3/README.md), para compararlos lado a 
 3. **El mensaje está en la vista:** el título del eje y el cierre del recorrido dicen «51 % en 2015 → 12 % en 2026».
 4. **Las reproducciones se encuadran** en el paso de cada canción por los charts.
 5. **El panel no se tapa a 1366×768**, y los textos del recorrido coinciden con lo que codifica el sonido.
-6. **Ficha «Cobertura y metodología»** (PR #2, José Tomás Larraín), a pedido, debajo de la vista.
+6. **El titular del panel lleva el ícono de los aplausos**, porque «Es #1 en N de 52 países» es justo lo que cuentan.
+7. **Ficha «Cobertura y metodología»** (PR #2, José Tomás Larraín), a pedido, debajo de la vista.
 
 ## Por qué cambió — el rationale (máx. 12 líneas)
 
 - **R3, las regiones parecían filtros, y en parte lo eran:** el panel pasaba a «N de 19 países de América» mientras el mapa y el eje seguían contando el mundo. Ahora solo acercan, que es su propósito. Van sobre el mapa por proximidad (es un control de vista) y la lupa es la convención del zoom.
 - **R3 y thinking aloud, el eje no se entendía.** Raúl supuso que las líneas «deberían ser más o menos las mismas» en cada granularidad, y no lo eran: cada una comparaba el #1 del período (2025: 0 % en «Año», 25 % en diciembre). Ahora todas promedian los mismos días. La cifra junto a la fecha (rotulado directo) y el punto sobre la línea evitan leer contra un eje sin marcas. La muestra verde conecta el área con los países verdes del mapa (similitud).
 - **Auditoría, vista general:** el título pregunta y la respuesta tardaba 11 años en verse. Ahora la dicen el eje y el cierre del recorrido.
-- **Thinking aloud, reproducciones y zoom:** «una canción de hace un mes queda en el extremo derecho y no aporta nada». Además, alejado más allá del mundo, el mapa daba «saltos abruptos».
+- **Thinking aloud, reproducciones, zoom y aplausos:** «una canción de hace un mes queda en el extremo derecho y no aporta nada». Alejado más allá del mundo, el mapa daba «saltos abruptos». Y Raúl entendió los aplausos como popularidad, pero no si contaban países o reproducciones: el mismo ícono en la leyenda y en el titular une el sonido con su cifra (similitud).
 - **§11 y heurísticas:** un panel que se tapa a sí mismo rompe el orden. Si la leyenda y el recorrido explican distinto los aplausos, el sonido no se entiende. El contexto (muestra, fuentes, fechas) queda a un click (*details on demand*).
 
 ## Qué se descartó (máx. 5 líneas)

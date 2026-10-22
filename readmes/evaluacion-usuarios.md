@@ -121,7 +121,8 @@ Lo aprendido se incorporó en la transición **V4 preliminar (`70b84c6`) → V4 
 - **Adoptado:**
   - el eje mide lo mismo en todas las granularidades y el punto va sobre la línea (`ebd4610`);
   - las reproducciones se encuadran en el paso de cada canción por los charts (`9cd4792`);
-  - el zoom manual no se aleja más allá del mundo (`f9d8c5d`).
+  - el zoom manual no se aleja más allá del mundo (`f9d8c5d`);
+  - el titular «Es #1 en N de 52 países» lleva el ícono de los aplausos de la leyenda, para unir el sonido con lo que cuenta (países, no reproducciones) (commit de este cambio).
 - **No adoptado, y por qué:**
   - los 5 continentes en el panel: con 1 o 2 países por fila una barra exageraría, y la ficha explica el mínimo;
   - la activación del sonido: el navegador exige un click o una tecla, y el botón ya pulsa;

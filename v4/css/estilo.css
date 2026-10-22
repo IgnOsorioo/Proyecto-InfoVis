@@ -394,6 +394,9 @@ body.en-recorrido .fijado { display: none; }
 /* Detalle de la canción: titular, barras por continente, anillo, reproducciones y diversidad */
 .p-detalle { display: flex; flex-direction: column; gap: 12px; }
 .r-titular { margin: 0; font-size: 20px; font-weight: 900; line-height: 1.15; }
+/* Thinking aloud (ronda 1): Raúl no sabía si los aplausos contaban países o reproducciones. El titular es justo lo
+   que cuentan: lleva el mismo ícono que «aplausos» en la leyenda del mapa (similitud: mismo símbolo, mismo dato). */
+.r-titular:not(:empty)::before { content: ""; display: inline-block; width: 15px; height: 15px; margin-right: 8px; vertical-align: -1px; background: var(--tinta-2); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 2.5v8.2a2.3 2.3 0 1 0 1.5 2.1V5.5l5-1.3v4.5a2.3 2.3 0 1 0 1.5 2.1V1z'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 2.5v8.2a2.3 2.3 0 1 0 1.5 2.1V5.5l5-1.3v4.5a2.3 2.3 0 1 0 1.5 2.1V1z'/%3E%3C/svg%3E") center / contain no-repeat; }
 .r-continentes { display: grid; grid-template-columns: minmax(0, max-content) minmax(40px, 1fr) 44px; gap: 8px 10px; margin: 0; padding: 0; list-style: none; }
 .r-continentes li { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; font-size: 13px; color: var(--tinta-2); }
 .r-cont-nombre { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
