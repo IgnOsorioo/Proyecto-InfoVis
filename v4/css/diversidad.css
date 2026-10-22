@@ -1,0 +1,4 @@
+/* Diversidad de líderes: una línea bajo las barras por continente. */
+.diversidad { margin: 0; padding-top: 12px; border-top: 1px solid var(--grilla); font-size: 14px; color: var(--tinta-2); }
+.diversidad strong { font-weight: 900; color: var(--tinta); }
+.diversidad:empty { display: none; }
