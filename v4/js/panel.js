@@ -63,9 +63,11 @@ const Panel = (() => {
     const mio = ++pedido;
     const idx = Estado.cancion;
     const c = cancion(idx);
+    const totalAlcance = muestraDe('global').length;
+    dibujarAnillo(null, totalAlcance, 'cargando');
     const [popularidad, alcance] = await conEspera(mio, Promise.all([
       pedirPopularidad(idx).catch(() => null),
-      pedirAlcance(idx).catch(() => null),
+      pedirAlcance(idx).then(datos => ({ datos, error: false }), () => ({ datos: null, error: true })),
       precargarPortada(c.portada),
     ]));
     if (mio !== pedido) return;                         // ya se pidió otra cosa: se descarta
@@ -78,7 +80,8 @@ const Panel = (() => {
     dibujarTitular(idx, origen, ambitoMedible(Estado.ambito));
     dibujarContinentes(idx);
     const semana = semanaDe(finDelPeriodo());
-    dibujarAnillo(alcanceEn(alcance, semana), muestraDe('global').length);
+    dibujarAnillo(alcance.datos ? alcanceEn(alcance.datos, semana) : null, totalAlcance,
+      alcance.error ? 'error' : 'sin-datos');
     dibujarPopularidad(popularidad, semana);
   }
 
@@ -111,7 +114,15 @@ const Panel = (() => {
   }
 
   /** Anillo de cobertura: en cuántos países de la muestra está la canción en su top 50 esta semana. */
-  function dibujarAnillo(paisesTop, total) {
+  function dibujarAnillo(paisesTop, total, estado = 'disponible') {
+    $('r-anillo-texto').closest('figure').setAttribute('aria-busy', String(estado === 'cargando'));
+    if (paisesTop === null) {
+      $('r-anillo-valor').style.strokeDasharray = '0 100';
+      $('r-anillo-pct').textContent = '—';
+      $('r-anillo-texto').textContent = estado === 'cargando' ? 'Cargando alcance top 50…'
+        : estado === 'error' ? 'No se pudo cargar el alcance top 50.' : 'Alcance top 50 no disponible para esta canción.';
+      return;
+    }
     const fraccion = total ? paisesTop / total : 0;
     $('r-anillo-valor').style.strokeDasharray = `${(fraccion * 100).toFixed(1)} 100`;
     $('r-anillo-pct').textContent = `${Math.round(fraccion * 100)} %`;
