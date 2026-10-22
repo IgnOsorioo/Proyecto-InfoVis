@@ -9,8 +9,9 @@ const Reproductor = (() => {
   const VOLUMEN = 0.9;
   const FUNDIDO_MS = 250;
   const VIGENCIA_MS = 10 * 60 * 1000;
-  // WAV vacío: se reproduce una vez dentro del click de activación para desbloquear el audio.
-  const SILENCIO = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+  // WAV de silencio (dos muestras): se reproduce una vez dentro del click de activación para desbloquear el audio.
+  // Antes no tenía muestras y Firefox lo rechazaba (NotSupportedError).
+  const SILENCIO = 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQIAAACAgA==';
 
   const pistas = [new Audio(), new Audio()];
   pistas.forEach(a => { a.preload = 'auto'; a.loop = true; a.volume = 0; });
