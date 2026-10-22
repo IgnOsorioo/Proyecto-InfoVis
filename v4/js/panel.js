@@ -127,12 +127,11 @@ const Panel = (() => {
     return Array.from({ length: Math.floor(maximo / paso) }, (_, i) => (i + 1) * paso);
   }
 
-  /** Reproducciones semanales de la canción, en el mismo eje que la línea de tiempo (mayo de 2015 → hoy) para toda
-      canción: los mismos años, y la franja de la fecha alineada con el cursor del eje de abajo. Fuera de su paso
-      por los charts la curva está en 0 (es la suma de sus reproducciones en los charts): sube y baja sin cortarse.
-      Lo anterior a la fecha en verde y lo posterior en gris; al reproducir el tiempo, la franja avanza y el verde
-      cubre la curva. El título dice cuántas lleva hasta la fecha (también las anteriores a mayo de 2015). Las
-      vistas de YouTube Music también cuentan como reproducciones. */
+  /** Reproducciones semanales de la canción, encuadradas en su paso por los charts (V4, tras el thinking aloud;
+      antes, el mismo eje mayo de 2015 → hoy para toda canción). Fuera de los charts la curva está en 0 (es la suma
+      de sus reproducciones en los charts). Lo anterior a la fecha va en verde y lo posterior en gris; al reproducir
+      el tiempo, la franja avanza y el verde cubre la curva. El título dice cuántas lleva hasta la fecha (también las
+      anteriores a mayo de 2015). Las vistas de YouTube Music también cuentan como reproducciones. */
   let ultimoGrafico = null;                             // para volver a dibujarlo al cambiar el tamaño de la ventana
   let timerTamano = null;
   window.addEventListener('resize', () => {
@@ -169,7 +168,17 @@ const Panel = (() => {
       line: { color, width: 1.5 }, fill: 'tozeroy', fillcolor: relleno,
       hovertemplate: 'Semana del %{x|%d %b %Y}<br><b>%{y:.3s}</b> reproducciones<extra></extra>',
     });
-    const maximo = Math.max(...y);
+    // Encuadre a la escala de la canción. Thinking aloud (V4 preliminar): con el eje fijo 2015 → hoy, una canción
+    // estrenada hace un mes «queda en el extremo derecho y no aporta nada». Ahora va desde que entra a los charts
+    // hasta que sale (o hasta la fecha, si es posterior), con un margen y un mínimo de 12 semanas.
+    const conDatos = valores.map((v, i) => (v > 0 ? inicio + i : null)).filter(s => s !== null);
+    const primera = Math.max(s0, conDatos[0] ?? s0);
+    const ultima = Math.min(s1, Math.max(conDatos.at(-1) ?? s1, semanaActual));
+    const margen = Math.max(2, Math.round((ultima - primera) * 0.06));
+    let r0 = Math.max(s0, primera - margen), r1 = Math.min(s1, ultima + margen);
+    if (r1 - r0 < 12) { r0 = Math.max(s0, Math.min(r0, r1 - 12)); r1 = Math.min(s1, Math.max(r1, r0 + 12)); }
+    const visibles = y.slice(r0 - s0, r1 - s0 + 1);
+    const maximoVisible = Math.max(...visibles, 1);
     Plotly.react(nodo, [
       parte(k, x.length, gris, 'rgba(138, 138, 138, 0.18)'),
       parte(0, k + 1, verde, 'rgba(30, 215, 96, 0.3)'),   // el mismo verde que el área del eje de tiempo
@@ -180,11 +189,11 @@ const Panel = (() => {
       showlegend: false,
       font: { family: token('fuente'), size: 10, color: token('tinta-3') },
       hoverlabel: { bgcolor: token('superficie'), bordercolor: token('eje'), font: { family: token('fuente'), size: 12, color: token('tinta') } },
-      // Los mismos años que la línea de tiempo: una marca cada enero.
-      xaxis: { showgrid: false, zeroline: false, linecolor: token('eje'), fixedrange: true,
-               tick0: '2016-01-01', dtick: 'M24', tickformat: '%Y', range: [x[0], x.at(-1)] },
-      yaxis: { gridcolor: token('grilla'), zeroline: false, fixedrange: true, range: [0, maximo * 1.08],
-               tickvals: marcasVerticales(maximo), tickformat: '~s' },
+      // Marcas de fecha automáticas (años en un tramo largo, meses en uno corto).
+      xaxis: { showgrid: false, zeroline: false, linecolor: token('eje'), fixedrange: true, nticks: 5,
+               range: [fechaSemana(r0), fechaSemana(r1)] },
+      yaxis: { gridcolor: token('grilla'), zeroline: false, fixedrange: true, range: [0, maximoVisible * 1.08],
+               tickvals: marcasVerticales(maximoVisible), tickformat: '~s' },
       shapes: [{ type: 'line', xref: 'x', yref: 'paper', x0: x[k], x1: x[k], y0: 0, y1: 1, line: { color: token('tinta'), width: 2 } }],
     }, CONFIG_PLOTLY);
   }
