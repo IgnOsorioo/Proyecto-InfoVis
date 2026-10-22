@@ -82,7 +82,7 @@
       </button>
 
       <div class="linea" id="linea">
-        <output id="fecha" class="linea-fecha" for="slider"></output>
+        <output id="fecha" class="linea-fecha" for="slider"><span id="fecha-texto"></span> · <b id="fecha-valor"></b></output>
         <div class="linea-caja">
           <svg class="linea-grafico" id="linea-grafico" viewBox="0 0 1000 100" preserveAspectRatio="none" aria-hidden="true">
             <line class="linea-medio" id="linea-medio" x1="0" x2="1000" y1="50" y2="50"/>
@@ -91,13 +91,14 @@
           </svg>
           <span class="linea-marca-50" aria-hidden="true">50 %</span>
           <div class="linea-cursor" id="linea-cursor" aria-hidden="true"></div>
+          <div class="linea-punto" aria-hidden="true"></div>
           <input type="range" id="slider" min="0" max="0" value="0" step="1" aria-label="Fecha">
         </div>
         <div class="linea-pie">
           <div class="linea-anios" id="linea-anios" aria-hidden="true"></div>
           <div class="linea-hitos" id="linea-hitos" role="group" aria-label="Hitos: cuándo llega o se va Spotify"></div>
         </div>
-        <p class="linea-titulo">Escuchan el #1 global (% de 52 países)</p>
+        <p class="linea-titulo"><i class="muestra muestra-global"></i>Países que escuchan el #1 global (% de los 52)</p>
       </div>
 
       <div class="granos" role="radiogroup" aria-label="Paso del tiempo">
