@@ -16,7 +16,7 @@ Las mismas dudas de fondo que en la R1, ahora planteadas al otro grupo:
 |---|---|
 | Fecha | 8 de octubre de 2026 |
 | Versión revisada | [V2](../v2/README.md) · tag `v2` → `a4ad3d9` |
-| Grupo que nos evaluó | [COMPLETAR: nombre o número; es el mismo grupo cuyo proyecto evaluamos, el de Starbucks] |
+| Grupo que nos evaluó | Grupo 15 (el mismo cuyo proyecto evaluamos, el de Starbucks) |
 | Ayudante | El ayudante estaba en la sala con todo el curso, sin supervisar de cerca nuestra mesa; no registramos su nombre. |
 
 ### Síntesis de lo discutido (breve)
@@ -44,7 +44,7 @@ Las mismas dudas de fondo que en la R1, ahora planteadas al otro grupo:
 
 ### El proyecto evaluado (máx. 5 líneas)
 
-Grupo [COMPLETAR]. Su visualización mostraba el azúcar y otra información nutricional de las bebidas de Starbucks. Estaba funcionando:
+Grupo 15. Su visualización mostraba el azúcar y otra información nutricional de las bebidas de Starbucks. Estaba funcionando:
 - la vista principal era un **scatter plot**, que al acercarse a un punto mostraba el detalle de cada bebida;
 - ya sonificaba el azúcar como el sonido de echarla en un vaso.
 
@@ -62,7 +62,7 @@ Grupo [COMPLETAR]. Su visualización mostraba el azúcar y otra información nut
 
 ### Lo que nos llevamos para nuestro proyecto (máx. 5 líneas)
 
-- **El detalle al pasar el cursor de su scatter** (idea del grupo [COMPLETAR]) lo adaptamos como el recuadro con el top 3 de cada país (V3).
+- **El detalle al pasar el cursor de su scatter** (idea del Grupo 15) lo adaptamos como el recuadro con el top 3 de cada país (V3).
 - **Normalizar antes de comparar**, como el azúcar por ml, confirmó contar el **% de una muestra fija de 52 países** y no países a secas (V3).
 - **El color con identidad:** sugerimos lo mismo que nos sugirieron a nosotros, y lo aplicamos con un solo acento verde.
 

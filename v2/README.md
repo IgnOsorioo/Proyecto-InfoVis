@@ -1,6 +1,6 @@
 # V2 — Primera iteración de diseño
 
-> Registro de versión según la pauta E1 (sección 5). Lo marcado con **[COMPLETAR]** lo tiene que escribir o revisar el grupo. Los cambios responden a la [R1](../readmes/R1-equipo-docente.md) (profesor), que observó tres cosas:
+> Registro de versión según la pauta E1 (sección 5). Los cambios responden a la [R1](../readmes/R1-equipo-docente.md) (profesor), que observó tres cosas:
 > - una sonificación pobre: el sonido era el dato mismo;
 > - una interacción que recién empezaba tras un click;
 > - un panel que cambiaba al llevar el cursor hacia él.
@@ -27,10 +27,7 @@
 
 Versión móvil: [evidencia/07-movil.png](evidencia/07-movil.png).
 
-**Video con audio: [COMPLETAR].** Grabar con QuickTime u OBS. Los aplausos son lo central de esta versión, así que el video tiene que tener sonido. La forma más simple es grabar el botón **"Recorrido de 1 min"** de principio a fin y después mostrar a mano:
-1. Pasar el cursor por Chile y luego por Brasil: cambia la canción y se atenúan los países que no comparten el #1.
-2. Buscar una canción de nicho (por ejemplo, "El baile de los que sobran"): aplausos sueltos y sin silbidos.
-3. Esc para volver al resumen.
+**Video con audio:** https://www.youtube.com/watch?v=bmM4CkWyvt8
 
 ## Qué cambió respecto a V1 (máx. 8 líneas)
 

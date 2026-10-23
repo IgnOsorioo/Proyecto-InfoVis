@@ -22,15 +22,12 @@
 | ![Sin datos](evidencia/05-sin-datos-2015.png) | ![1366×768](evidencia/06-pantalla-1366.png) |
 | Kenia en 2015: sin datos, con estática de radio al pasar el cursor. | A 1366×768, el título de dos líneas tapa a los artistas (se corrige en la V4). |
 
-**Video con audio: [COMPLETAR].** 30–60 s en https://ignosorioo.github.io/Proyecto-InfoVis/v3/:
-1. dejar correr el tiempo unos segundos con el sonido activado (aplausos según en cuántos países es #1);
-2. pasar el cursor por Chile y luego por Kenia (estática);
-3. hacer click en Brasil.
+**Video con audio:** https://youtu.be/ykCwCJUP4nQ
 
 ## Qué cambió respecto a V2 (máx. 8 líneas)
 
 1. **Título y pregunta nuevos, «¿Qué escucha el mundo?».** Verde: el #1 del país es el #1 global. Gris: otra canción. Contorno: sin datos.
-2. **Datos de mayo de 2015 a hoy**, sobre una **muestra fija de 52 países**. Fuentes: Spotify semanal 2015–2016, Spotify diario desde 2017, YouTube Music y, para China, QQ Music.
+2. **Datos desde mayo de 2015:** muestra fija de 52 países con Spotify (semanal 2015–2016, diario desde 2017); YouTube Music y QQ Music (China) completan el mapa.
 3. **Eje de tiempo con datos:** el área es el % de los 52 países que escucha el #1 global. Tiene marcas de cuándo llega o se va Spotify.
 4. **Sonido:** aplaude una persona por cada país donde la canción que suena es #1. Sobre la mitad se suma el murmullo de un estadio. En los países sin datos suena estática de radio.
 5. **Panel único:** «Es #1 en N de 52», barras por continente, anillo del top 50 y reproducciones por semana. Al pasar el cursor aparece un recuadro con el top 3.

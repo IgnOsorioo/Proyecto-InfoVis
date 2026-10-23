@@ -20,14 +20,7 @@ Cálculo: % de los 52 países de la muestra cuyo #1 es el #1 global, promedio de
 
 ## Origen y procesamiento de los datos (máx. 8 líneas)
 
-1. **Fuentes:**
-   - charts de Spotify por país: diarios desde 2017 (Kaggle, *Spotify Charts Daily Updated*, CC BY-SA 4.0) y semanales de 2013 a 2023 (Kaggle, jfreyberg);
-   - YouTube Music Charts;
-   - el chart de QQ Music para China.
-2. **#1 por período:** con DuckDB se calcula el #1 de cada país por día, semana, mes y año, y el top 3. Cada canción se reconoce por título y primer artista.
-3. **Muestra fija:** los 52 países con #1 todos los días desde el 1 de mayo de 2015. Así la cifra no cambia por la llegada de países. Un país con un solo día de datos cuenta como sin datos.
-4. **Ajustes para la interacción y el sonido:**
-   - el #1 se guarda solo cuando cambia;
-   - el alcance de cada canción (en cuántos de los 52 está en su top 50) se precalcula;
-   - cada canción tiene su preview de 30 s de Deezer;
-   - el mapa es Natural Earth 1:50m.
+- **Spotify** (92 % de los días-país): diario 2017–2026 (Kaggle, *Spotify Charts Daily Updated*, CC BY-SA 4.0) y semanal 2013–2023 (Kaggle, jfreyberg) para 2015–2016 y países sin diario.
+- **YouTube Music** (top 100 semanal, desde 2018), solo sin Spotify: Kenia, Serbia, Tanzania, Uganda, Zimbabue, Rusia (desde 2022) e Israel (en parte). **QQ Music:** solo China, desde 2018.
+- **Muestra fija:** 52 países con #1 de Spotify cada día desde el 1-may-2015; la cifra y los aplausos se cuentan sobre ellos. Sin Apple Music (un solo día).
+- **Procesamiento** (DuckDB, scripts 08 → 13): #1, top 3 y reproducciones por período. Audio de Deezer, portadas de Spotify, mapa de Natural Earth.

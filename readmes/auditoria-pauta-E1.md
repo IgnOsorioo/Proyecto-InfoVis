@@ -1,3 +1,5 @@
+> **Documento histórico.** Es la auditoría interna del 7 de octubre de 2026, con el estado de ese día (V1 cerrada, V2 en preparación). Se conserva como evidencia del proceso; el estado final está en el [README de la raíz](../README.md) y en los registros de cada versión.
+
 # Auditoría del proyecto frente a la pauta de la E1
 
 **Fecha de la auditoría:** 7 de octubre de 2026, actualizada con la V2 el mismo día. **Estado:** V1 cerrada (tag `v1`); V2 lista para la R2 (8 de octubre), pendiente de su tag. **Entrega:** jueves 22 de octubre, 23:59, un PDF por el formulario.

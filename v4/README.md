@@ -8,7 +8,7 @@
 |---|---|
 | Versión | V4 |
 | Fecha | 22 de octubre de 2026 (cerrada) |
-| Tag / commit | `v4` (`git show v4`) |
+| Tag / commit | `v4` → commit `24633c5` |
 | Ver en línea | https://ignosorioo.github.io/Proyecto-InfoVis/v4/ |
 
 ## Evidencia visual y sonora
@@ -30,12 +30,7 @@ China, con su #1 de QQ Music: el anillo marca «—» porque no hay alcance top 
 
 **Verificación técnica:** sin errores y con sonido en Chrome, WebKit (Safari) y Firefox, y recorrido completo (57 s) sin errores. La prueba encontró que Firefox rechazaba el audio de desbloqueo del primer click (un WAV sin muestras), y se corrigió.
 
-**Video con audio: [COMPLETAR].** 30–60 s en https://ignosorioo.github.io/Proyecto-InfoVis/v4/:
-1. dejar correr el tiempo con el sonido activado, para que se vea cambiar la cifra del eje y se oigan los aplausos;
-2. arrastrar el eje hasta 2026;
-3. hacer click en «Europa» y volver a «Mundo»;
-4. pasar el cursor por Chile y por Kenia;
-5. hacer click en China: su #1 es de QQ Music y el anillo muestra «—», porque no hay alcance top 50.
+**Video con audio:** https://www.youtube.com/watch?v=bth3r3BUxuk
 
 ## Qué cambió respecto a V3 (máx. 8 líneas)
 

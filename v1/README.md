@@ -1,6 +1,6 @@
 # V1 — La idea completa
 
-> Registro de versión según la pauta E1 (sección 5). Lo marcado con **[COMPLETAR]** lo tiene que escribir o revisar el grupo.
+> Registro de versión según la pauta E1 (sección 5).
 
 ## Identificación
 
@@ -22,13 +22,7 @@
 
 Versión móvil: [evidencia/05-movil.png](evidencia/05-movil.png).
 
-**Video con audio: [COMPLETAR].** Grabar 30–60 s con QuickTime u OBS y subirlo a YouTube (no listado). Las capturas no registran el sonido, así que el video lo tiene que grabar el grupo. Recorrido sugerido:
-1. Activar sonido.
-2. Pasar el cursor por Chile y Argentina: misma canción, el audio sigue sin cortarse.
-3. Pasar a EE.UU.: la canción cambia.
-4. Pasar por Kenia: aparece el mensaje "sin datos".
-5. Botón Europa.
-6. Play de la línea de tiempo, para ver cómo crece el gráfico de popularidad.
+**Video con audio:** https://www.youtube.com/watch?v=byQVqgL1buQ
 
 ## Qué cambió (en V1: las decisiones iniciales) — máx. 8 líneas
 
