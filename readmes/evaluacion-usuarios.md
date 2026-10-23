@@ -50,7 +50,7 @@
 
 | Campo | Valor |
 |---|---|
-| Pensador y fecha (máx. 2 líneas) | Raúl Paezo, estudiante de Administración de Empresas (usa gráficos de Excel y dashboards), externo al curso y sin haber visto la visualización. 21 de octubre de 2026, ~22:30, por Discord: compartió su pantalla y usó la V4 preliminar publicada (commit `70b84c6`) de forma autónoma. |
+| Pensador y fecha (máx. 2 líneas) | Raúl Baeza, estudiante de Administración de Empresas (usa gráficos de Excel y dashboards), externo al curso y sin haber visto la visualización. 21 de octubre de 2026, ~22:30, por Discord: compartió su pantalla y usó la V4 preliminar publicada (commit `70b84c6`) de forma autónoma. |
 | Versión evaluada | V4 preliminar · https://ignosorioo.github.io/Proyecto-InfoVis/v4/ |
 | Observador(es) | Ignacio Osorio (único observador) |
 
