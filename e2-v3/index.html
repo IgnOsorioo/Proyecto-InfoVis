@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-11-19c">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-11-20b">
 </head>
 <body class="sin-disco">
   <header>
@@ -55,6 +55,7 @@
         <ol id="top"></ol>
         <p id="top-vacio" hidden>Ninguna canción de este género entró al top 200 ese año.</p>
       </div>
+      <div id="discos" role="group" aria-label="Disco"></div>
     </aside>
   </main>
 
@@ -63,13 +64,10 @@
     <div id="dial" class="dial"><i id="aguja" class="aguja"></i></div>
   </nav>
 
-  <footer>
-    <nav class="dial-marco dial-anio" aria-label="Dial de años" title="← → año · ↑ ↓ país · 1–5 disco · 0 sin disco · Espacio pausa">
-      <span class="dial-nombre">Año</span>
-      <div id="dial-anio" class="dial"><i id="aguja-anio" class="aguja"></i></div>
-    </nav>
-    <div id="discos" role="group" aria-label="Disco"></div>
-  </footer>
+  <nav class="dial-marco" aria-label="Dial de años" title="← → año · ↑ ↓ país · 1–5 disco · 0 sin disco · Espacio pausa">
+    <span class="dial-nombre">Año</span>
+    <div id="dial-anio" class="dial"><i id="aguja-anio" class="aguja"></i></div>
+  </nav>
 
   <script src="../datos/paises.js?v=2026-10-17s"></script>
   <script src="../datos/e2/canciones200.js?v=2026-11-18a"></script>
