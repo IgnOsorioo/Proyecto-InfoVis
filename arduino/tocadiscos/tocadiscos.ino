@@ -6,6 +6,7 @@
 //   V:0.37   velocidad entre 0 y 1 (la cuota del género). 0 = detenido.
 //   S        detener
 //   ?        responde el estado actual
+//   R        activa o desactiva las lecturas crudas del sensor (diagnóstico): RAW:claro,rojo,verde,azul
 // Mensajes que envía el Arduino:
 //   P:512,T:300   lectura de los potenciómetros país y tiempo (0–1023), solo al cambiar
 //   PAUSA:1 / PAUSA:0   el botón detuvo o reanudó el disco
@@ -17,8 +18,9 @@
 // Conexiones (la mini protoboard reparte 5V y GND):
 //   Protoboard: primera línea de 5 agujeros (izquierda) = 5V, última (derecha) = GND
 //   Servo: rojo → línea 5V, marrón → línea GND, naranjo → ~9
-//   Potenciómetro país:   patas de los extremos a 5V y GND, centro → A0
-//   Potenciómetro tiempo: patas de los extremos a 5V y GND, centro → A1
+//   Potenciómetro tiempo: patas de los extremos a 5V y GND, centro → A0 (perilla azul)
+//   Potenciómetro país:   patas de los extremos a 5V y GND, centro → A1 (perilla blanca)
+//   (19-nov: se intercambiaron en el programa, sin mover cables)
 //   Botón: dos patas en diagonal, una → pin 7, la otra → línea GND
 //   Sensor TCS34725: VIN → línea 5V, GND → GND, SDA → agujero SDA, SCL → agujero SCL (los dos junto a AREF;
 //   son los mismos pines 2 y 3, pero el agujero del pin 2 de esta placa hace mal contacto). LED e INT sin conectar.
@@ -36,8 +38,8 @@ const unsigned long TIEMPO_SIN_ORDEN_MS = 3000;
 
 // ---------- Potenciómetros ----------
 const bool HAY_POTES = true;   // false si los potenciómetros no están conectados
-const int PIN_POTE_PAIS = A0;
-const int PIN_POTE_TIEMPO = A1;
+const int PIN_POTE_PAIS = A1;
+const int PIN_POTE_TIEMPO = A0;
 const int UMBRAL_POTE = 4;     // ignora variaciones menores (ruido)
 const int MUESTRAS_POTE = 16;  // se promedian lecturas para que la perilla no tiemble
 
@@ -54,21 +56,25 @@ const Referencia COLORES[] = {
   {"blanco",   0.42, 0.35, 0.24},
   {"amarillo", 0.46, 0.40, 0.14},
   {"naranjo",  0.68, 0.21, 0.14},
-  {"rojo",     0.71, 0.18, 0.17},
+  {"rojo",     0.74, 0.17, 0.16},   // promedio de la calibración y de la caja armada (19-nov)
   {"verde",    0.32, 0.48, 0.19},
   {"azul",     0.23, 0.41, 0.35},
 };
 const int N_COLORES = sizeof(COLORES) / sizeof(COLORES[0]);
-const float DISTANCIA_MAX = 0.07;      // más lejos de toda referencia: color dudoso (un borde, dos caras), se ignora
+const float DISTANCIA_MAX = 0.10;      // más lejos de toda referencia: color dudoso (un borde, dos caras), se ignora
 const int LECTURAS_COLOR = 3;          // lecturas iguales seguidas para aceptar un color (~0,3 s)
 const int LECTURAS_NADA = 10;          // y para aceptar que no hay nada (~1 s): girar el cubo no detiene el disco
 const unsigned long REPETIR_COLOR_MS = 2000;
+const unsigned long CADA_LECTURA_MS = 110;   // el sensor integra 101 ms: no se relee la misma medición
+const unsigned int UMBRAL_MIN = 600, UMBRAL_MAX = 900;   // brillo mínimo para que haya algo delante
+unsigned long ultimaLectura = 0;
 const byte SENSOR = 0x29;
 bool haySensor = false;
 unsigned int brilloBase = 0;           // brillo sin nada delante, medido al encender
 int colorActual = -2;                  // -2 = aún no se informa; -1 = nada; 0.. = índice en COLORES
 int candidato = -2, repeticiones = 0;
 unsigned long ultimoColor = 0;
+bool crudo = false;                    // orden R: imprime cada lectura del sensor
 
 Servo motor;
 float alcance = 0;
@@ -102,6 +108,10 @@ void procesar(String orden) {
     fijarAlcance(0);
   } else if (orden == "?") {
     Serial.println(haySensor ? "SENSOR:1" : "SENSOR:0");
+    Serial.print("BASE:"); Serial.println(brilloBase);
+  } else if (orden == "R") {
+    crudo = !crudo;
+    return;
   } else {
     Serial.println("ERR orden desconocida");
     return;
@@ -192,7 +202,8 @@ void iniciarSensor() {
 
 // Índice del color más parecido, -1 si no hay nada delante, -3 si es dudoso.
 int clasificar(unsigned int c, unsigned int r, unsigned int g, unsigned int b) {
-  unsigned int umbral = max(700u, 2 * brilloBase);
+  // Acotado: si al encender algo tapaba el sensor (el CD), el brillo base sale alto y no debe bloquear los colores.
+  unsigned int umbral = constrain(2 * brilloBase, UMBRAL_MIN, UMBRAL_MAX);
   if (c < umbral || c == 0) return -1;
   float fr = (float)r / c, fg = (float)g / c, fb = (float)b / c;
   int mejor = -3;
@@ -212,11 +223,17 @@ void informarColor() {
 
 void leerColor() {
   unsigned int c, r, g, b;
-  if (!haySensor || !leerSensor(c, r, g, b)) {
+  if (!haySensor || millis() - ultimaLectura < CADA_LECTURA_MS || !leerSensor(c, r, g, b)) {
     if (colorActual != -2 && millis() - ultimoColor > REPETIR_COLOR_MS) informarColor();
     return;
   }
+  ultimaLectura = millis();
   int visto = clasificar(c, r, g, b);
+  if (crudo) {
+    Serial.print("RAW:"); Serial.print(c); Serial.print(','); Serial.print(r); Serial.print(',');
+    Serial.print(g); Serial.print(','); Serial.print(b); Serial.print(" -> ");
+    Serial.println(visto == -1 ? "nada" : visto == -3 ? "dudoso" : COLORES[visto].nombre);
+  }
   if (visto == -3) return;                 // dudoso: no cambia nada
   if (visto == candidato) repeticiones++;
   else { candidato = visto; repeticiones = 1; }

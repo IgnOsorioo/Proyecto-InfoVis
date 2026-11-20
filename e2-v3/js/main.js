@@ -4,7 +4,8 @@
    escuchada del género (suena su preview, con su portada en grande: el disco que gira es el físico) y el top 5.
 
    Entradas equivalentes: perillas, botón y sensor de color del Arduino (Web Serial), el lector del celular (V2) y,
-   sin hardware, los controles en pantalla y el teclado (← → mes · ↑ ↓ país · 1–6 disco · 0 sin disco · Espacio).
+   sin hardware, el dial (clic en un país), el control del año, los discos en pantalla y el teclado
+   (← → año · ↑ ↓ país · 1–5 disco · 0 sin disco · Espacio pausa). El país no tiene otro selector: es el dial.
 
    Perillas (R2): el país cambia solo cuando la perilla sale de su zona con margen (histéresis), para que el ruido del
    potenciómetro no haga saltar entre vecinos; el dial en pantalla muestra la aguja y los países vecinos. */
@@ -42,8 +43,6 @@
   }
 
   // ---------- Controles en pantalla ----------
-  const selPais = $('pais');
-  for (const p of Datos.paises) selPais.add(new Option(p.nombre, p.cc));
   const rangoAnio = $('anio-rango');
   rangoAnio.max = Datos.nAnios - 1;
   const discosUI = $('discos');
@@ -66,7 +65,6 @@
     dial.appendChild(s);
   }
 
-  selPais.addEventListener('change', () => { estado.pais = selPais.value; cambiar(); });
   rangoAnio.addEventListener('input', () => { estado.anio = +rangoAnio.value; cambiar(); });
   $('pausa').addEventListener('click', () => ponerPausa(!estado.pausa));
 
@@ -78,7 +76,7 @@
     else if (e.key === 'ArrowDown') { estado.pais = Datos.paises[Math.min(Datos.paises.length - 1, iPais + 1)].cc; cambiar(); }
     else if (e.key === 'ArrowUp') { estado.pais = Datos.paises[Math.max(0, iPais - 1)].cc; cambiar(); }
     else if (e.key === ' ') { e.preventDefault(); ponerPausa(!estado.pausa); }
-    else if (e.key >= '1' && e.key <= '6') elegirFamilia(DISCOS[+e.key - 1].familia);
+    else if (e.key >= '1' && e.key <= String(DISCOS.length)) elegirFamilia(DISCOS[+e.key - 1].familia);
     else if (e.key === '0') elegirFamilia(null);
     else return;
     e.preventDefault();
@@ -99,16 +97,16 @@
   }
 
   function sincronizarControles() {
-    selPais.value = estado.pais;
     rangoAnio.value = estado.anio;
     for (const b of discosUI.children) b.setAttribute('aria-pressed', b.dataset.familia === estado.familia);
     for (const s of dial.children) s.classList.toggle('activo', s.dataset.cc === estado.pais);
   }
 
   // ---------- Perillas, botón y lector ----------
+  // En el encabezado manda la pausa: «Conectar tocadiscos» solo aparece mientras no hay uno conectado (la primera
+  // vez el navegador exige un clic para dar permiso; después se reconecta solo).
   Tocadiscos.alCambiar(con => {
-    $('tocadiscos').setAttribute('aria-pressed', con);
-    $('tocadiscos').textContent = con ? 'Tocadiscos conectado' : 'Conectar tocadiscos';
+    $('tocadiscos').hidden = con || !Tocadiscos.disponible;
     if (!con) { perilla.pais = perilla.anio = null; dial.classList.remove('con-aguja'); $('serie').hidden = true; }
   });
   Tocadiscos.alMoverPerillas((p, t) => {
@@ -138,13 +136,14 @@
   // (aunque se mueva o se saque el cubo). Solo se acepta un color con el sistema en pausa o si aún no hay disco.
   Tocadiscos.alVerColor(color => {
     mostrarLector();
+    if (color && !discoPorId(color)) return;          // un color que no es disco (el blanco del cubo)
     if (!estado.pausa && estado.familia) return;
     const familia = color ? discoPorId(color)?.familia ?? null : null;
     if (familia !== estado.familia) elegirFamilia(familia);
   });
   if (Tocadiscos.disponible) {
     $('tocadiscos').hidden = false;
-    $('tocadiscos').addEventListener('click', () => Tocadiscos.alternar());
+    $('tocadiscos').addEventListener('click', () => { if (!Tocadiscos.conectado) Tocadiscos.alternar(); });
     Tocadiscos.reconectar();
   }
 
@@ -174,19 +173,25 @@
   }
 
   // ---------- Audio ----------
-  $('audio').addEventListener('click', () => {
-    // Dentro del click (el navegador exige un gesto): la canción, los aplausos y la estática.
-    if (Reproductor.habilitado) {
-      Reproductor.deshabilitar(); Aplausos.silenciar(); Estatica.silenciar();
-    } else {
-      Reproductor.habilitar(); Aplausos.iniciar(); Estatica.iniciar();
-    }
-    $('audio').setAttribute('aria-pressed', Reproductor.habilitado);
-    $('audio').textContent = Reproductor.habilitado ? 'Sonido activado' : 'Activar sonido';
+  // El sonido está siempre activo. Los navegadores no dejan sonar una página hasta el primer gesto de la persona
+  // (un clic o una tecla en cualquier parte): ese primer gesto desbloquea la canción, los aplausos y la estática.
+  let audioLibre = !!navigator.userActivation?.hasBeenActive;
+  Reproductor.habilitar(); Aplausos.iniciar(); Estatica.iniciar();
+  function liberarAudio() {
+    if (audioLibre) return;
+    audioLibre = true;
+    Reproductor.habilitar(); Aplausos.iniciar(); Estatica.iniciar();   // dentro del gesto
+    Reproductor.detener();                                              // vuelve a pedir la canción actual
+    $('estado-audio').textContent = '';
     cambiar();
-  });
+  }
+  addEventListener('pointerdown', liberarAudio, { capture: true });
+  addEventListener('keydown', liberarAudio, { capture: true });
+  if (!audioLibre) $('estado-audio').textContent = 'Haz clic en la pantalla para activar el sonido';
   Reproductor.alCambiar(est => {
-    $('estado-audio').textContent = { cargando: 'Cargando…', 'sin-preview': 'Sin preview', silencio: '', sonando: '' }[est] ?? '';
+    $('estado-audio').textContent = !audioLibre
+      ? 'Haz clic en la pantalla para activar el sonido'
+      : { cargando: 'Cargando…', 'sin-preview': 'Sin preview', silencio: '', sonando: '' }[est] ?? '';
   });
 
   // ---------- Dibujo ----------
@@ -238,7 +243,7 @@
       ? 'En pausa: muéstrale otra cara del cubo al sensor para cambiar el disco y aprieta el botón para seguir.'
       : 'En pausa: muéstrale una cara del cubo al sensor y aprieta el botón para seguir.';
     $('top-titulo').textContent = fam === 'local' ? `Top 5 de artistas de ${pais.nombre} ese año` : 'Top 5 del género ese año';
-    $('top-vacio').textContent = fam === 'local'
+    $('top-vacio').textContent = !fam ? 'Elige un género para ver sus cinco canciones más escuchadas.' : fam === 'local'
       ? `Ningún artista de ${pais.nombre} entró al top 200 ese año.`
       : 'Ninguna canción de este género entró al top 200 ese año.';
 
