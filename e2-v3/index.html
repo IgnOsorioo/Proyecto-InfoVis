@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>El tocadiscos del mundo</title>
+  <meta name="description" content="Cinco discos de género y uno verde para los artistas del propio país: cada uno gira según cuánto se escucha en cada país, año a año, de 2013 a 2026. Entrega 2 de IIC2026 (Grupo 31).">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23000000'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23fdd835' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ffffff'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-11-18d">
+</head>
+<body class="sin-disco">
+  <header>
+    <h1>El tocadiscos del mundo</h1>
+    <span class="espacio"></span>
+    <span id="serie" hidden></span>
+    <span id="lector" hidden>Sensor de color conectado</span>
+    <span id="estado-audio" aria-live="polite"></span>
+    <button id="audio" type="button" aria-pressed="false">Activar sonido</button>
+    <button id="tocadiscos" type="button" aria-pressed="false" hidden>Conectar tocadiscos</button>
+  </header>
+
+  <main>
+    <section class="escena" aria-label="Plato">
+      <div class="album">
+        <div id="carrusel" class="carrusel" aria-hidden="true"></div>
+        <div class="leyenda">
+          <div class="titulo" id="cancion-titulo"></div>
+          <div class="artista" id="cancion-artista"></div>
+          <div class="album-nombre" id="cancion-album"></div>
+        </div>
+      </div>
+      <div class="lectura" role="status" aria-live="polite">
+        <p class="donde"><b id="pais-nombre"></b><span class="fecha"><b id="anio"></b></span> &nbsp; <span id="genero-nombre"></span></p>
+        <div id="cuota"></div>
+        <p id="frase"></p>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="tarjeta">
+        <h2>Cuota del género en lo que se escucha, mes a mes</h2>
+        <svg id="curva" viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true">
+          <rect class="banda" y="0" height="120"></rect>
+          <polygon class="area" points=""></polygon>
+          <polyline class="linea" points=""></polyline>
+          <line class="nivel"></line>
+        </svg>
+        <div class="ejes"><span id="curva-desde"></span><span id="curva-hasta"></span></div>
+      </div>
+      <div class="tarjeta top-marco">
+        <h2 id="top-titulo">Top 5 del género ese año</h2>
+        <ol id="top"></ol>
+        <p id="top-vacio" hidden>Ninguna canción de este género entró al top 200 ese año.</p>
+      </div>
+    </aside>
+  </main>
+
+  <nav class="dial-marco" aria-label="Dial de países">
+    <div id="dial"><i id="aguja"></i></div>
+  </nav>
+
+  <footer>
+    <label>País <select id="pais"></select></label>
+    <label>Año <input id="anio-rango" type="range" min="0" max="10" value="10"></label>
+    <div id="discos" role="group" aria-label="Disco"></div>
+    <button id="pausa" type="button" aria-pressed="false">Pausa</button>
+    <span class="ayuda">← → año · ↑ ↓ país · 1–6 disco · 0 sin disco · Espacio pausa</span>
+  </footer>
+
+  <script src="../datos/paises.js?v=2026-10-17s"></script>
+  <script src="../datos/e2/canciones200.js?v=2026-11-18a"></script>
+  <script src="https://app.protobject.com/framework/p.js"></script>
+  <script src="config.js?v=2026-11-10a"></script>
+  <script src="js/discos.js?v=2026-11-18b"></script>
+  <script src="js/datos.js?v=2026-11-18a"></script>
+  <script src="js/reproductor.js?v=2026-10-17s"></script>
+  <script src="js/aplausos.js?v=2026-11-18a"></script>
+  <script src="js/estatica.js?v=2026-11-18a"></script>
+  <script src="js/tocadiscos.js?v=2026-11-18d"></script>
+  <script src="js/main.js?v=2026-11-18e"></script>
+</body>
+</html>

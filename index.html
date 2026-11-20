@@ -26,6 +26,8 @@
     .version .estado.vigente { background: var(--c1); color: #000; }
     .version p { margin: 0; color: var(--tinta-2); font-size: 14px; }
     .version .meta { margin-top: auto; color: var(--tinta-3); font-size: 12px; }
+    h2 { margin: 40px 0 0; font-size: 22px; font-weight: 900; }
+    .nota { margin: 10px 0 0; color: var(--tinta-3); font-size: 13px; }
     .enlaces { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 32px 0 0; font-size: 14px; }
     .enlaces a { color: var(--tinta); text-underline-offset: 3px; text-decoration-color: var(--tinta-3); }
     footer { margin-top: 40px; color: var(--tinta-3); font-size: 12px; }
@@ -36,7 +38,13 @@
     <h1>¿Qué suena en el mundo?</h1>
     <p class="bajada">La canción más escuchada en Spotify en cada país, día a día desde 2017. Proyecto de Visualización de Información (IIC2026, PUC). Cada versión del proceso de diseño queda navegable:</p>
 
+    <h2>Entrega 1 · ¿Qué suena en el mundo?</h2>
     <ul class="versiones" id="versiones"></ul>
+
+    <h2>Entrega 2 · El tocadiscos del mundo</h2>
+    <p class="bajada">La fisicalización: un CD sobre un servo gira según cuánto se escucha cada género en el país y el año de las perillas. La página se conecta al Arduino por Web Serial (Chrome o Edge).</p>
+    <ul class="versiones" id="versiones-e2"></ul>
+    <p class="nota">La V2 y la V2.1 se desarrollaron sobre la misma carpeta que la V3, sin commits intermedios.</p>
 
     <div class="enlaces">
       <a href="https://github.com/IgnOsorioo/Proyecto-InfoVis">Repositorio en GitHub</a>
@@ -54,11 +62,19 @@
       { n: 3, nombre: 'Segunda iteración de diseño', estado: 'cerrada',     fecha: '16 oct 2026', tag: 'v3' },
       { n: 4, nombre: 'La versión final',            estado: 'cerrada',     fecha: '22 oct 2026', tag: 'v4' },
     ];
-    const lista = document.getElementById('versiones');
-    for (const v of VERSIONES) {
+    const VERSIONES_E2 = [
+      { n: 1, nombre: 'El disco gira según en cuántos países es #1 la canción', estado: 'cerrada', fecha: '29 oct 2026', tag: 'e2-v1', carpeta: 'e2-v1/' },
+      { n: 3, nombre: 'Un disco por género, sensor de color y sonificación', estado: 'vigente', fecha: '19 nov 2026', tag: 'e2-v3', carpeta: 'e2-v3/' },
+      { n: 4, nombre: 'La experiencia final', estado: 'pendiente' },
+    ];
+    pintar(VERSIONES, document.getElementById('versiones'));
+    pintar(VERSIONES_E2, document.getElementById('versiones-e2'));
+
+    function pintar(versiones, lista) {
+    for (const v of versiones) {
       const tarjeta = document.createElement(v.estado === 'pendiente' ? 'div' : 'a');
       tarjeta.className = `version ${v.estado}`;
-      if (v.estado !== 'pendiente') tarjeta.href = `v${v.n}/`;
+      if (v.estado !== 'pendiente') tarjeta.href = v.carpeta || `v${v.n}/`;
       const meta = [v.fecha, v.tag && `tag ${v.tag}`].filter(Boolean).join(' · ');
       tarjeta.innerHTML = `<span class="estado ${v.estado}"></span><span class="num">V${v.n}</span><p></p><span class="meta"></span>`;
       tarjeta.querySelector('.estado').textContent = v.estado === 'vigente' ? 'versión actual' : v.estado;
@@ -67,6 +83,7 @@
       const li = document.createElement('li');
       li.append(tarjeta);
       lista.append(li);
+    }
     }
   </script>
 </body>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lector de discos</title>
+  <meta name="description" content="Lector de discos del tocadiscos: la cámara del celular reconoce el color del anillo bajo el CD.">
+  <meta name="theme-color" content="#000000">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
+  <link rel="stylesheet" href="css/lector.css?v=2026-11-10a">
+</head>
+<body>
+  <script src="https://app.protobject.com/framework/p.js"></script>
+  <script src="config.js?v=2026-11-10a"></script>
+
+  <main class="lector">
+    <header>
+      <h1>Lector de discos</h1>
+      <p class="conexion" id="conexion">Sin conexión: escanea el QR del botón «+» en la página del tocadiscos</p>
+    </header>
+
+    <section class="visto" aria-live="polite">
+      <div class="visor">
+        <video id="video" playsinline muted></video>
+        <div class="mira" aria-hidden="true"></div>
+      </div>
+      <div class="resultado">
+        <i class="muestra grande vacia" id="visto-muestra"></i>
+        <strong id="visto-nombre">Cámara apagada</strong>
+        <span class="medida-actual"><i class="muestra" id="medida-muestra"></i><span id="medida">—</span></span>
+      </div>
+    </section>
+
+    <div class="acciones">
+      <button type="button" id="encender" class="principal">Encender cámara</button>
+      <button type="button" id="linterna" aria-pressed="false" hidden>Linterna</button>
+    </div>
+
+    <section class="calibrar">
+      <h2>Calibrar</h2>
+      <p>Con la caja armada y la luz encendida, pon cada disco y presiona su botón. Calibra también «Sin disco». Se guarda en este celular.</p>
+      <ul id="lista"></ul>
+      <button type="button" id="borrar">Borrar calibración</button>
+    </section>
+  </main>
+
+  <script src="js/discos.js?v=2026-11-10a"></script>
+  <script src="js/lector.js?v=2026-11-10a"></script>
+</body>
+</html>

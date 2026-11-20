@@ -1,0 +1,214 @@
+/* El tocadiscos del mundo (E2, V3). Tema oscuro como la E1; el color del disco puesto tiñe el plato y la curva. */
+:root {
+  color-scheme: dark;
+  --plano: #000000;
+  --superficie: #161616;
+  --borde: #2a2a2a;
+  --tinta: #ffffff;
+  --tinta-2: #b3b3b3;
+  --tinta-3: #7a7a7a;
+  --color-disco: #8a8a8a;
+  --fuente: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  height: 100vh;
+  overflow: hidden;
+  color: var(--tinta);
+  background: var(--plano);
+  font-family: var(--fuente);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+button, select, input { font: inherit; color: inherit; }
+button {
+  padding: 6px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  cursor: pointer;
+}
+button[aria-pressed="true"] { border-color: var(--tinta); }
+[hidden] { display: none !important; }
+
+/* ---------- Encabezado ---------- */
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 72px 12px 20px;          /* a la derecha queda el botón «+» (QR) de Protobject */
+  border-bottom: 1px solid var(--borde);
+}
+header h1 { margin: 0; font-size: 18px; font-weight: 800; }
+header .espacio { flex: 1; }
+#lector { color: var(--tinta-2); font-size: 13px; }
+#serie { color: var(--tinta-3); font-size: 12px; font-family: ui-monospace, Menlo, monospace; }
+#serie.error { color: #ff8a80; }
+#lector::before { content: "●"; color: #1ed760; margin-right: 6px; }
+#estado-audio { color: var(--tinta-3); font-size: 13px; min-width: 7em; text-align: right; }
+
+/* ---------- Escena ---------- */
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 24px;
+  padding: 20px 28px;
+  min-height: 0;
+}
+.escena { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; min-height: 0; }
+
+/* El dial: los países en el orden de la perilla, como las emisoras de una radio, a todo el ancho y en una línea;
+   la aguja sigue la perilla. */
+.dial-marco { padding: 6px 28px 2px; border-top: 1px solid var(--borde); }
+#dial {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  color: var(--tinta-3);
+  font-size: 12px;
+  line-height: 1.1;
+  text-align: center;
+}
+#dial span { position: relative; padding: 14px 2px 6px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+#dial span::before { content: ""; position: absolute; top: 2px; left: 50%; width: 1px; height: 9px; background: var(--eje, #3e3e3e); }
+#dial span:hover { color: var(--tinta-2); }
+#dial span.activo { color: var(--tinta); font-weight: 800; background: #1c1c1c; }
+#aguja {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  margin-left: -1px;
+  background: var(--color-disco);
+  opacity: 0;
+  transition: left .12s linear, opacity .3s;
+}
+#aguja::before { content: ""; position: absolute; top: -2px; left: -4px; border: 5px solid transparent; border-top-color: var(--color-disco); }
+#dial.con-aguja #aguja { opacity: 1; }
+
+/* Carrusel de portadas: al centro la canción más escuchada del género ese año; a los lados, la del año anterior y
+   la del siguiente. Al mover la perilla del tiempo las portadas se corren (transición de transform). El disco que
+   gira es el físico, por eso en pantalla no se dibuja ninguno. */
+.album { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; min-height: 0; container-type: size; }
+.carrusel { position: relative; height: 100%; min-height: 0; --d: min(100cqh, 46cqw); }
+.carrusel figure {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--d);
+  height: var(--d);
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--superficie);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+  transform: translate(-50%, -50%) scale(.6);
+  opacity: 0;
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1), opacity .5s, box-shadow .4s;
+  cursor: pointer;
+}
+.carrusel figure img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.carrusel figure .vacio { position: absolute; inset: 0; display: grid; place-items: center; color: var(--tinta-3); font-size: 16px; text-align: center; padding: 10px; white-space: pre-line; }
+.carrusel figure .anio { position: absolute; left: 10px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, .65); color: var(--tinta-2); font-size: 12px; font-weight: 800; }
+.carrusel figure.actual { transform: translate(-50%, -50%) scale(1); opacity: 1; z-index: 3; box-shadow: 0 0 0 4px var(--color-disco), 0 20px 60px rgba(0, 0, 0, .6); cursor: default; }
+.carrusel figure.actual .anio { display: none; }
+.carrusel figure.previa { transform: translate(calc(-50% - 0.66 * var(--d)), -50%) scale(.68); opacity: .55; z-index: 2; }
+.carrusel figure.siguiente { transform: translate(calc(-50% + 0.66 * var(--d)), -50%) scale(.68); opacity: .55; z-index: 2; }
+.carrusel figure.previa:hover, .carrusel figure.siguiente:hover { opacity: .85; }
+.carrusel figure.entra-izq { transform: translate(calc(-50% - 1.3 * var(--d)), -50%) scale(.5); opacity: 0; }
+.carrusel figure.entra-der { transform: translate(calc(-50% + 1.3 * var(--d)), -50%) scale(.5); opacity: 0; }
+body.sin-disco .carrusel figure.actual { box-shadow: 0 0 0 4px #222; }
+body.en-pausa .carrusel figure img { filter: grayscale(.6); }
+.album .leyenda { min-height: 3.6em; }
+.album .titulo { font-size: 22px; font-weight: 800; line-height: 1.2; }
+.album .artista { color: var(--tinta-2); font-size: 15px; }
+.album .album-nombre { color: var(--tinta-3); font-size: 13px; }
+
+.lectura { display: grid; grid-template-columns: auto 1fr; gap: 4px 20px; align-items: baseline; }
+.lectura .donde { grid-column: 1 / -1; color: var(--tinta-2); font-size: 15px; }
+.lectura .donde > b { color: var(--tinta); font-size: 22px; font-weight: 800; margin-right: 10px; }
+.lectura .fecha b { color: var(--tinta); font-size: 20px; font-weight: 800; }
+.lectura .fecha span { font-size: 14px; }
+#genero-nombre {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--color-disco);
+  color: #000;
+  font-size: 13px;
+  font-weight: 800;
+}
+body.sin-disco #genero-nombre { background: #333; color: var(--tinta-2); }
+#cuota { font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -.02em; }
+#cuota.vacio { font-size: 28px; color: var(--tinta-3); align-self: center; }
+#frase { color: var(--tinta-2); font-size: 16px; max-width: 32em; }
+
+/* ---------- Panel ---------- */
+.panel { display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 14px; min-height: 0; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px; }
+.tarjeta h2 { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase; letter-spacing: .04em; }
+
+#curva { width: 100%; height: 120px; display: block; }
+#curva .area { fill: var(--color-disco); opacity: .18; }
+#curva .linea { fill: none; stroke: var(--color-disco); stroke-width: 2; }
+#curva .banda { fill: var(--tinta); opacity: .10; }
+#curva .nivel { stroke: var(--tinta); stroke-width: 2; }
+.ejes { display: flex; justify-content: space-between; color: var(--tinta-3); font-size: 12px; margin-top: 4px; }
+
+.top-marco { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+#top { list-style: none; margin: 0; padding: 0; overflow: auto; min-height: 0; }
+#top li {
+  display: grid;
+  grid-template-columns: 40px 1.4em 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#top li:hover { background: #222; }
+#top li.elegida { background: #262626; outline: 1px solid var(--color-disco); }
+#top img { grid-row: 1 / 3; width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: #222; }
+#top img[hidden] { display: block !important; visibility: hidden; }   /* conserva la columna */
+#top b { grid-row: 1 / 3; color: var(--tinta-3); font-weight: 800; text-align: right; }
+#top .titulo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#top .artista { color: var(--tinta-2); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#top-vacio { color: var(--tinta-3); font-size: 13px; }
+
+/* ---------- Controles ---------- */
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  padding: 10px 20px 14px;
+  border-top: 1px solid var(--borde);
+  color: var(--tinta-2);
+  font-size: 13px;
+}
+footer label { display: flex; align-items: center; gap: 8px; }
+footer select { padding: 5px 8px; border-radius: 8px; border: 1px solid var(--borde); background: var(--superficie); }
+footer input[type="range"] { width: clamp(160px, 24vw, 320px); accent-color: var(--tinta); }
+#discos { display: flex; gap: 6px; }
+.disco { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; }
+.disco i { width: 16px; height: 16px; border-radius: 50%; background: var(--color); box-shadow: inset 0 0 0 4px #000, 0 0 0 1px var(--color); }
+.disco[aria-pressed="true"] { border-color: var(--color); background: #222; }
+footer .ayuda { color: var(--tinta-3); margin-left: auto; }
+
+@media (max-width: 900px) {
+  body { height: auto; overflow: auto; }
+  main { grid-template-columns: 1fr; }
+  .album { height: 60vw; }
+  #dial span { white-space: normal; font-size: 11px; }
+  #cuota { font-size: 48px; }
+  footer .ayuda { display: none; }
+}
