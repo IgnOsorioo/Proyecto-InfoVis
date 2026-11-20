@@ -30,7 +30,16 @@
   let timerLector = null, timerAudio = null;
   let paisSonando = null;                // para el golpe de estática al cambiar de país
   const PERSONAS_MAX = 50;              // aplausos: 1 persona por cada 2 % de cuota
+  // Los años sin chart no son datos perdidos: Spotify aún no llegaba a esos países (fechas de lanzamiento).
+  const LLEGADA_SPOTIFY = {
+    br: 'mayo de 2014', ph: 'abril de 2014', id: 'marzo de 2016', jp: 'septiembre de 2016',
+    in: 'febrero de 2019', kr: 'febrero de 2021',
+  };
   let cuotaVisible = null;              // { cc, meses } del país mostrado
+  // Título de la curva: «Cómo varía el pop en Chile, mes a mes».
+  const QUE_VARIA = { pop: 'el pop', hiphop: 'el hip hop', latino: 'la música latina', rock: 'el rock',
+                      electro: 'la electrónica', local: 'la música de artistas locales' };
+  const MARCAS_Y = [0, 25, 50, 75, 100];  // eje Y fijo (0–100 %) en todos los países, géneros y años
 
   /** Índice de la zona en que cae `valor` (0–1) entre n zonas iguales, pero manteniendo `actual` mientras el valor
       no salga de su zona ampliada en `margen` zonas por cada lado. */
@@ -165,7 +174,7 @@
     Tocadiscos.reconectar();
   }
 
-  if (typeof Protobject !== 'undefined') {
+  if (typeof Protobject !== 'undefined') {           // lector del celular (V2, descartado): ya no se carga
     Protobject.Core.onReceived(mensaje => {
       if (!mensaje || !('disco' in mensaje)) return;
       mostrarLector();
@@ -239,7 +248,10 @@
       $('frase').textContent = 'Muéstrale una cara del cubo al sensor para elegir un género.';
     } else if (sinDatos) {
       $('cuota').textContent = 'Sin datos';
-      $('frase').textContent = `${pais.nombre} no tiene chart en ${cuando}.`;
+      const llegada = LLEGADA_SPOTIFY[pais.cc];
+      $('frase').textContent = llegada
+        ? `${pais.nombre} no tiene chart en ${cuando}: Spotify llegó a ${pais.nombre} en ${llegada}.`
+        : `${pais.nombre} no tiene chart en ${cuando}.`;
     } else {
       // El disco verde no es un género: es la música de artistas del país que está en la perilla.
       const que = fam === 'local' ? `de artistas de ${pais.nombre}` : Datos.nombreFamilia(fam).toLowerCase();
@@ -249,9 +261,11 @@
         : `En ${cuando}, casi nada de lo que se escuchó en ${pais.nombre} fue ${que}.`).replace(/\.\.$/, '.');   // «EE. UU.»
     }
     $('genero-nombre').textContent = !fam ? 'Sin disco' : fam === 'local' ? `Local · de ${pais.nombre}` : Datos.nombreFamilia(fam);
-    if (estado.pausa) $('frase').textContent = fam
-      ? 'En pausa: muéstrale otra cara del cubo al sensor para cambiar el disco y aprieta el botón para seguir.'
-      : 'En pausa: muéstrale una cara del cubo al sensor y aprieta el botón para seguir.';
+    // Qué es el número grande: la parte de las reproducciones del top 200 de ese país y año que fue del disco puesto.
+    $('cuota-titulo').hidden = !fam || sinDatos;
+    $('cuota-titulo').textContent = `Porcentaje de las reproducciones de ${cuando} en ${pais.nombre}`;
+    $('curva-titulo').textContent = !fam ? 'Cómo varía el género, mes a mes'
+      : `Cómo varía ${QUE_VARIA[fam] || Datos.nombreFamilia(fam).toLowerCase()} en ${pais.nombre}, mes a mes`;
     $('top-titulo').textContent = fam === 'local' ? `Top 5 de artistas de ${pais.nombre} ese año` : 'Top 5 del género ese año';
     $('top-vacio').textContent = !fam ? 'Elige un género para ver sus cinco canciones más escuchadas.' : fam === 'local'
       ? `Ningún artista de ${pais.nombre} entró al top 200 ese año.`
@@ -310,9 +324,51 @@
     const hayNivel = fi >= 0 && !sinDatos;
     nivel.setAttribute('x1', x(m0) - medioPaso); nivel.setAttribute('x2', x(m1) + medioPaso);
     nivel.setAttribute('y1', hayNivel ? y(cuotaAnio * 100) : -10); nivel.setAttribute('y2', hayNivel ? y(cuotaAnio * 100) : -10);
-    $('curva-desde').textContent = Datos.fechaDeMes(0).anio;
-    $('curva-hasta').textContent = Datos.fechaDeMes(n - 1).anio;
+    dibujarEjes(x, y, medioPaso, W, H);
   }
+
+  /** Ejes de la curva: Y fijo de 0 a 100 % (líneas de grilla y etiquetas) y X con todos los años, cada etiqueta
+      al centro de su año y una marca en el borde entre años. Las etiquetas se ubican en % del ancho/alto del SVG. */
+  let ejesHechos = null;
+  function dibujarEjes(x, y, medioPaso, W, H) {
+    const clave = `${Datos.nMeses}-${Datos.nAnios}`;
+    if (ejesHechos !== clave) {
+      ejesHechos = clave;
+      const grilla = $('curva').querySelector('.grilla');
+      const ejeY = $('eje-y'), ejeX = $('eje-x');
+      grilla.innerHTML = ''; ejeY.innerHTML = ''; ejeX.innerHTML = '';
+      const ns = 'http://www.w3.org/2000/svg';
+      for (const v of MARCAS_Y) {
+        const l = document.createElementNS(ns, 'line');
+        l.setAttribute('x1', 0); l.setAttribute('x2', W);
+        l.setAttribute('y1', y(v)); l.setAttribute('y2', y(v));
+        l.setAttribute('vector-effect', 'non-scaling-stroke');
+        if (v === 0) l.classList.add('base');
+        grilla.appendChild(l);
+        const s = document.createElement('span');
+        s.textContent = `${v} %`;
+        s.style.top = `${(y(v) / H * 100).toFixed(2)}%`;
+        ejeY.appendChild(s);
+      }
+      for (let a = 0; a < Datos.nAnios; a++) {
+        const [m0, m1] = Datos.mesesDelAnio(a);
+        const borde = document.createElement('i');
+        borde.style.left = `${((x(m0) - medioPaso) / W * 100).toFixed(2)}%`;
+        ejeX.appendChild(borde);
+        const s = document.createElement('span');
+        s.textContent = Datos.anioDe(a);
+        s.dataset.anio = a;
+        if (a % 2) s.classList.add('impar');
+        s.style.left = `${((x(m0) + x(m1)) / 2 / W * 100).toFixed(2)}%`;
+        ejeX.appendChild(s);
+      }
+    }
+    for (const s of $('eje-x').querySelectorAll('span')) s.classList.toggle('activo', +s.dataset.anio === estado.anio);
+  }
+  // Si el panel es angosto y los años no caben, se muestra uno sí y otro no (el elegido siempre se ve).
+  new ResizeObserver(([e]) => {
+    $('eje-x').classList.toggle('compacto', e.contentRect.width / Math.max(1, Datos.nAnios) < 34);
+  }).observe($('eje-x'));
 
   function dibujarTop(top) {
     const ol = $('top');

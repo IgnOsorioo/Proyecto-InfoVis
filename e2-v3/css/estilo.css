@@ -8,6 +8,8 @@
   --tinta-2: #b3b3b3;
   --tinta-3: #7a7a7a;
   --color-disco: #8a8a8a;
+  --aguja-pais: #ffffff;                 /* las agujas tienen el color de su perilla: blanca = país, azul = año */
+  --aguja-anio: #3d8bff;
   --fuente: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -42,7 +44,7 @@ header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 72px 12px 20px;          /* a la derecha queda el botón «+» (QR) de Protobject */
+  padding: 12px 28px 12px 20px;
   border-bottom: 1px solid var(--borde);
 }
 header h1 { margin: 0; font-size: 18px; font-weight: 800; }
@@ -95,11 +97,13 @@ main {
   width: 2px;
   height: 100%;
   margin-left: -1px;
-  background: var(--color-disco);
+  background: var(--aguja);
   pointer-events: none;
   transition: left .12s linear;
 }
-.aguja::before { content: ""; position: absolute; top: -2px; left: -4px; border: 5px solid transparent; border-top-color: var(--color-disco); }
+.aguja::before { content: ""; position: absolute; top: -2px; left: -4px; border: 5px solid transparent; border-top-color: var(--aguja); }
+#aguja { --aguja: var(--aguja-pais); }
+#aguja-anio { --aguja: var(--aguja-anio); }
 
 /* Carrusel de portadas: al centro la canción más escuchada del género ese año; a los lados, la del año anterior y
    la del siguiente. Al mover la perilla del tiempo las portadas se corren (transición de transform). El disco que
@@ -140,12 +144,13 @@ body.en-pausa .carrusel figure img { filter: grayscale(.6); }
 .album .album-nombre { color: var(--tinta-3); font-size: 13px; }
 
 .lectura { display: grid; grid-template-columns: auto 1fr; gap: 4px 20px; align-items: baseline; }
-.lectura .donde { grid-column: 1 / -1; color: var(--tinta-2); font-size: 15px; }
-.lectura .donde > b { color: var(--tinta); font-size: 22px; font-weight: 800; margin-right: 10px; }
-.lectura .fecha b { color: var(--tinta); font-size: 20px; font-weight: 800; }
-.lectura .fecha span { font-size: 14px; }
+/* País, año y género en una fila, centrados en su eje vertical. */
+.lectura .donde { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin: 0; }
+.lectura .donde > b { color: var(--tinta); font-size: 22px; font-weight: 800; line-height: 1.2; }
+.lectura .cuota-titulo { grid-column: 1 / -1; margin: 6px 0 0; color: var(--tinta-3); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
 #genero-nombre {
   display: inline-block;
+  line-height: 1.4;
   padding: 2px 10px;
   border-radius: 999px;
   background: var(--color-disco);
@@ -164,12 +169,26 @@ body.sin-disco #genero-nombre { background: #333; color: var(--tinta-2); }
 .tarjeta h2 { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase; letter-spacing: .04em; }
 
 .curva-marco { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
-#curva { width: 100%; height: 100%; min-height: 80px; display: block; }
+.curva-marco { grid-template-rows: auto auto minmax(0, 1fr); }
+.curva-marco h2 { margin-bottom: 2px; }
+.curva-marco .nota { margin: 0 0 8px; color: var(--tinta-3); font-size: 12px; }
+/* Gráfico con ejes: escala fija de 0 a 100 % para todos los países, géneros y años (se pueden comparar). Las
+   etiquetas son HTML (el SVG se estira sin conservar proporciones y deformaría el texto). */
+.grafico { display: grid; grid-template-columns: 2.6em minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; column-gap: 6px; min-height: 0; }
+.eje-y { position: relative; color: var(--tinta-3); font-size: 11px; }
+.eje-y span { position: absolute; right: 0; transform: translateY(-50%); white-space: nowrap; }
+#curva { width: 100%; height: 100%; min-height: 80px; display: block; overflow: visible; }
+#curva .grilla line { stroke: #2e2e2e; stroke-width: 1; }
+#curva .grilla line.base { stroke: #555; }
 #curva .area { fill: var(--color-disco); opacity: .18; }
 #curva .linea { fill: none; stroke: var(--color-disco); stroke-width: 2; }
 #curva .banda { fill: var(--tinta); opacity: .10; }
 #curva .nivel { stroke: var(--tinta); stroke-width: 2; }
-.ejes { display: flex; justify-content: space-between; color: var(--tinta-3); font-size: 12px; margin-top: 4px; }
+.eje-x { grid-column: 2; position: relative; height: 22px; color: var(--tinta-3); font-size: 11px; }
+.eje-x i { position: absolute; top: 0; width: 1px; height: 5px; background: #555; }
+.eje-x span { position: absolute; top: 5px; transform: translateX(-50%); white-space: nowrap; }
+.eje-x span.activo { color: var(--tinta); font-weight: 800; }
+.eje-x.compacto span.impar:not(.activo) { visibility: hidden; }   /* si no caben, un año sí y otro no */
 
 .top-marco { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
 #top { list-style: none; margin: 0; padding: 0; overflow: auto; min-height: 0; display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); --tapa: clamp(34px, 5.4vh, 56px); }
