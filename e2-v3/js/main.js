@@ -17,7 +17,6 @@
   const SIN_LECTOR_MS = 8000;           // si el celular deja de avisar, se vuelve a los discos en pantalla
   const MARGEN_PAIS = 0.35;             // histéresis: fracción de la zona de un país que hay que pasar para soltarlo
   const MARGEN_ANIO = 0.35;
-  const AGUJA_QUIETA_MS = 1500;         // la aguja del dial se apaga si la perilla no se mueve
 
   const estado = {
     pais: Datos.paises[0].cc,
@@ -27,7 +26,8 @@
     cancion: null,                      // idx de la canción elegida en el top (null: la primera)
   };
   const perilla = { pais: null, anio: null };   // índices que siguen las perillas físicas (histéresis)
-  let timerLector = null, timerAudio = null, timerAguja = null;
+  const crudo = { pais: null, anio: null };     // última lectura de cada perilla (0–1): ahí apunta la aguja
+  let timerLector = null, timerAudio = null;
   let paisSonando = null;                // para el golpe de estática al cambiar de país
   const PERSONAS_MAX = 50;              // aplausos: 1 persona por cada 2 % de cuota
   let cuotaVisible = null;              // { cc, meses } del país mostrado
@@ -43,8 +43,6 @@
   }
 
   // ---------- Controles en pantalla ----------
-  const rangoAnio = $('anio-rango');
-  rangoAnio.max = Datos.nAnios - 1;
   const discosUI = $('discos');
   for (const d of DISCOS) {
     const b = document.createElement('button');
@@ -56,20 +54,27 @@
     b.addEventListener('click', () => elegirFamilia(estado.familia === d.familia ? null : d.familia));
     discosUI.appendChild(b);
   }
-  const dial = $('dial');
-  for (const p of Datos.paises) {
-    const s = document.createElement('span');
-    s.textContent = p.nombre;
-    s.dataset.cc = p.cc;
-    s.addEventListener('click', () => { estado.pais = p.cc; cambiar(); });
-    dial.appendChild(s);
+  // Dos diales iguales, uno por perilla: los países y los años. Un clic en una casilla la elige.
+  const dial = $('dial'), dialAnio = $('dial-anio');
+  function armarDial(contenedor, etiquetas, alElegir) {
+    for (const s of [...contenedor.querySelectorAll('span')]) s.remove();
+    etiquetas.forEach((texto, i) => {
+      const s = document.createElement('span');
+      s.textContent = texto;
+      s.addEventListener('click', () => { alElegir(i); crudo.pais = crudo.anio = null; cambiar(); });
+      contenedor.appendChild(s);
+    });
   }
-
-  rangoAnio.addEventListener('input', () => { estado.anio = +rangoAnio.value; cambiar(); });
+  armarDial(dial, Datos.paises.map(p => p.nombre), i => { estado.pais = Datos.paises[i].cc; });
+  const armarDialAnio = () => armarDial(dialAnio, Array.from({ length: Datos.nAnios }, (_, i) => String(Datos.anioDe(i))), i => {
+    estado.anio = i; estado.cancion = null;
+  });
+  armarDialAnio();
   $('pausa').addEventListener('click', () => ponerPausa(!estado.pausa));
 
   document.addEventListener('keydown', e => {
     if (e.target.matches('select, input')) e.target.blur();
+    if (e.key.startsWith('Arrow')) crudo.pais = crudo.anio = null;   // el teclado manda: la aguja va a la casilla
     const iPais = Datos.paises.findIndex(p => p.cc === estado.pais);
     if (e.key === 'ArrowRight') { estado.anio = Math.min(Datos.nAnios - 1, estado.anio + 1); cambiar(); }
     else if (e.key === 'ArrowLeft') { estado.anio = Math.max(0, estado.anio - 1); cambiar(); }
@@ -97,9 +102,21 @@
   }
 
   function sincronizarControles() {
-    rangoAnio.value = estado.anio;
     for (const b of discosUI.children) b.setAttribute('aria-pressed', b.dataset.familia === estado.familia);
-    for (const s of dial.children) s.classList.toggle('activo', s.dataset.cc === estado.pais);
+    const iPais = Datos.paises.findIndex(p => p.cc === estado.pais);
+    dial.querySelectorAll('span').forEach((s, i) => s.classList.toggle('activo', i === iPais));
+    dialAnio.querySelectorAll('span').forEach((s, i) => s.classList.toggle('activo', i === estado.anio));
+    ubicarAgujas();
+  }
+
+  /** Cada aguja apunta a la lectura cruda de su perilla (se ve hacia dónde va antes de que cambie la casilla);
+      sin perilla, al centro de la casilla elegida. */
+  function ubicarAgujas() {
+    const iPais = Datos.paises.findIndex(p => p.cc === estado.pais);
+    const pais = crudo.pais ?? (iPais + 0.5) / Datos.paises.length;
+    const anio = crudo.anio ?? (estado.anio + 0.5) / Datos.nAnios;
+    $('aguja').style.left = `${(pais * 100).toFixed(2)}%`;
+    $('aguja-anio').style.left = `${(anio * 100).toFixed(2)}%`;
   }
 
   // ---------- Perillas, botón y lector ----------
@@ -107,12 +124,13 @@
   // vez el navegador exige un clic para dar permiso; después se reconecta solo).
   Tocadiscos.alCambiar(con => {
     $('tocadiscos').hidden = con || !Tocadiscos.disponible;
-    if (!con) { perilla.pais = perilla.anio = null; dial.classList.remove('con-aguja'); $('serie').hidden = true; }
+    if (!con) { perilla.pais = perilla.anio = null; crudo.pais = crudo.anio = null; ubicarAgujas(); $('serie').hidden = true; }
   });
   Tocadiscos.alMoverPerillas((p, t) => {
     const nuevoPais = zonaConHisteresis(p, Datos.paises.length, perilla.pais, MARGEN_PAIS);
     const nuevoAnio = zonaConHisteresis(t, Datos.nAnios, perilla.anio, MARGEN_ANIO);
-    moverAguja(p);
+    crudo.pais = p; crudo.anio = t;
+    ubicarAgujas();
     if (nuevoPais === perilla.pais && nuevoAnio === perilla.anio) return;
     perilla.pais = nuevoPais;
     perilla.anio = nuevoAnio;
@@ -145,14 +163,6 @@
     $('tocadiscos').hidden = false;
     $('tocadiscos').addEventListener('click', () => { if (!Tocadiscos.conectado) Tocadiscos.alternar(); });
     Tocadiscos.reconectar();
-  }
-
-  /** La aguja del dial sigue la perilla cruda: se ve hacia dónde va antes de que cambie el país. */
-  function moverAguja(valor) {
-    $('aguja').style.left = `${(valor * 100).toFixed(2)}%`;
-    dial.classList.add('con-aguja');
-    clearTimeout(timerAguja);
-    timerAguja = setTimeout(() => dial.classList.remove('con-aguja'), AGUJA_QUIETA_MS);
   }
 
   if (typeof Protobject !== 'undefined') {
@@ -385,7 +395,7 @@
 
   Datos.listo.then(() => {
     estado.anio = Datos.nAnios - 1;
-    rangoAnio.max = Datos.nAnios - 1;
+    armarDialAnio();
     cambiar();
   });
 })();

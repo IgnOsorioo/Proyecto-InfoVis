@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-11-19b">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-11-19c">
 </head>
 <body class="sin-disco">
   <header>
@@ -59,11 +59,15 @@
   </main>
 
   <nav class="dial-marco" aria-label="Dial de países">
-    <div id="dial"><i id="aguja"></i></div>
+    <span class="dial-nombre">País</span>
+    <div id="dial" class="dial"><i id="aguja" class="aguja"></i></div>
   </nav>
 
   <footer>
-    <label title="← → año · ↑ ↓ país · 1–5 disco · 0 sin disco · Espacio pausa">Año <input id="anio-rango" type="range" min="0" max="10" value="10"></label>
+    <nav class="dial-marco dial-anio" aria-label="Dial de años" title="← → año · ↑ ↓ país · 1–5 disco · 0 sin disco · Espacio pausa">
+      <span class="dial-nombre">Año</span>
+      <div id="dial-anio" class="dial"><i id="aguja-anio" class="aguja"></i></div>
+    </nav>
     <div id="discos" role="group" aria-label="Disco"></div>
   </footer>
 
@@ -77,6 +81,6 @@
   <script src="js/aplausos.js?v=2026-11-18a"></script>
   <script src="js/estatica.js?v=2026-11-18a"></script>
   <script src="js/tocadiscos.js?v=2026-11-18d"></script>
-  <script src="js/main.js?v=2026-11-19b"></script>
+  <script src="js/main.js?v=2026-11-19c"></script>
 </body>
 </html>
