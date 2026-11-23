@@ -1,0 +1,189 @@
+/* El tocadiscos del mundo (E2, V4). Mismo tema y mismos diales que la V3, sin gráficos (R3): el carrusel de
+   portadas, el top 5 de álbumes más vendidos del género y los dos diales con su aguja. */
+:root {
+  color-scheme: dark;
+  --plano: #000000;
+  --superficie: #161616;
+  --borde: #2a2a2a;
+  --tinta: #ffffff;
+  --tinta-2: #b3b3b3;
+  --tinta-3: #7a7a7a;
+  --color-disco: #8a8a8a;
+  --aguja-pais: #ffffff;                 /* las agujas tienen el color de su perilla: blanca = país, azul = década */
+  --aguja-decada: #3d8bff;
+  --fuente: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  height: 100vh;
+  overflow: hidden;
+  color: var(--tinta);
+  background: var(--plano);
+  font-family: var(--fuente);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+button { font: inherit; color: inherit; }
+button {
+  padding: 6px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  cursor: pointer;
+}
+button[aria-pressed="true"] { border-color: var(--tinta); }
+[hidden] { display: none !important; }
+
+/* ---------- Encabezado ---------- */
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px 12px 20px;
+  border-bottom: 1px solid var(--borde);
+}
+header h1 { margin: 0; font-size: 18px; font-weight: 800; }
+header .espacio { flex: 1; }
+#lector { color: var(--tinta-2); font-size: 13px; }
+#lector::before { content: "●"; color: #1ed760; margin-right: 6px; }
+#estado-audio { color: var(--tinta-3); font-size: 13px; text-align: right; }
+button.enlace { padding: 4px 6px; border: 0; background: none; color: var(--tinta-2); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+#pausa { min-width: 7.5em; }
+
+/* ---------- Escena ---------- */
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 24vw, 360px);   /* 22-nov: el top 5 sobraba de ancho */
+  gap: 24px;
+  padding: 20px 28px;
+  min-height: 0;
+}
+
+/* Los diales (V3): los países y las décadas en el orden de sus perillas, como las emisoras de una radio, en una
+   línea. La aguja sigue la perilla y se dibuja por encima de las casillas; sin perilla, marca el centro de la casilla
+   elegida. Son los mismos que se graban en la caja. */
+.dial-marco { display: flex; align-items: center; gap: 12px; padding: 8px 28px 6px; border-top: 1px solid var(--borde); }
+.dial-marco:last-of-type { padding-bottom: 12px; }
+.dial-nombre { flex: none; width: 4.2em; color: var(--tinta-3); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.dial {
+  position: relative;
+  flex: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  color: var(--tinta-3);
+  font-size: 14px;
+  line-height: 1.1;
+  text-align: center;
+}
+.dial span { position: relative; padding: 19px 2px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.dial span::before { content: ""; position: absolute; top: 3px; left: 50%; width: 1px; height: 11px; background: #3e3e3e; }
+.dial span:hover { color: var(--tinta-2); }
+.dial span.activo { color: var(--tinta); font-weight: 800; background: #1c1c1c; }
+.aguja {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  margin-left: -1px;
+  background: var(--aguja);
+  pointer-events: none;
+  transition: left .12s linear;
+}
+.aguja::before { content: ""; position: absolute; top: -2px; left: -4px; border: 5px solid transparent; border-top-color: var(--aguja); }
+#aguja { --aguja: var(--aguja-pais); }
+#aguja-decada { --aguja: var(--aguja-decada); }
+
+/* Carrusel de portadas (V3): al centro el álbum que suena; a los lados, el más vendido del género en la década
+   anterior y en la siguiente. Al mover la perilla de la década las portadas se corren. El disco que gira es el
+   físico, por eso en pantalla no se dibuja ninguno. */
+.album { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; min-height: 0; container-type: size; }
+.carrusel { position: relative; height: 100%; min-height: 0; --d: min(100cqh, 46cqw); }
+.carrusel figure {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--d);
+  height: var(--d);
+  margin: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--superficie);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+  transform: translate(-50%, -50%) scale(.6);
+  opacity: 0;
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1), opacity .5s, box-shadow .4s;
+  cursor: pointer;
+}
+.carrusel figure img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.carrusel figure .vacio { position: absolute; inset: 0; display: grid; place-items: center; color: var(--tinta-3); font-size: 16px; text-align: center; padding: 10px; white-space: pre-line; }
+.carrusel figure .anio { position: absolute; left: 10px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, .65); color: var(--tinta-2); font-size: 12px; font-weight: 800; }
+.carrusel figure.actual { transform: translate(-50%, -50%) scale(1); opacity: 1; z-index: 3; box-shadow: 0 0 0 4px var(--color-disco), 0 20px 60px rgba(0, 0, 0, .6); cursor: default; }
+.carrusel figure.actual .anio { display: none; }
+.carrusel figure.previa { transform: translate(calc(-50% - 0.66 * var(--d)), -50%) scale(.68); opacity: .55; z-index: 2; }
+.carrusel figure.siguiente { transform: translate(calc(-50% + 0.66 * var(--d)), -50%) scale(.68); opacity: .55; z-index: 2; }
+.carrusel figure.previa:hover, .carrusel figure.siguiente:hover { opacity: .85; }
+.carrusel figure.entra-izq { transform: translate(calc(-50% - 1.3 * var(--d)), -50%) scale(.5); opacity: 0; }
+.carrusel figure.entra-der { transform: translate(calc(-50% + 1.3 * var(--d)), -50%) scale(.5); opacity: 0; }
+body.sin-disco .carrusel figure.actual { box-shadow: 0 0 0 4px #222; }
+body.en-pausa .carrusel figure img { filter: grayscale(.6); }
+/* Sin registro de ventas: ruido de televisor, como la estática que suena. */
+body.sin-datos .carrusel figure.actual {
+  background: repeating-radial-gradient(circle at 30% 40%, #222 0 1px, #111 1px 3px), #111;
+}
+.album .leyenda { min-height: 9.5em; text-align: center; display: flex; flex-direction: column; align-items: center; padding-top: 6px; }
+.album .titulo { font-size: clamp(24px, 3.2vh, 34px); font-weight: 900; line-height: 1.15; }
+.album .artista { color: var(--tinta-2); font-size: clamp(16px, 2.2vh, 21px); margin-top: 4px; }
+.album .nota { color: var(--color-disco); font-size: 16px; font-weight: 700; margin-top: 14px; }
+.album .cancion { color: var(--tinta-2); font-size: 15px; margin-top: 4px; }
+.album .cancion .rotulo { color: var(--tinta-3); }
+
+/* ---------- Panel ---------- */
+.panel { display: grid; grid-template-rows: minmax(0, 1fr); min-height: 0; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px; }
+.tarjeta h2 { margin: 0 0 10px; font-size: 15px; font-weight: 800; line-height: 1.3; color: var(--tinta); text-wrap: balance; }
+
+.top-marco { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+#top { list-style: none; margin: 0; padding: 0; overflow: auto; min-height: 0; display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); --tapa: clamp(40px, 7vh, 72px); }
+#top li {
+  display: grid;
+  grid-template-columns: var(--tapa) 1.4em 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#top li:hover { background: #222; }
+#top li.elegida { background: #262626; }
+#top img { grid-row: 1 / 3; width: var(--tapa); height: var(--tapa); border-radius: 4px; object-fit: cover; background: #222; }
+#top img[hidden] { display: block !important; visibility: hidden; }   /* conserva la columna */
+#top b { grid-row: 1 / 3; color: var(--tinta-3); font-weight: 800; text-align: right; }
+#top .titulo { align-self: end; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#top .artista { align-self: start; color: var(--tinta-2); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#top-vacio { color: var(--tinta-3); font-size: 14px; align-self: start; margin: 0; }
+#top:empty { display: none; }
+
+/* ---------- Discos (22-nov: en el encabezado, junto al sensor y la pausa; de ahí abajo, solo la visualización) ---------- */
+#discos { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 6px; }
+.disco { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; }
+.disco i { width: 16px; height: 16px; border-radius: 50%; background: var(--relleno, var(--color)); box-shadow: inset 0 0 0 4px #000, 0 0 0 1px var(--color); }
+.disco[aria-pressed="true"] { border-color: var(--color); background: #222; }
+
+@media (max-width: 900px) {
+  body { height: auto; overflow: auto; }
+  main { grid-template-columns: 1fr; padding: 16px; }
+  .album { height: 60vw; }
+  header, .dial-marco { padding-left: 16px; padding-right: 16px; }
+  header { flex-wrap: wrap; }
+  .dial span { white-space: normal; font-size: 11px; }
+}

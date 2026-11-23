@@ -384,8 +384,22 @@ def filas_diarias(con, lista, sin_red, cobertura=0.95):
         return []
     tabla = {normalizar(k): v for k, v in json.loads(TABLA_ARTISTAS.read_text()).items()} if TABLA_ARTISTAS.exists() else {}
     nuevos = json.loads(ARTISTAS_NUEVOS.read_text()) if ARTISTAS_NUEVOS.exists() else {}
-    crudas = con.sql(f"""select country, d, streams, track_id, name, artists
-                         from '{DIARIO}' where country in ({lista}) and streams is not null and artists is not null""").fetchall()
+    # Desde agosto de 2026 el chart de India trae los 200 puestos pero no las reproducciones. Se estiman por puesto con
+    # la curva de India de los 60 días anteriores al hueco (reproducciones promedio de cada puesto): la cuota sigue
+    # ponderada por reproducciones y el hueco no deja meses vacíos.
+    crudas = con.sql(f"""
+        with base as (select country, d, position, streams, track_id, name, artists
+                      from '{DIARIO}' where country in ({lista}) and artists is not null),
+             hueco as (select country, min(d) d0 from base where streams is null group by 1),
+             curva as (select b.country, b.position, avg(b.streams) st from base b join hueco h using (country)
+                       where b.streams is not null and b.d >= h.d0 - interval 60 day and b.d < h.d0 group by 1, 2)
+        select b.country, b.d, coalesce(b.streams, round(c.st)::bigint) as streams, b.track_id, b.name, b.artists
+        from base b left join curva c on c.country = b.country and c.position = b.position
+        where coalesce(b.streams, c.st) is not null""").fetchall()
+    estimadas = con.sql(f"""select country, count(*), min(d), max(d) from '{DIARIO}'
+                            where country in ({lista}) and streams is null group by 1""").fetchall()
+    for cc, n, d0, d1 in estimadas:
+        print(f"{cc}: {n} filas sin reproducciones ({d0} a {d1}); se estiman por puesto")
     desconocidos = Counter()
     for _, _, streams, _, _, artistas in crudas:
         for a in artistas.split("|"):
