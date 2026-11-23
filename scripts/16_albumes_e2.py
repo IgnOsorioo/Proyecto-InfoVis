@@ -813,7 +813,7 @@ def etapa_salida_ventas(P, deezer):
             }
     out = REPO / "datos" / "e2" / "decadas.js"
     out.write_text("window.DECADAS = " + json.dumps(
-        {"medida": "unidades certificadas o vendidas", "genero": "Deezer", "paises": PAISES, "decadas": DECADAS, "familias": FAMILIAS,
+        {"medida": "unidades certificadas o vendidas", "genero": "ficha del artista en Wikipedia (Deezer si no hay)", "paises": PAISES, "decadas": DECADAS, "familias": FAMILIAS,
          "datos": datos}, ensure_ascii=False) + ";\n")
     print("→", out.relative_to(REPO), f"{out.stat().st_size // 1024} KB")
     return datos

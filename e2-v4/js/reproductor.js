@@ -3,11 +3,16 @@
    - La API de Deezer no permite fetch desde otro dominio, así que se consulta por JSONP.
    - Las URLs de preview expiran (~15 min): se piden al momento y se guardan en caché por 10 min.
    - Dos elementos <audio> alternados permiten un fundido cruzado al pasar de un país a otro.
-     Si el país siguiente tiene la misma canción #1, la música sigue sin cortarse. */
+     Si el país siguiente tiene la misma canción #1, la música sigue sin cortarse.
+   - Crescendo (22-nov): al cambiar de país, década o disco la canción entra muy baja y sube de a poco hasta su volumen
+     máximo, mientras la ovación del público (ovacion.js) suena encima; así primero se oye la sonificación y después
+     la música. Al pasar de un álbum a otro del mismo top 5 hay solo un fundido corto. */
 
 const Reproductor = (() => {
   const VOLUMEN = 0.9;
   const FUNDIDO_MS = 250;
+  const CRESCENDO_MS = 7000;    // de casi nada al volumen máximo al cambiar de país, década o disco
+  const PISO = 0.03;            // volumen con que empieza el crescendo
   const VIGENCIA_MS = 10 * 60 * 1000;
   // WAV de silencio (dos muestras): se reproduce una vez dentro del click de activación para desbloquear el audio.
   // Antes no tenía muestras y Firefox lo rechazaba (NotSupportedError).
@@ -50,16 +55,18 @@ const Reproductor = (() => {
     return url;
   }
 
-  /** Cambia el volumen gradualmente. Un fundido nuevo sobre la misma pista cancela el anterior. */
-  function fundir(audio, hasta, alTerminar) {
+  /** Cambia el volumen gradualmente en `ms`. Un fundido nuevo sobre la misma pista cancela el anterior. Con `curva`
+      el avance es cuadrático (k²): el oído percibe el volumen en escala logarítmica, y así el crescendo se siente
+      parejo en vez de saltar al principio y estancarse al final. */
+  function fundir(audio, hasta, alTerminar, ms = FUNDIDO_MS, curva = false) {
     const id = tomarPista(audio);
     const desde = audio.volume;
     const t0 = performance.now();
     const paso = ahora => {
       if (audio._fundido !== id) return;
       // El timestamp de requestAnimationFrame puede ser anterior a t0: se acota k a [0, 1].
-      const k = Math.min(1, Math.max(0, (ahora - t0) / FUNDIDO_MS));
-      audio.volume = desde + (hasta - desde) * k;
+      const k = Math.min(1, Math.max(0, (ahora - t0) / ms));
+      audio.volume = desde + (hasta - desde) * (curva ? k * k : k);
       if (k < 1) requestAnimationFrame(paso);
       else alTerminar?.();
     };
@@ -91,7 +98,8 @@ const Reproductor = (() => {
     detener();
   }
 
-  async function tocar(c) {
+  /** Toca el preview del álbum `c`. Con `crescendo`, entra bajo y sube durante CRESCENDO_MS. */
+  async function tocar(c, { crescendo = false } = {}) {
     if (!habilitado) { alCambiarEstado('silencio', c); return; }
     if (actual?.idx === c.idx) return;                // misma canción: sigue sonando
     const mia = ++solicitud;
@@ -105,11 +113,12 @@ const Reproductor = (() => {
       tomarPista(audio);                              // cancela un fundido de salida pendiente en esta pista
       audio.pause();
       audio.src = url;
-      audio.volume = 0;
+      audio.volume = crescendo ? PISO : 0;
       await audio.play();
       if (mia !== solicitud) { audio.pause(); return; }
       actual.audio = audio;
-      fundir(audio, VOLUMEN);
+      if (crescendo) fundir(audio, VOLUMEN, null, CRESCENDO_MS, true);
+      else fundir(audio, VOLUMEN);
       alCambiarEstado('sonando', c);
     } catch (e) {
       if (mia === solicitud) alCambiarEstado('sin-preview', c);
@@ -128,7 +137,7 @@ const Reproductor = (() => {
   }
 
   return {
-    habilitar, deshabilitar, tocar, detener, progreso,
+    habilitar, deshabilitar, tocar, detener, progreso, CRESCENDO_MS,
     get habilitado() { return habilitado; },
     alCambiar(fn) { alCambiarEstado = fn; },
   };

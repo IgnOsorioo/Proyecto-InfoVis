@@ -83,4 +83,4 @@ Dos corridas seguidas dan los mismos archivos.
 
 ## Licencias y herramientas
 
-Charts de Spotify vía Kaggle (CC BY-SA 4.0) · Natural Earth (dominio público) · mledoze/countries (ODbL) · audio de Deezer por JSONP · [Plotly.js](https://plotly.com/javascript/) · tipografía [Figtree](https://fonts.google.com/specimen/Figtree) (OFL).
+Charts de Spotify vía Kaggle (CC BY-SA 4.0) · Natural Earth (dominio público) · mledoze/countries (ODbL) · audio de Deezer por JSONP · ovación de la E2 V4 (`e2-v4/audio/publico.mp3`): «concert» de kauasilbershlachparodes en [Pixabay](https://pixabay.com/es/sound-effects/gente-concert-493997/) (licencia de contenido de Pixabay) · [Plotly.js](https://plotly.com/javascript/) · tipografía [Figtree](https://fonts.google.com/specimen/Figtree) (OFL).

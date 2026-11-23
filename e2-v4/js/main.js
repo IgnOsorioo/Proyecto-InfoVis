@@ -6,7 +6,8 @@
 
    R3 (profesor): quitar información y llevar todo a lo físico; sin gráficos. En pantalla quedan los mismos diales de
    la V3 (con la aguja que sigue cada perilla), el carrusel de portadas (la década anterior y la siguiente a los
-   lados) y el top 5 de álbumes más vendidos del género.
+   lados), el porcentaje de las ventas que fue del género (22-nov: el dato que mueve el plato, ahora también escrito)
+   y el top 5 de álbumes más vendidos del género.
    Thinking aloud (R3): suenan por turnos los cinco álbumes del top, unos segundos cada uno; un clic en uno lo elige.
 
    Entradas equivalentes: perillas, botón y sensor de color del Arduino (Web Serial) y, sin hardware, los diales
@@ -176,7 +177,37 @@
     Tocadiscos.ponerDisco(!!fam);
     Tocadiscos.fijarVelocidad(estado.pausa || !fam ? 0 : lect.cuota);
     sonificar();
-    mostrarTurno();
+    mostrarCuota();
+    mostrarTurno(true);
+  }
+
+  /** El porcentaje de las ventas del país y la década que fue del género: el mismo dato que mueve el plato y la
+      ovación. La cifra corre desde la anterior hasta la nueva para que se note el cambio. */
+  let cuotaVista = 0, animCuota = 0;
+  const formatoCuota = v => `${v.toLocaleString('es-CL', { maximumFractionDigits: v > 0 && v < 10 ? 1 : 0 })} %`;
+  function mostrarCuota() {
+    const fam = estado.familia, pais = Datos.paises[estado.pais], dec = Datos.decadas[estado.decada];
+    $('cuota-marco').hidden = !fam;
+    if (!fam) return;
+    const cifra = $('cuota-cifra');
+    cancelAnimationFrame(animCuota);
+    if (lect.sinDatos) {
+      cifra.textContent = '–';
+      $('cuota-texto').textContent = `Sin registro de ventas en ${pais.nombre} en los ${dec.corto}`;
+      cuotaVista = 0;
+      return;
+    }
+    const meta = Math.round(lect.cuota * 1000) / 10, desde = cuotaVista, t0 = performance.now();
+    const paso = ahora => {
+      const k = Math.min(1, Math.max(0, (ahora - t0) / 700));
+      const v = desde + (meta - desde) * (1 - Math.pow(1 - k, 3));
+      cifra.textContent = formatoCuota(k < 1 ? Math.round(v * 10) / 10 : meta);
+      if (k < 1) animCuota = requestAnimationFrame(paso);
+    };
+    animCuota = requestAnimationFrame(paso);
+    cuotaVista = meta;
+    $('cuota-texto').textContent = `de las copias de álbumes vendidas en ${pais.nombre} en los ${dec.corto} `
+      + `fueron de ${Datos.nombreGenero(fam).toLowerCase()}`;
   }
 
   function sonificar() {
@@ -189,8 +220,10 @@
     Estatica.sonar(!!fam && lect.sinDatos && !estado.pausa);
   }
 
-  /** Dibuja el álbum del turno actual (carrusel, leyenda y top 5) y programa el siguiente. */
-  function mostrarTurno() {
+  /** Dibuja el álbum del turno actual (carrusel, leyenda y top 5) y programa el siguiente. Con `crescendo` (cambió
+      país, década o disco, o se reanudó) la canción entra baja y sube de a poco (reproductor.js), y ese primer álbum
+      se queda lo que dura el crescendo más su turno normal. */
+  function mostrarTurno(crescendo = false) {
     clearTimeout(timerRotar);
     const fam = estado.familia, pais = Datos.paises[estado.pais], dec = Datos.decadas[estado.decada];
     const top = fam && !lect.sinDatos ? lect.top : [];
@@ -220,8 +253,9 @@
 
     clearTimeout(timerAudio);
     if (!a || estado.pausa) Reproductor.detener();
-    else timerAudio = setTimeout(() => Reproductor.tocar(a), ESPERA_AUDIO_MS);
-    if (top.length > 1 && !estado.pausa) timerRotar = setTimeout(() => { estado.turno++; mostrarTurno(); }, ROTAR_MS);
+    else timerAudio = setTimeout(() => Reproductor.tocar(a, { crescendo }), ESPERA_AUDIO_MS);
+    const espera = ROTAR_MS + (crescendo ? Reproductor.CRESCENDO_MS : 0);
+    if (top.length > 1 && !estado.pausa) timerRotar = setTimeout(() => { estado.turno++; mostrarTurno(); }, espera);
   }
 
   function dibujarTop(top, elegido) {

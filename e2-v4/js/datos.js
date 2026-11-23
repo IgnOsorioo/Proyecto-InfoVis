@@ -2,7 +2,7 @@
 
    Para cada país y década: las ventas de álbumes de cada género (unidades certificadas en el país, según las tablas
    de certificaciones de Wikipedia y las listas de álbumes más vendidos de Wikipedia y BestSellingAlbums.org), qué
-   parte del total fue de cada género (género según Deezer) y los cinco álbumes más vendidos de cada género (con su
+   parte del total fue de cada género (género del artista según su ficha de Wikipedia; Deezer si no hay) y los cinco álbumes más vendidos de cada género (con su
    portada y la canción más popular en Deezer). Sin sencillos ni recopilaciones de grandes éxitos.
    R3: el profesor pidió pocas posiciones por perilla, grabadas en la caja: seis países y seis décadas.
    21-nov: Canadá reemplaza a Argentina, que no tenía datos de 2010 en adelante (los seis países, completos).

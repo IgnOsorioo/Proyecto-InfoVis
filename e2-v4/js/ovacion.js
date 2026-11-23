@@ -5,11 +5,13 @@
    género del disco puesto (por ejemplo, ventas de discos de rock / ventas totales). Con esa parte (0–1):
    - Intensidad: volumen de 0,15 a 1 (un género marginal es un murmullo; el que domina, un estadio).
    - Cercanía: un filtro pasa-bajos va de apagado y lejano (700 Hz) a brillante y cercano (12 kHz).
-   - Duración: de 2 a 10 s; el público se calla antes o aplaude hasta el final.
+   - Duración: de 6 a 20 s (22-nov: antes 2–10 s y pasaba inadvertida); el público se calla antes o sigue aplaudiendo.
    - Más gente: sobre el 40 % se suma una segunda capa de la misma ovación, desfasada y abierta a los lados.
 
    Grabación: audio/publico.mp3 (aportada por el grupo, 21-nov) trae la misma ovación cuatro veces, de ~10 s cada una
-   (empiezan en 4,5, 15, 25,5 y 36 s: pico al primer segundo y luego decae). Cada ovación toma una de las cuatro al azar.
+   (empiezan en 4,5, 15, 25,5 y 36 s: pico al primer segundo y luego decae). Cada ovación toma una de las cuatro al azar
+   y, si dura más de una grabación, encadena las siguientes con un fundido cruzado, entrando ya pasado el pico para que
+   no suene como aplausos que vuelven a empezar.
    Silencio = sin disco, en pausa o sin datos (ahí suena la estática, estatica.js). Si el archivo no carga, suenan los
    aplausos sintéticos de antes (aplausos.js) durante el mismo tiempo. */
 
@@ -17,7 +19,9 @@ const Ovacion = (() => {
   const ARCHIVO = 'audio/publico.mp3';
   const INICIOS = [4.5, 15.0, 25.5, 36.0];     // inicio de cada ovación dentro del archivo (s)
   const LARGO_OVACION = 10.3;                  // duración de una ovación completa (s)
-  const DUR_MIN = 2, DUR_MAX = 10;             // s, para 0 % y 100 %
+  const DUR_MIN = 6, DUR_MAX = 20;             // s, para 0 % y 100 %
+  const CRUCE = 2.5;                           // fundido cruzado entre una grabación y la siguiente (s)
+  const SIN_PICO = 1.5;                        // las grabaciones encadenadas entran pasado el grito inicial (s)
   const ESPERA_MS = 450;                       // al girar la perilla rápido no se encadena una ovación por posición
   const ATAQUE = 0.08, CAIDA = 1.2;            // fundidos de entrada y salida (s)
 
@@ -49,19 +53,39 @@ const Ovacion = (() => {
     activas = [];
   }
 
+  /** Una capa de la ovación de `dur` s que empieza en `t`: encadena grabaciones (cada una de LARGO_OVACION s) con un
+      fundido cruzado hasta llenar la duración, y al final se apaga con CAIDA. */
   function capa(t, inicio, dur, pico, filtro, pan) {
-    const fuente = ctx.createBufferSource();
-    fuente.buffer = buffer;
-    const volumen = ctx.createGain();
-    volumen.gain.setValueAtTime(0, t);
-    volumen.gain.linearRampToValueAtTime(pico, t + ATAQUE);
-    volumen.gain.setValueAtTime(pico, t + Math.max(ATAQUE, dur - CAIDA));
-    volumen.gain.linearRampToValueAtTime(0, t + dur);
-    let nodo = fuente;
-    if (pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; fuente.connect(p); nodo = p; }
-    nodo.connect(volumen).connect(filtro);
-    fuente.start(t, inicio, dur + 0.1);
-    activas.push({ fuente, volumen });
+    let salida = filtro;
+    if (pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; p.connect(filtro); salida = p; }
+    const fin = t + dur;
+    // k = la grabación que contiene `inicio` (las capas laterales entran unos décimos después de su comienzo).
+    let k = INICIOS.length - 1;
+    while (k > 0 && INICIOS[k] > inicio) k--;
+    let desde = t, offset = inicio, primera = true;
+    while (desde < fin - 0.05) {
+      const largo = LARGO_OVACION - (offset - INICIOS[k]);     // lo que queda de esta grabación
+      const hasta = Math.min(fin, desde + largo);
+      const ultima = hasta >= fin - 0.01;
+      const entrada = primera ? ATAQUE : CRUCE;
+      const caida = ultima ? Math.min(CAIDA, hasta - desde) : CRUCE;
+      const fuente = ctx.createBufferSource();
+      fuente.buffer = buffer;
+      const volumen = ctx.createGain();
+      volumen.gain.setValueAtTime(0, desde);
+      volumen.gain.linearRampToValueAtTime(pico, desde + entrada);
+      volumen.gain.setValueAtTime(pico, Math.max(desde + entrada, hasta - caida));
+      volumen.gain.linearRampToValueAtTime(0, hasta);
+      fuente.connect(volumen).connect(salida);
+      fuente.start(desde, offset, hasta - desde + 0.1);
+      activas.push({ fuente, volumen });
+      if (ultima) break;
+      // La siguiente grabación entra CRUCE s antes de que esta termine, ya pasado su pico.
+      k = (k + 1) % INICIOS.length;
+      offset = INICIOS[k] + SIN_PICO;
+      desde = hasta - CRUCE;
+      primera = false;
+    }
   }
 
   /** Una ovación para una parte `p` (0–1) del género. */
@@ -82,12 +106,12 @@ const Ovacion = (() => {
     filtro.connect(ctx.destination);
     const inicio = INICIOS[Math.floor(Math.random() * INICIOS.length)];
     const pico = 0.15 + 0.85 * p;
-    capa(t, inicio, Math.min(dur, LARGO_OVACION), pico, filtro, 0);
+    capa(t, inicio, dur, pico, filtro, 0);
     if (p > 0.4) {                                    // más gente: la misma ovación desfasada, a los lados
       const otra = INICIOS[(INICIOS.indexOf(inicio) + 1) % INICIOS.length] + 0.3;
       const extra = pico * Math.min(1, (p - 0.4) / 0.6) * 0.7;
-      capa(t + 0.12, otra, Math.min(dur, LARGO_OVACION) - 0.12, extra / 2, filtro, -0.6);
-      capa(t + 0.2, otra + 0.2, Math.min(dur, LARGO_OVACION) - 0.2, extra / 2, filtro, 0.6);
+      capa(t + 0.12, otra, dur - 0.12, extra / 2, filtro, -0.6);
+      capa(t + 0.2, otra + 0.2, dur - 0.2, extra / 2, filtro, 0.6);
     }
   }
 
