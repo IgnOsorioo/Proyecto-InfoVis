@@ -8,6 +8,10 @@
 //   ?        responde el estado actual (SENSOR, BASE = brillo al encender, NADA = color de «sin disco»)
 //   R        activa o desactiva el diagnóstico: RAW:claro,rojo,verde,azul (sensor), BOTON:0/1 (cada cambio
 //            eléctrico del botón, antes del antirrebote) y POTES:país,década crudos (antes del filtro)
+//   A        diagnóstico de cableado de los pines analógicos (ver procesar)
+//   K:rojo   calibra el disco que está puesto (rojo, azul, negro, verde; K:nada sin disco) con la luz de ahora y
+//            lo guarda en la EEPROM: sobrevive al apagado. K:borrar vuelve a la calibración de fábrica. Lo guía
+//            scripts/calibrar_discos.py. Responde CAL:nombre:r,g,b,brillo.
 // Mensajes que envía el Arduino:
 //   P:512,T:300   lectura de los potenciómetros país y tiempo (0–1023), solo al cambiar
 //   BOTON         se apretó el botón (22-nov: la pausa la decide solo la página, que manda V:0 en pausa;
@@ -29,12 +33,14 @@
 
 #include <Servo.h>
 #include <Wire.h>
+#include <EEPROM.h>
 
 // ---------- Servo ----------
 const int PIN_SERVO = 9;
 const int STOP_US = 1500;      // punto de reposo; ajustar si gira estando en 0
 const int MIN_OFFSET = 40;     // velocidad mínima visible (alcance > 0): un hit local apenas gira
 const int MAX_OFFSET = 1000;   // velocidad máxima (alcance = 1)
+const int SENTIDO = -1;         // 24-nov: -1 = horario visto desde arriba, como un CD (con +1 giraba antihorario)
 const int PASO_RAMPA = 15;     // µs por ciclo: el disco acelera y frena suave
 const unsigned long TIEMPO_SIN_ORDEN_MS = 3000;
 
@@ -67,7 +73,7 @@ const unsigned long REBOTE_MS = 40;
 // El brillo solo descarta lecturas imposibles: cada disco se acepta entre la mitad y el doble de su brillo
 // típico (una mano que tapa el sensor no pasa por el disco negro).
 struct Referencia { const char *nombre; float r, g, b; unsigned int brillo; };
-const Referencia COLORES[] = {
+Referencia COLORES[] = {             // 24-nov: modificable; K:<color> la recalibra y la guarda en la EEPROM
   {"rojo",  0.74, 0.21, 0.19, 490},   // rock
   {"azul",  0.21, 0.35, 0.46, 805},   // pop
   {"negro", 0.49, 0.32, 0.24, 161},   // hip hop
@@ -75,8 +81,12 @@ const Referencia COLORES[] = {
 };
 const int N_COLORES = sizeof(COLORES) / sizeof(COLORES[0]);
 float nadaR = 0.22, nadaG = 0.38, nadaB = 0.35;   // sin disco (se reemplaza por lo medido al encender)
+unsigned int brilloNada = 835;
 const float DISTANCIA_MAX = 0.06;      // los colores están a ≥ 0,11 entre sí; más lejos que esto: dudoso (al poner o sacar)
 const unsigned int BRILLO_NADA_MIN = 300;   // sin disco se ve la sala: más oscuro que esto no es «sin disco»
+// 24-nov: con luz de día las proporciones y el brillo de cada disco cambian (el sensor no filtra el infrarrojo) y
+// la calibración nocturna dejaba casi todo como «dudoso». Por eso la calibración se puede rehacer en el lugar (K:).
+const byte EEPROM_MARCA = 0x5C;      // byte 0: hay una calibración guardada
 const int LECTURAS_COLOR = 3;          // lecturas iguales seguidas para aceptar un color (~0,3 s)
 const int LECTURAS_NADA = 10;          // y para aceptar que no hay disco (~1 s)
 const unsigned long REPETIR_COLOR_MS = 2000;
@@ -103,7 +113,7 @@ unsigned long cambioBoton = 0;
 int pulsoDeAlcance(float a) {
   if (a <= 0) return STOP_US;
   if (a > 1) a = 1;
-  return STOP_US + MIN_OFFSET + (int)(a * (MAX_OFFSET - MIN_OFFSET));
+  return STOP_US + SENTIDO * (MIN_OFFSET + (int)(a * (MAX_OFFSET - MIN_OFFSET)));
 }
 
 void fijarAlcance(float a) {
@@ -124,8 +134,33 @@ void procesar(String orden) {
     Serial.print("BASE:"); Serial.println(brilloBase);
     Serial.print("NADA:"); Serial.print(nadaR, 2); Serial.print(','); Serial.print(nadaG, 2); Serial.print(',');
     Serial.println(nadaB, 2);
+    Serial.println(EEPROM.read(0) == EEPROM_MARCA ? "CALIBRACION:guardada" : "CALIBRACION:de fabrica");
+    imprimirReferencia("nada", nadaR, nadaG, nadaB, brilloNada);
+    for (int k = 0; k < N_COLORES; k++)
+      imprimirReferencia(COLORES[k].nombre, COLORES[k].r, COLORES[k].g, COLORES[k].b, COLORES[k].brillo);
   } else if (orden == "R") {
     crudo = !crudo;
+    return;
+  } else if (orden.startsWith("K:")) {
+    calibrar(orden.substring(2));
+    return;
+  } else if (orden == "A") {
+    // Diagnóstico de cableado: mínimo y máximo de 32 lecturas en A0–A5 y en las entradas analógicas de los pines
+    // digitales libres (A6 = D4, A7 = D6, A8 = D8, A10 = D10, A11 = D12; A9 = D9 es el servo y no se toca). Un pin
+    // con una perilla conectada da un valor estable; uno sin nada (flotante) oscila y copia el canal anterior.
+    const int pines[] = {A0, A1, A2, A3, A4, A5, A6, A7, A8, A10, A11};
+    const char *nombres[] = {"A0", "A1", "A2", "A3", "A4", "A5", "D4", "D6", "D8", "D10", "D12"};
+    for (int k = 0; k < 11; k++) {
+      int mn = 1023, mx = 0;
+      analogRead(pines[k]);
+      for (int i = 0; i < 32; i++) { int v = analogRead(pines[k]); mn = min(mn, v); mx = max(mx, v); }
+      // Con el pull-up interno encendido un instante: un pin suelto sube a ~1023; uno con perilla casi no cambia.
+      pinMode(pines[k], INPUT_PULLUP); delay(2); analogRead(pines[k]);
+      int conPullup = analogRead(pines[k]);
+      pinMode(pines[k], INPUT);
+      Serial.print(nombres[k]); Serial.print(':'); Serial.print(mn); Serial.print('-'); Serial.print(mx);
+      Serial.print(" pullup:"); Serial.println(conPullup);
+    }
     return;
   } else {
     Serial.println("ERR orden desconocida");
@@ -140,6 +175,7 @@ void procesar(String orden) {
 // Promedio recortado: se ordenan las muestras y se promedia la mitad del medio.
 int leerRecortado(int pin) {
   int m[MUESTRAS_POTE];
+  analogRead(pin);  // descarta la primera: tras cambiar de canal, el ADC aún arrastra el voltaje del canal anterior
   for (int i = 0; i < MUESTRAS_POTE; i++) {
     int v = analogRead(pin), j = i;
     while (j > 0 && m[j - 1] > v) { m[j] = m[j - 1]; j--; }
@@ -253,7 +289,7 @@ void iniciarSensor() {
   float fr = (float)sr / sc, fg = (float)sg / sc, fb = (float)sb / sc;
   for (int i = 0; i < N_COLORES; i++)
     if (distancia(fr, fg, fb, COLORES[i].r, COLORES[i].g, COLORES[i].b) < 2 * DISTANCIA_MAX) return;
-  nadaR = fr; nadaG = fg; nadaB = fb;
+  nadaR = fr; nadaG = fg; nadaB = fb; brilloNada = brilloBase;
 }
 
 // Índice del disco más parecido, -1 si no hay disco, -3 si es dudoso (poniendo o sacando el disco, una mano).
@@ -262,7 +298,7 @@ int clasificar(unsigned int c, unsigned int r, unsigned int g, unsigned int b) {
   float fr = (float)r / c, fg = (float)g / c, fb = (float)b / c;
   int mejor = -3;
   float dMejor = DISTANCIA_MAX;
-  if (c >= BRILLO_NADA_MIN) {
+  if (c >= max(BRILLO_NADA_MIN / 2, brilloNada / 2)) {
     float d = distancia(fr, fg, fb, nadaR, nadaG, nadaB);
     if (d < dMejor) { dMejor = d; mejor = -1; }
   }
@@ -305,8 +341,76 @@ void leerColor() {
   }
 }
 
+// ---------- Calibración en el lugar (K:) ----------
+struct Guardada { float r, g, b; unsigned int brillo; };
+
+void guardarCalibracion() {
+  int dir = 1;
+  Guardada n = {nadaR, nadaG, nadaB, brilloNada};
+  EEPROM.put(dir, n); dir += sizeof(Guardada);
+  for (int i = 0; i < N_COLORES; i++) {
+    Guardada g = {COLORES[i].r, COLORES[i].g, COLORES[i].b, COLORES[i].brillo};
+    EEPROM.put(dir, g); dir += sizeof(Guardada);
+  }
+  EEPROM.update(0, EEPROM_MARCA);
+}
+
+void cargarCalibracion() {
+  if (EEPROM.read(0) != EEPROM_MARCA) return;
+  int dir = 1;
+  Guardada n; EEPROM.get(dir, n); dir += sizeof(Guardada);
+  nadaR = n.r; nadaG = n.g; nadaB = n.b; brilloNada = n.brillo;
+  for (int i = 0; i < N_COLORES; i++) {
+    Guardada g; EEPROM.get(dir, g); dir += sizeof(Guardada);
+    COLORES[i].r = g.r; COLORES[i].g = g.g; COLORES[i].b = g.b; COLORES[i].brillo = g.brillo;
+  }
+}
+
+void imprimirReferencia(const char *nombre, float r, float g, float b, unsigned int brillo) {
+  Serial.print("CAL:"); Serial.print(nombre); Serial.print(':');
+  Serial.print(r, 3); Serial.print(','); Serial.print(g, 3); Serial.print(','); Serial.print(b, 3);
+  Serial.print(','); Serial.println(brillo);
+}
+
+// Mide ~1 s lo que ve el sensor y lo guarda como referencia del disco puesto.
+void calibrar(String nombre) {
+  if (nombre == "borrar") { EEPROM.update(0, 0xFF); Serial.println("CAL:borrada (vale al reiniciar)"); return; }
+  int i = -1;
+  if (nombre != "nada") {
+    for (int k = 0; k < N_COLORES; k++) if (nombre == COLORES[k].nombre) i = k;
+    if (i < 0) { Serial.println("ERR color desconocido"); return; }
+  }
+  if (!haySensor) { Serial.println("ERR sin sensor"); return; }
+  unsigned long sc = 0, sr = 0, sg = 0, sb = 0;
+  int n = 0;
+  unsigned long t = millis();
+  while (millis() - t < 1200) {
+    unsigned int c, r, g, b;
+    if (leerSensor(c, r, g, b)) { sc += c; sr += r; sg += g; sb += b; n++; }
+    delay(5);
+  }
+  if (n == 0 || sc == 0) { Serial.println("ERR el sensor no midió"); return; }
+  float fr = (float)sr / sc, fg = (float)sg / sc, fb = (float)sb / sc;
+  unsigned int brillo = sc / n;
+  if (i < 0) { nadaR = fr; nadaG = fg; nadaB = fb; brilloNada = brillo; }
+  else { COLORES[i].r = fr; COLORES[i].g = fg; COLORES[i].b = fb; COLORES[i].brillo = brillo; }
+  guardarCalibracion();
+  imprimirReferencia(nombre.c_str(), fr, fg, fb, brillo);
+  // Aviso si quedó demasiado parecido a otra referencia: el sensor podría confundirlos.
+  for (int k = -1; k < N_COLORES; k++) {
+    if (k == i) continue;
+    float d = k < 0 ? distancia(fr, fg, fb, nadaR, nadaG, nadaB)
+                    : distancia(fr, fg, fb, COLORES[k].r, COLORES[k].g, COLORES[k].b);
+    if (d < 2 * DISTANCIA_MAX) {
+      Serial.print("AVISO: parecido a "); Serial.print(k < 0 ? "nada" : COLORES[k].nombre);
+      Serial.print(" (distancia "); Serial.print(d, 3); Serial.println(")");
+    }
+  }
+}
+
 void setup() {
   Serial.begin(115200);
+  cargarCalibracion();
   motor.attach(PIN_SERVO, 500, 2500);
   motor.writeMicroseconds(STOP_US);
   pinMode(PIN_BOTON, INPUT_PULLUP);

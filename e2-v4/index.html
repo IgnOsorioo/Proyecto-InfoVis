@@ -9,17 +9,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800;900&display=swap">
-  <link rel="stylesheet" href="css/estilo.css?v=2026-11-22e">
+  <link rel="stylesheet" href="css/estilo.css?v=2026-11-24d">
 </head>
 <body class="sin-disco">
   <header>
     <h1>El tocadiscos del mundo</h1>
-    <span class="espacio"></span>
-    <span id="estado-audio" aria-live="polite"></span>
-    <span id="lector" hidden>Sensor de color conectado</span>
     <div id="discos" role="group" aria-label="Disco"></div>
-    <button id="tocadiscos" class="enlace" type="button" hidden>Conectar tocadiscos</button>
-    <button id="pausa" type="button" aria-pressed="false">Pausa</button>
+    <div class="controles">
+      <span id="estado-audio" aria-live="polite"></span>
+      <span id="lector" hidden>Sensor de color conectado</span>
+      <button id="tocadiscos" class="enlace" type="button" hidden>Conectar tocadiscos</button>
+      <button id="pausa" type="button" aria-pressed="false">Pausa</button>
+    </div>
   </header>
 
   <main>
@@ -34,11 +35,11 @@
     </section>
 
     <aside class="panel">
-      <div class="tarjeta cuota-marco" id="cuota-marco" aria-live="polite">
+      <div class="cuota-marco" id="cuota-marco" aria-live="polite">
         <div class="cuota-cifra" id="cuota-cifra"></div>
         <p id="cuota-texto"></p>
       </div>
-      <div class="tarjeta top-marco">
+      <div class="top-marco">
         <h2 id="top-titulo">Top 5 álbumes más vendidos</h2>
         <ol id="top"></ol>
         <p id="top-vacio" hidden></p>
@@ -64,6 +65,6 @@
   <script src="js/ovacion.js?v=2026-11-22a"></script>
   <script src="js/estatica.js?v=2026-11-18a"></script>
   <script src="js/tocadiscos.js?v=2026-11-22e"></script>
-  <script src="js/main.js?v=2026-11-22f"></script>
+  <script src="js/main.js?v=2026-11-24a"></script>
 </body>
 </html>

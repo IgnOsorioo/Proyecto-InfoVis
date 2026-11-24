@@ -187,7 +187,7 @@
   const formatoCuota = v => `${v.toLocaleString('es-CL', { maximumFractionDigits: v > 0 && v < 10 ? 1 : 0 })} %`;
   function mostrarCuota() {
     const fam = estado.familia, pais = Datos.paises[estado.pais], dec = Datos.decadas[estado.decada];
-    $('cuota-marco').hidden = !fam;
+    $('cuota-marco').classList.toggle('oculto', !fam);   // 24-nov: conserva su lugar
     if (!fam) return;
     const cifra = $('cuota-cifra');
     cancelAnimationFrame(animCuota);
@@ -233,7 +233,7 @@
     $('album-artista').textContent = a?.artista || '';
     $('album-nota').textContent = a ? `${Datos.copiasTexto(a.unidades)} en ${pais.nombre}${a.anio ? ` · ${a.anio}` : ''}` : '';
     $('album-cancion-nombre').textContent = a?.cancion || '';
-    $('album-cancion').hidden = !a?.cancion;
+    $('album-cancion').classList.toggle('oculto', !a?.cancion);
 
     // 22-nov: «Rock · Alemania · años 2010» no decía qué era la lista; ahora la frase completa.
     $('top-titulo').textContent = `Top 5 álbumes${fam ? ` de ${Datos.nombreGenero(fam).toLowerCase()}` : ''} más vendidos`
